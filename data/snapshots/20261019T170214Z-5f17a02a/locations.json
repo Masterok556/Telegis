@@ -1,0 +1,18 @@
+[
+  {
+    "id": "osm_way_499328514",
+    "name": "Mega Silk Way",
+    "lat": 51.0890897,
+    "lon": 71.4073303,
+    "source_url": "https://www.openstreetmap.org/way/499328514",
+    "coordinate_kind": "bounding_box_center"
+  },
+  {
+    "name": "25-ти летие Независимости",
+    "lat": 51.0934524,
+    "lon": 71.4175645,
+    "source_url": "https://www.openstreetmap.org/way/1460763574",
+    "coordinate_kind": "bounding_box_center",
+    "id": "osm_way_1460763574"
+  }
+]

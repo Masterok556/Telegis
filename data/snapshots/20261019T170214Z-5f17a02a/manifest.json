@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "20261019T170214Z-5f17a02a",
+  "collected_at": "2026-10-19T17:00:13+00:00",
+  "source": "OpenStreetMap",
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "request_method": "GET",
+  "source_data_timestamp": "2026-10-19T16:58:40Z",
+  "license": "ODbL 1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_url": "https://www.openstreetmap.org/copyright",
+  "coverage": {
+    "name": "EXPO / Mega Silk Way, Астана",
+    "lat": 51.089,
+    "lon": 71.419,
+    "radius_m": 3500
+  },
+  "query": "[out:json][timeout:30];\n(\n nwr[\"amenity\"=\"cafe\"](around:3500,51.089,71.419);\n nwr[\"leisure\"~\"^(park|garden|playground)$\"](around:3500,51.089,71.419);\n nwr[\"tourism\"~\"^(museum|gallery|attraction|viewpoint|artwork)$\"](around:3500,51.089,71.419);\n nwr[\"historic\"~\"^(monument|memorial)$\"](around:3500,51.089,71.419);\n nwr[\"shop\"=\"mall\"](around:3500,51.089,71.419);\n);\nout center tags;",
+  "raw_sha256": "182a541719a8a5f7136918688b8d8857e7330a99689f0af3bdc02e0ddfdb6de6",
+  "raw_elements": 156,
+  "poi_count": 49,
+  "categories": {
+    "cafe": 28,
+    "memorial": 2,
+    "monument": 1,
+    "artwork": 5,
+    "park": 6,
+    "garden": 2,
+    "attraction": 2,
+    "mall": 2,
+    "museum": 1
+  },
+  "skipped": {
+    "missing_name_category_or_coordinates": 106,
+    "duplicate_name_nearby": 1
+  },
+  "locations_count": 2
+}

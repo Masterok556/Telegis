@@ -1,0 +1,412 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Astana Walk AI",
+    "description": "Рекомендации реальных POI: геофильтр, BM25, проверяемая генерация.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations": {
+      "get": {
+        "summary": "Locations",
+        "operationId": "locations_api_locations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/meta": {
+      "get": {
+        "summary": "Meta",
+        "operationId": "meta_api_meta_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommend": {
+      "post": {
+        "summary": "Recommend",
+        "operationId": "recommend_api_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Location": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "lat",
+          "lon"
+        ],
+        "title": "Location"
+      },
+      "LocationsResponse": {
+        "properties": {
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/Location"
+            },
+            "type": "array",
+            "title": "Locations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "locations"
+        ],
+        "title": "LocationsResponse"
+      },
+      "RecommendRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Query"
+          },
+          "lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon"
+          },
+          "available_minutes": {
+            "type": "integer",
+            "maximum": 180.0,
+            "minimum": 10.0,
+            "title": "Available Minutes"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "walk",
+              "cafe"
+            ],
+            "title": "Category"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "query",
+          "lat",
+          "lon",
+          "available_minutes",
+          "category"
+        ],
+        "title": "RecommendRequest"
+      },
+      "RecommendResponse": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "rag",
+              "fallback"
+            ],
+            "title": "Mode"
+          },
+          "used_context": {
+            "$ref": "#/components/schemas/UsedContext"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Recommendations"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "used_context",
+          "recommendations",
+          "message"
+        ],
+        "title": "RecommendResponse"
+      },
+      "Recommendation": {
+        "properties": {
+          "poi_id": {
+            "type": "string",
+            "title": "Poi Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "distance_m": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Distance M"
+          },
+          "distance_kind": {
+            "type": "string",
+            "const": "straight_line",
+            "title": "Distance Kind",
+            "default": "straight_line"
+          },
+          "walk_minutes_estimate": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Walk Minutes Estimate"
+          },
+          "visit_minutes_estimate": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Visit Minutes Estimate"
+          },
+          "total_minutes_estimate": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Total Minutes Estimate"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          },
+          "activity": {
+            "type": "string",
+            "title": "Activity"
+          },
+          "opening_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Hours"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "collected_at": {
+            "type": "string",
+            "title": "Collected At"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "poi_id",
+          "name",
+          "lat",
+          "lon",
+          "category",
+          "distance_m",
+          "walk_minutes_estimate",
+          "visit_minutes_estimate",
+          "total_minutes_estimate",
+          "why",
+          "activity",
+          "opening_hours",
+          "source_url",
+          "collected_at",
+          "warnings"
+        ],
+        "title": "Recommendation"
+      },
+      "UsedContext": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "available_minutes": {
+            "type": "integer",
+            "title": "Available Minutes"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "walk",
+              "cafe"
+            ],
+            "title": "Category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon",
+          "available_minutes",
+          "category"
+        ],
+        "title": "UsedContext"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
