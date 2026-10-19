@@ -34,6 +34,18 @@ FEATURE_PATTERNS = {
     "wheelchair": r"инвалид\w*|wheelchair\w*|безбарьер\w*",
 }
 FEATURE_LABELS = {"socket": "розетки", "wifi": "Wi-Fi", "quiet": "тишина", "wheelchair": "доступность для кресла-коляски"}
+CATEGORY_PATTERNS = (
+    (r"музе\w*|museums?", {"museum"}),
+    (r"парк(?:а|е|и|ом|ов|ам|ах|у)?|parks?", {"park", "garden"}),
+    (r"сад(?:а|у|ом|ы|ов|ах)?|gardens?", {"garden"}),
+    (r"галере\w*|galler(?:y|ies)", {"gallery"}),
+    (r"смотров\w*(?:\s+площад\w*)?|viewpoints?", {"viewpoint"}),
+    (r"дет\w*\s+площад\w*|playgrounds?", {"playground"}),
+    (r"кофе|кафе|кофейн\w*|coffee|caf[eé]s?", {"cafe"}),
+    (r"памятник\w*|monuments?", {"monument", "memorial"}),
+    (r"мемориал\w*|memorials?", {"memorial"}),
+    (r"арт[ -]?объект\w*|artworks?", {"artwork"}),
+)
 
 
 @dataclass(frozen=True)
@@ -51,6 +63,9 @@ class RetrievalResult:
     candidates: tuple[Candidate, ...]
     message: str
     required_features: tuple[str, ...] = ()
+    effective_minutes: int | None = None
+    max_distance_m: float = 2500.0
+    excluded_categories: tuple[str, ...] = ()
 
 
 def tokens(text: str) -> list[str]:
@@ -65,9 +80,51 @@ def tokens(text: str) -> list[str]:
 def required_features(query: str) -> tuple[str, ...]:
     # Remove common explicitly waived requirements; other mentions are conservative constraints.
     q = query.lower()
-    q = re.sub(r"(?:без|не\s+нужн\w*|не\s+обязательн\w*)\s+(?:розет\w*|wi[ -]?fi|вай[ -]?фай|тишин\w*)", "", q)
-    q = re.sub(r"(?:розет\w*|wi[ -]?fi|вай[ -]?фай|тишин\w*)\s+(?:не\s+нужн\w*|не\s+обязательн\w*)", "", q)
-    return tuple(key for key, pattern in FEATURE_PATTERNS.items() if re.search(pattern, q))
+    feature = "(?:" + "|".join(FEATURE_PATTERNS.values()) + ")"
+    waive = r"(?:не\s+(?:нуж\w*|обязательн\w*|важн\w*|требу\w*)|not\s+(?:needed|required|necessary))"
+    q = re.sub(r"\b(?:без|" + waive + r")\s+" + feature + r"(?:\s*(?:,|и|или|and|or)\s*" + feature + r")*", "", q)
+    q = re.sub(feature + r"(?:\s*(?:,|и|или|and|or)\s*" + feature + r")*\s+" + waive, "", q)
+    return tuple(key for key, pattern in FEATURE_PATTERNS.items() if re.search(r"\b(?:" + pattern + r")\b", q))
+
+
+def category_constraints(query: str) -> tuple[set[str], set[str]]:
+    """Recognize simple interests/exclusions without treating nearby landmarks as goals."""
+    all_terms = "(?:" + "|".join(pattern for pattern, _ in CATEGORY_PATTERNS) + ")"
+    negative = r"(?:без|кроме|исключая|никаких|не(?:\s+(?:хочу|хочется|нужен|нужна|нужно|нужны|надо|интересует|интересуют))?(?:\s+в)?|not|no|except)"
+    spans = [match.span() for match in re.finditer(
+        r"\b" + negative + r"\s+" + all_terms + r"\b(?:\s*(?:,|и|или|and|or)\s*" + all_terms + r"\b)*", query)]
+    interests, excluded = set(), set()
+    for pattern, categories in CATEGORY_PATTERNS:
+        for match in re.finditer(r"\b(?:" + pattern + r")\b", query):
+            before, after = query[:match.start()], query[match.end():]
+            if any(start <= match.start() < end for start, end in spans) or re.match(
+                r"\s+не\s+(?:нуж\w*|интересу\w*|надо)\b", after
+            ):
+                excluded.update(categories)
+            elif re.search(r"\b(?:у|возле|около|рядом\s+с|near|next\s+to)\s+(?:здания\s+)?$", before) or re.search(
+                r"\b(?:я|сейчас|нахожусь|стою)\s+в\s+$", before
+            ):
+                continue
+            else:
+                interests.update(categories)
+    return interests, excluded
+
+
+def explicit_limits(query: str, available_minutes: int) -> tuple[int, float]:
+    """A few unambiguous numeric limits; never increase the form's time allowance."""
+    minutes, radius = available_minutes, 2500.0
+    for match in re.finditer(
+        r"\b(?:на|за|есть|осталось|всего|меня|максимум|бюджет(?:\s+времени)?|не\s+(?:более|больше)|до|уложиться\s+в)\s+"
+        r"(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?\s*(минут\w*|мин\b|час\w*|ч\b)", query
+    ):
+        amount = int(match[2] or match[1])
+        minutes = min(minutes, amount * (60 if match[3].startswith("ч") else 1))
+    for match in re.finditer(
+        r"\b(?:не\s+(?:дальше|далее|более|больше)|максимум|в\s+радиусе|в\s+пределах|до)\s+"
+        r"(\d+(?:[.,]\d+)?)\s*(километр\w*|км\b|метр\w*|м\b)", query
+    ):
+        radius = min(radius, float(match[1].replace(",", ".")) * (1000 if match[2].startswith("к") else 1))
+    return minutes, radius
 
 
 def lexical_scores(query: str, pois: list[POI]) -> dict[str, float]:
@@ -92,51 +149,53 @@ def lexical_scores(query: str, pois: list[POI]) -> dict[str, float]:
 
 
 def retrieve(request: RecommendRequest, dataset: Dataset) -> RetrievalResult:
+    q = request.query.lower()
+    required = required_features(q)
+    category_interests, excluded = category_constraints(q)
+    available_minutes, max_distance = explicit_limits(q, request.available_minutes)
+
+    def result(candidates: tuple[Candidate, ...], message: str) -> RetrievalResult:
+        return RetrievalResult(candidates, message, required, available_minutes, max_distance, tuple(sorted(excluded)))
+
     coverage = dataset.manifest["coverage"]
     if distance_m(request.lat, request.lon, coverage["lat"], coverage["lon"]) > coverage["radius_m"]:
-        return RetrievalResult((), "Пока доступны только места в районе EXPO / Mega Silk Way. Выберите стартовую точку в зоне покрытия.")
-    q = request.query.lower()
-    if re.search(r"открыт\w*\s+сейчас|сейчас\s+открыт|ноч\w*|круглосуточ\w*|open\s+now|вылет|аэропорт", q):
-        return RetrievalResult((), "Этот прототип не проверяет доступность в реальном времени и не рассчитывает поездки в аэропорт. Выберите прогулку или кофе без такого условия.")
-    if re.search(r"интерактив\w*|бесплат\w*|деш[её]в\w*|бюджет\w*|\d+\s*(?:₸|тенге|тг\b)|под\s+крышей|в\s+помещении", q):
-        return RetrievalResult((), "В собранных данных недостаточно сведений, чтобы подтвердить указанное дополнительное условие. Уточните запрос или уберите это условие.")
-    required = required_features(q)
+        return result((), "Пока доступны только места в районе EXPO / Mega Silk Way. Выберите стартовую точку в зоне покрытия.")
+    if re.search(r"\b(?:открыт\w*\s+сейчас|сейчас\s+открыт\w*|ноч\w*|круглосуточ\w*|open\s+now|вылет\w*|аэропорт\w*)\b", q):
+        return result((), "Этот прототип не проверяет доступность в реальном времени и не рассчитывает поездки в аэропорт. Выберите прогулку или кофе без такого условия.")
+    if re.search(r"\b(?:интерактив\w*|бесплат\w*|деш[её]в\w*|бюджетн\w*|бюджет\s+(?:до\s+)?\d+(?!\d)(?!\s*(?:минут\w*|мин\b|час\w*|ч\b))|\d+\s*(?:₸|тенге|тг\b)|под\s+крышей|в\s+помещении)", q):
+        return result((), "В собранных данных недостаточно сведений, чтобы подтвердить указанное дополнительное условие. Уточните запрос или уберите это условие.")
     allowed = {"cafe"} if request.category == "cafe" else set(VISIT_MINUTES) - {"cafe"}
     # Explicit narrower interests must not be silently replaced with unrelated POI.
-    category_interests: set[str] = set()
-    for pattern, categories in [
-        (r"музе\w*|museum", {"museum"}), (r"парк\w*|\bpark\b", {"park", "garden"}),
-        (r"галере\w*|gallery", {"gallery"}), (r"смотров\w*|viewpoint", {"viewpoint"}),
-        (r"дет\w*\s+площад\w*|реб[её]н\w*|с\s+детьми|playground", {"playground"}),
-        (r"кофе|кафе|coffee|cafe", {"cafe"}),
-    ]:
-        if re.search(pattern, q):
-            category_interests.update(categories)
     if category_interests:
         allowed &= category_interests
         if not allowed:
-            return RetrievalResult((), "Текст запроса и выбранная категория расходятся. Переключите «Прогулка» / «Кофе» или уточните запрос.", required)
+            return result((), "Текст запроса и выбранная категория расходятся. Переключите «Прогулка» / «Кофе» или уточните запрос.")
+    elif request.category == "walk" and re.search(r"\b(?:реб[её]н\w*|с\s+детьми|children|child)\b", q):
+        # Accompanying a child does not override an explicit museum or cafe interest.
+        allowed &= {"park", "garden", "playground"}
+    allowed -= excluded
     eligible = [p for p in dataset.pois if p.category in allowed and all(p.confirmed_features.get(f) is True for f in required)]
     if not eligible:
         detail = " Не подтверждены условия: " + ", ".join(FEATURE_LABELS[f] for f in required) + "." if required else ""
-        return RetrievalResult((), "В этой части датасета нет подходящих мест." + detail, required)
+        return result((), "В этой части датасета нет подходящих мест." + detail)
     scores = lexical_scores(request.query, eligible)
     max_score = max(scores.values(), default=0) or 1
     candidates = []
     for poi in eligible:
-        meters = round(distance_m(request.lat, request.lon, poi.lat, poi.lon))
-        if meters > 2500:
+        direct_distance = distance_m(request.lat, request.lon, poi.lat, poi.lon)
+        if direct_distance > max_distance:
             continue
+        meters = round(direct_distance)
         # A transparent heuristic, not a route: detour factor 1.3 / speed 70m/min.
         # Add a fixed entrance/orientation margin. Park/mall centers are not entrances.
         walk = max(1, ceil(meters * 1.3 / 70)) + 2
         visit = VISIT_MINUTES[poi.category]
         total = 2 * walk + visit
-        if total > request.available_minutes:
+        if total > available_minutes:
             continue
         score = 0.65 * (scores[poi.poi_id] / max_score) + 0.35 * (1 - meters / 2500)
         candidates.append(Candidate(poi, meters, walk, visit, total, score))
     candidates.sort(key=lambda c: (-c.score, c.distance, c.poi.poi_id))
     if not candidates:
-        return RetrievalResult((), "Подходящих мест с посещением и возвращением в выбранный бюджет времени не найдено. Попробуйте увеличить время.", required)
-    return RetrievalResult(tuple(candidates[:5]), "", required)
+        return result((), "Подходящих мест с посещением и возвращением в указанные ограничения времени и расстояния не найдено. Попробуйте увеличить время или радиус.")
+    return result(tuple(candidates[:5]), "")

@@ -1,1 +1,1 @@
-"""Astana Walk AI backend."""
+"""Telegis backend."""

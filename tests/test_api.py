@@ -21,7 +21,8 @@ def test_walk_has_real_source_and_honest_fallback(client, payload):
     body = response.json()
     assert set(body) == {"mode", "used_context", "recommendations", "message"}
     assert body["mode"] == "fallback"
-    assert body["used_context"] == {k: v for k, v in payload.items() if k != "query"}
+    assert {k: body["used_context"][k] for k in payload if k != "query"} == {k: v for k, v in payload.items() if k != "query"}
+    assert body["used_context"]["effective_minutes"] == payload["available_minutes"]
     assert 1 <= len(body["recommendations"]) <= 3
     for row in body["recommendations"]:
         assert row["poi_id"] in {"osm_node_1", "osm_node_2"}

@@ -33,7 +33,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
     config = settings or Settings.from_env()
     store = DataStore(config.data_dir)
     generator = generator or Generator(config)
-    api = FastAPI(title="Astana Walk AI", version="1.0.0", description="Рекомендации реальных POI: геофильтр, BM25, проверяемая генерация.")
+    api = FastAPI(title="Telegis", version="1.1.0", description="AI-гид по Астане: реальные места, учёт времени и проверяемые рекомендации.")
     api.state.store = store
     api.state.settings = config
     api.state.generator = generator
@@ -69,6 +69,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
         try:
             dataset = store.get()
             return {"status": "ok", "poi_count": len(dataset.pois), "llm_configured": config.llm_configured,
+                    "service": "Telegis", "llm_last_status": generator.last_status,
                     "snapshot_id": dataset.manifest["snapshot_id"]}
         except DatasetUnavailable:
             return JSONResponse(status_code=503, content={"status": "missing_data", "poi_count": 0,
@@ -86,6 +87,14 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                                                "coverage", "attribution", "license", "license_url", "snapshot_id")} | {
             "retrieval": "geographic filters + lexical BM25",
             "llm_configured": config.llm_configured,
+            "service": "Telegis",
+            "data_quality": {
+                "with_opening_hours": sum(bool(p.opening_hours) for p in dataset.pois),
+                "with_contacts": sum(bool(p.phone or p.website) for p in dataset.pois),
+                "confirmed_features": {feature: sum(p.confirmed_features.get(feature) is True for p in dataset.pois)
+                                       for feature in ("wifi", "socket", "quiet", "wheelchair")},
+                "ratings_available": False,
+            },
             "time_estimate": "one-way = max(1, ceil(straight_line_m * 1.3 / 70)) + 2; total = 2 * one-way + visit",
             "limitations": ["Расстояния по прямой; пешеходные маршруты не рассчитаны.",
                             "Часы и доступность в реальном времени не подтверждаются.",
@@ -98,11 +107,14 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
     @api.post("/api/recommend", response_model=RecommendResponse)
     async def recommend(payload: RecommendRequest):
         dataset = store.get()
-        context = UsedContext(**payload.model_dump(exclude={"query"}))
         result = retrieve(payload, dataset)
+        context = UsedContext(**payload.model_dump(exclude={"query"}),
+                              effective_minutes=result.effective_minutes, max_distance_m=result.max_distance_m,
+                              required_features=list(result.required_features), excluded_categories=list(result.excluded_categories))
         if not result.candidates:
             return RecommendResponse(mode="fallback", used_context=context, recommendations=[], message=result.message)
-        generated = await generator.generate(payload, result.candidates, result.required_features)
+        effective = payload.model_copy(update={"available_minutes": result.effective_minutes or payload.available_minutes})
+        generated = await generator.generate(effective, result.candidates, result.required_features)
         recommendations = []
         for choice in generated.choices:
             candidate, poi = choice.candidate, choice.candidate.poi
@@ -122,6 +134,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                 visit_minutes_estimate=candidate.visit_minutes, total_minutes_estimate=candidate.total_minutes,
                 why=choice.why, activity=choice.activity, opening_hours=poi.opening_hours,
                 source_url=poi.source_url, collected_at=poi.collected_at, warnings=warnings,
+                description=poi.description, phone=poi.phone, website=poi.website,
             ))
         return RecommendResponse(mode=generated.mode, used_context=context, recommendations=recommendations, message=generated.message)
 
@@ -130,7 +143,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
         target = config.static_dir / "index.html"
         if target.is_file():
             return FileResponse(target)
-        return JSONResponse({"message": "Бэкенд готов. Добавьте static/index.html от участника 2.", "api_docs": "/docs"})
+        return JSONResponse({"service": "Telegis", "message": "Бэкенд Telegis готов. Добавьте static/index.html от участника 2.", "api_docs": "/docs"})
 
     api.mount("/static", OptionalStaticFiles(directory=str(config.static_dir), check_dir=False), name="static")
     return api

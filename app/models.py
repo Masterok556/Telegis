@@ -16,6 +16,10 @@ class UsedContext(BaseModel):
     lon: float
     available_minutes: int
     category: Literal["walk", "cafe"]
+    effective_minutes: int | None = None
+    max_distance_m: float = 2500
+    required_features: list[str] = Field(default_factory=list)
+    excluded_categories: list[str] = Field(default_factory=list)
 
 
 class Location(BaseModel):
@@ -43,6 +47,22 @@ class POI(BaseModel):
     collected_at: str
     coordinate_kind: str
     confirmed_features: dict[str, bool | None]
+    phone: str | None = None
+    website: str | None = None
+
+    @field_validator("website")
+    @classmethod
+    def website_is_public_http(cls, value: str | None) -> str | None:
+        from urllib.parse import urlsplit
+        if not value:
+            return None
+        try:
+            parsed = urlsplit(value)
+            if parsed.scheme in {"http", "https"} and parsed.hostname and not parsed.username and not parsed.password:
+                return value
+        except ValueError:
+            pass
+        return None
 
     @field_validator("source_url")
     @classmethod
@@ -78,6 +98,11 @@ class Recommendation(BaseModel):
     source_url: str
     collected_at: str
     warnings: list[str]
+    description: str = ""
+    phone: str | None = None
+    website: str | None = None
+    fact_source: Literal["OpenStreetMap"] = "OpenStreetMap"
+    activity_source: Literal["suggested_idea"] = "suggested_idea"
 
 
 class RecommendResponse(BaseModel):

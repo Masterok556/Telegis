@@ -12,7 +12,11 @@
       "lat": 51.0890897,
       "lon": 71.4073303,
       "available_minutes": 60,
-      "category": "walk"
+      "category": "walk",
+      "effective_minutes": 60,
+      "max_distance_m": 2500.0,
+      "required_features": [],
+      "excluded_categories": []
     },
     "recommendations": [
       {
@@ -35,7 +39,12 @@
           "Расстояние по прямой; время приблизительное, пешеходный маршрут не рассчитан.",
           "Часы работы не подтверждены.",
           "Координаты обозначают центр объекта, не проверенный вход."
-        ]
+        ],
+        "description": "Парк. Название в OpenStreetMap: NU Park.",
+        "phone": null,
+        "website": null,
+        "fact_source": "OpenStreetMap",
+        "activity_source": "suggested_idea"
       },
       {
         "poi_id": "osm_way_1470723968",
@@ -57,7 +66,12 @@
           "Расстояние по прямой; время приблизительное, пешеходный маршрут не рассчитан.",
           "Часы работы не подтверждены.",
           "Координаты обозначают центр объекта, не проверенный вход."
-        ]
+        ],
+        "description": "Сад. Название в OpenStreetMap: Японский сад.",
+        "phone": null,
+        "website": null,
+        "fact_source": "OpenStreetMap",
+        "activity_source": "suggested_idea"
       },
       {
         "poi_id": "osm_way_1456208624",
@@ -79,9 +93,14 @@
           "Расстояние по прямой; время приблизительное, пешеходный маршрут не рассчитан.",
           "Часы работы не подтверждены.",
           "Координаты обозначают центр объекта, не проверенный вход."
-        ]
+        ],
+        "description": "Парк. Название в OpenStreetMap: Аллея мира и согласия.",
+        "phone": null,
+        "website": null,
+        "fact_source": "OpenStreetMap",
+        "activity_source": "suggested_idea"
       }
     ],
-    "message": "Модель не подключена: рекомендации подготовлены по данным и шаблонам (fallback)."
+    "message": "Модель не подключена. Показаны рекомендации по данным и шаблонам (fallback)."
   }
 }

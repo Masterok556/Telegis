@@ -1,7 +1,8 @@
 """Collect a bounded OSM extract; publish a complete snapshot atomically.
 
 Run from any directory: python scripts/collect_pois.py
-Uses Python's standard library. No API key or user coordinates are involved.
+Fetches with Python's standard library and validates with the backend's models.
+No API key or user coordinates are involved.
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from app.geo import distance_m
+from app.data_store import load_snapshot
 
 # This is the fixed collection extent, not a claimed POI or user location.
 CENTER = (51.089, 71.419)
@@ -180,7 +182,7 @@ def fetch_overpass(endpoint: str, query: str, timeout: float = 45) -> dict:
     # Bounded query fits comfortably in a URL. GET also works behind proxies that reject POST.
     url = endpoint + "?" + urllib.parse.urlencode({"data": query})
     request = urllib.request.Request(url, headers={
-        "User-Agent": "AstanaWalkHackathon/1.0 (bounded POI collection; no tracking)",
+        "User-Agent": "Telegis/1.0 (bounded POI collection; no tracking)",
     })
     with urllib.request.urlopen(request, timeout=timeout) as response:
         body = response.read(12_000_001)
@@ -217,6 +219,9 @@ def publish(raw: dict, output: Path, endpoint: str, query: str, collected_at: st
         "skipped": skipped, "locations_count": len(locations),
     }
     write_json(snapshot / "manifest.json", manifest)
+    # A complete JSON export can still contain invalid types or inconsistent metadata.
+    # Validate exactly as the API does before replacing the last working version.
+    load_snapshot(snapshot)
     # Only this pointer is switched. A crash before it leaves the old dataset intact.
     pointer_tmp = output / f".current-{uuid.uuid4().hex}.tmp"
     write_json(pointer_tmp, {"snapshot": f"snapshots/{snapshot_id}"})

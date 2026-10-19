@@ -16,6 +16,7 @@ class Settings:
     llm_api_key: str = field(default="", repr=False)
     llm_model: str = ""
     llm_reasoning_effort: str = ""
+    llm_max_tokens: int = 1200
     llm_timeout_seconds: float = 15
     llm_json_mode: bool = True
     cors_origins: tuple[str, ...] = ()
@@ -38,11 +39,15 @@ class Settings:
         effort = os.getenv("LLM_REASONING_EFFORT", "").strip()
         if effort not in {"", "none", "minimal", "low", "medium", "high", "xhigh", "max"}:
             raise ValueError("Некорректное значение LLM_REASONING_EFFORT")
+        max_tokens = int(os.getenv("LLM_MAX_TOKENS", "1200"))
+        if not 128 <= max_tokens <= 4096:
+            raise ValueError("LLM_MAX_TOKENS должен быть от 128 до 4096")
         return cls(
             llm_base_url=base,
             llm_api_key=os.getenv("LLM_API_KEY", "").strip(),
             llm_model=os.getenv("LLM_MODEL", "").strip(),
             llm_reasoning_effort=effort,
+            llm_max_tokens=max_tokens,
             llm_timeout_seconds=timeout,
             llm_json_mode=os.getenv("LLM_JSON_MODE", "true").lower() in {"1", "true", "yes"},
             cors_origins=tuple(x.strip() for x in os.getenv("CORS_ORIGINS", "").split(",") if x.strip()),

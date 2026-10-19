@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Astana Walk AI",
-    "description": "Рекомендации реальных POI: геофильтр, BM25, проверяемая генерация.",
-    "version": "1.0.0"
+    "title": "Telegis",
+    "description": "AI-гид по Астане: реальные места, учёт времени и проверяемые рекомендации.",
+    "version": "1.1.0"
   },
   "paths": {
     "/api/health": {
@@ -320,6 +320,45 @@
             },
             "type": "array",
             "title": "Warnings"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "fact_source": {
+            "type": "string",
+            "const": "OpenStreetMap",
+            "title": "Fact Source",
+            "default": "OpenStreetMap"
+          },
+          "activity_source": {
+            "type": "string",
+            "const": "suggested_idea",
+            "title": "Activity Source",
+            "default": "suggested_idea"
           }
         },
         "type": "object",
@@ -363,6 +402,36 @@
               "cafe"
             ],
             "title": "Category"
+          },
+          "effective_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Minutes"
+          },
+          "max_distance_m": {
+            "type": "number",
+            "title": "Max Distance M",
+            "default": 2500
+          },
+          "required_features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required Features"
+          },
+          "excluded_categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded Categories"
           }
         },
         "type": "object",
