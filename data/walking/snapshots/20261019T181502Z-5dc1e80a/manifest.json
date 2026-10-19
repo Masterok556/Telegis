@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "20261019T181502Z-5dc1e80a",
+  "collected_at": "2026-10-19T18:15:02+00:00",
+  "source_data_timestamp": "2026-10-19T18:13:51Z",
+  "source": "OpenStreetMap",
+  "basis": "osm_walking_graph",
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "request_method": "GET",
+  "query": "[out:json][timeout:40];\nway[\"highway\"][\"highway\"!~\"^(motorway|motorway_link|trunk|trunk_link|construction|proposed|raceway|bus_guideway)$\"](around:3500,51.089,71.419);\n(._;>;);\nout body;",
+  "license": "ODbL 1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_url": "https://www.openstreetmap.org/copyright",
+  "coverage": {
+    "lat": 51.089,
+    "lon": 71.419,
+    "radius_m": 3500
+  },
+  "raw_sha256": "c284510b907ae16067226300103fb42e65a9fc2ee4a51d87d09fa0b3bd467345",
+  "graph_sha256": "1903376ad0cbe5d43f7a25e5b3e8d605452b6b7a877b2b6c581663d67cb57faf",
+  "raw_elements": 41066,
+  "node_count": 30829,
+  "directed_edge_count": 73816,
+  "way_count": 7582,
+  "ways_without_sidewalk_tag": 3763,
+  "skipped": {
+    "restricted_node": 108,
+    "restricted_or_nonwalkable_way": 221
+  },
+  "limitations": [
+    "Путь построен по связности OSM, без проверки на местности и без данных о временных перекрытиях.",
+    "Подход к графу и к точке — отрезки до 120 м каждый; входы, заборы и проход через здания на них не проверены.",
+    "У обычных улиц тротуары и переходы могут быть не описаны. Безопасность и доступность маршрута не подтверждены.",
+    "Ступени разрешены; маршрут не предназначен для проверки доступности на коляске."
+  ]
+}

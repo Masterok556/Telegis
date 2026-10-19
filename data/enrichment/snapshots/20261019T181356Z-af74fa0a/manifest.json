@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "20261019T181356Z-af74fa0a",
+  "source_count": 3,
+  "fact_count": 6,
+  "records_sha256": "8e8792522320a07951d9b5fd29198b716b9a64b06e3b6a7084daef587ddeb71b",
+  "method": "Allowlisted primary pages, reviewed OSM identities, deterministic phrase checks",
+  "license_note": "Factual paraphrases with attribution; short supporting excerpts; page copyrights remain with publishers."
+}

@@ -1,15 +1,15 @@
 {
-  "checked_at": "2026-10-19T18:00:14.958026+00:00",
+  "checked_at": "2026-10-19T18:22:41.969935+00:00",
   "passed": true,
   "service": "Telegis",
   "poi_count": 49,
-  "snapshot_id": "20261019T170214Z-5f17a02a",
+  "snapshot_id": "20261019T181106Z-e7831bf2",
   "category": "cafe",
   "mode": "rag",
-  "elapsed_seconds": 2.67,
+  "elapsed_seconds": 3.09,
   "recommendations": [
     "Starbucks",
-    "Drinkit",
+    "Лепим и варим",
     "Gasteria"
   ],
   "message": "Модель выбрала варианты, причины и занятия из найденных данных. Сведения о местах взяты из источника; примерное время рассчитано кодом."

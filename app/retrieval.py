@@ -7,6 +7,7 @@ import re
 from app.data_store import Dataset
 from app.geo import distance_m
 from app.models import POI, RecommendRequest
+from app.facts import facts_for, excluded_from_routes
 
 VISIT_MINUTES = {
     "cafe": 15, "park": 20, "garden": 15, "playground": 20,
@@ -56,6 +57,9 @@ class Candidate:
     visit_minutes: int
     total_minutes: int
     score: float
+    route_distance_m: int | None = None
+    return_route_distance_m: int | None = None
+    route_connector_m: int | None = None
 
 
 @dataclass(frozen=True)
@@ -129,7 +133,8 @@ def explicit_limits(query: str, available_minutes: int) -> tuple[int, float]:
 
 def lexical_scores(query: str, pois: list[POI]) -> dict[str, float]:
     """Small-corpus BM25. Category aliases provide limited RU/EN normalization."""
-    documents = [Counter(tokens(" ".join([p.name, p.description, LABELS.get(p.category, p.category), *p.tags.values()]))) for p in pois]
+    documents = [Counter(tokens(" ".join([p.name, p.description, LABELS.get(p.category, p.category),
+                                         *p.tags.values(), *(f["text"] for f in facts_for(p))]))) for p in pois]
     if not documents:
         return {}
     average = max(1.0, sum(sum(d.values()) for d in documents) / len(documents))
@@ -148,7 +153,7 @@ def lexical_scores(query: str, pois: list[POI]) -> dict[str, float]:
     return scores
 
 
-def retrieve(request: RecommendRequest, dataset: Dataset) -> RetrievalResult:
+def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> RetrievalResult:
     q = request.query.lower()
     required = required_features(q)
     category_interests, excluded = category_constraints(q)
@@ -174,7 +179,8 @@ def retrieve(request: RecommendRequest, dataset: Dataset) -> RetrievalResult:
         # Accompanying a child does not override an explicit museum or cafe interest.
         allowed &= {"park", "garden", "playground"}
     allowed -= excluded
-    eligible = [p for p in dataset.pois if p.category in allowed and all(p.confirmed_features.get(f) is True for f in required)]
+    eligible = [p for p in dataset.pois if p.category in allowed and not excluded_from_routes(p)
+                and all(p.confirmed_features.get(f) is True for f in required)]
     if not eligible:
         detail = " Не подтверждены условия: " + ", ".join(FEATURE_LABELS[f] for f in required) + "." if required else ""
         return result((), "В этой части датасета нет подходящих мест." + detail)
@@ -188,14 +194,28 @@ def retrieve(request: RecommendRequest, dataset: Dataset) -> RetrievalResult:
         meters = round(direct_distance)
         # A transparent heuristic, not a route: detour factor 1.3 / speed 70m/min.
         # Add a fixed entrance/orientation margin. Park/mall centers are not entrances.
-        walk = max(1, ceil(meters * 1.3 / 70)) + 2
+        routed = returned = None
+        if network is not None:
+            routed = network.route((request.lat, request.lon), (poi.lat, poi.lon))
+            returned = network.route((poi.lat, poi.lon), (request.lat, request.lon))
+            if routed is None or returned is None:
+                continue
+            # Keep the established 2*walk+visit contract, conservatively using
+            # the longer direction when pedestrian one-way rules differ.
+            walk = max(1, ceil(max(routed.distance_m, returned.distance_m) / 70)) + 2
+        else:
+            walk = max(1, ceil(meters * 1.3 / 70)) + 2
         visit = VISIT_MINUTES[poi.category]
         total = 2 * walk + visit
         if total > available_minutes:
             continue
         score = 0.65 * (scores[poi.poi_id] / max_score) + 0.35 * (1 - meters / 2500)
-        candidates.append(Candidate(poi, meters, walk, visit, total, score))
+        candidates.append(Candidate(poi, meters, walk, visit, total, score,
+                                    routed.distance_m if routed else None,
+                                    returned.distance_m if returned else None,
+                                    routed.connector_m + returned.connector_m if routed else None))
     candidates.sort(key=lambda c: (-c.score, c.distance, c.poi.poi_id))
     if not candidates:
-        return result((), "Подходящих мест с посещением и возвращением в указанные ограничения времени и расстояния не найдено. Попробуйте увеличить время или радиус.")
+        return result((), "Подходящих мест с посещением и возвращением в указанные ограничения времени и расстояния не найдено. Попробуйте увеличить время или радиус." +
+                      (" Для части мест может не быть связного пути в сохранённой сети OSM." if network is not None else ""))
     return result(tuple(candidates[:5]), "")

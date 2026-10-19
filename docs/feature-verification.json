@@ -1,0 +1,88 @@
+{
+  "checked_at": "2026-10-19T18:22:10.487062+00:00",
+  "passed": true,
+  "checks": [
+    {
+      "name": "Real 3-stop route at 120 minutes",
+      "passed": true
+    },
+    {
+      "name": "All legs include return to start",
+      "passed": true
+    },
+    {
+      "name": "Complete time accounting",
+      "passed": true
+    },
+    {
+      "name": "Reserve at least 10 percent",
+      "passed": true
+    },
+    {
+      "name": "Strict 60-minute refusal with actionable budget",
+      "passed": true
+    },
+    {
+      "name": "Suggested budget actually works",
+      "passed": true
+    },
+    {
+      "name": "Every stop is a real stored POI",
+      "passed": true
+    },
+    {
+      "name": "No held construction project in route",
+      "passed": true
+    },
+    {
+      "name": "Specific sourced explanation for Japanese garden",
+      "passed": true
+    },
+    {
+      "name": "Graph-based time on ordinary recommendation",
+      "passed": true
+    },
+    {
+      "name": "Historical source warning preserved",
+      "passed": true
+    },
+    {
+      "name": "Unknown sockets not invented",
+      "passed": true
+    }
+  ],
+  "data_quality": {
+    "with_opening_hours": 15,
+    "with_contacts": 14,
+    "confirmed_features": {
+      "wifi": 5,
+      "socket": 0,
+      "quiet": 0,
+      "wheelchair": 0
+    },
+    "ratings_available": false,
+    "with_informative_facts": 35,
+    "attributed_fact_count": 72,
+    "official_fact_count": 6,
+    "excluded_pending_verification": [
+      {
+        "poi_id": "osm_way_1467797207",
+        "name": "NU Park",
+        "warnings": [
+          "Официальная публикация от 22.05.2026 описывает NU Park как будущий проект. Подтверждения ввода всех зон нет; точка исключена из прогулочных маршрутов."
+        ]
+      }
+    ]
+  },
+  "walking_network": {
+    "available": true,
+    "snapshot_id": "20261019T181502Z-5dc1e80a",
+    "collected_at": "2026-10-19T18:15:02+00:00",
+    "node_count": 30829,
+    "directed_edge_count": 73816,
+    "source_data_timestamp": "2026-10-19T18:13:51Z",
+    "max_snap_m": 120
+  },
+  "itinerary_elapsed_seconds": 0.578,
+  "paid_llm_calls": 0
+}

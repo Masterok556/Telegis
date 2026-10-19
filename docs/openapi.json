@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Telegis",
-    "description": "AI-гид по Астане: реальные места, учёт времени и проверяемые рекомендации.",
-    "version": "1.1.0"
+    "description": "AI-гид по Астане: факты с источниками и мини-маршруты с возвращением и запасом времени.",
+    "version": "1.2.0"
   },
   "paths": {
     "/api/health": {
@@ -93,10 +93,102 @@
           }
         }
       }
+    },
+    "/api/itinerary": {
+      "post": {
+        "summary": "Itinerary",
+        "operationId": "itinerary_api_itinerary_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItineraryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "Evidence": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "collected_at": {
+            "type": "string",
+            "title": "Collected At"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "osm_tag",
+              "official"
+            ],
+            "title": "Kind"
+          },
+          "confidence": {
+            "type": "string",
+            "const": "source_reported",
+            "title": "Confidence",
+            "default": "source_reported"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "source_url",
+          "collected_at",
+          "kind"
+        ],
+        "title": "Evidence"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -109,6 +201,464 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ItineraryContext": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "available_minutes": {
+            "type": "integer",
+            "title": "Available Minutes"
+          },
+          "effective_minutes": {
+            "type": "integer",
+            "title": "Effective Minutes"
+          },
+          "include_coffee": {
+            "type": "boolean",
+            "title": "Include Coffee"
+          },
+          "max_distance_m": {
+            "type": "number",
+            "title": "Max Distance M"
+          },
+          "max_distance_kind": {
+            "type": "string",
+            "const": "straight_line_from_start",
+            "title": "Max Distance Kind",
+            "default": "straight_line_from_start"
+          },
+          "required_features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required Features"
+          },
+          "excluded_categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded Categories"
+          },
+          "return_to_start": {
+            "type": "boolean",
+            "const": true,
+            "title": "Return To Start",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon",
+          "available_minutes",
+          "effective_minutes",
+          "include_coffee",
+          "max_distance_m",
+          "required_features",
+          "excluded_categories"
+        ],
+        "title": "ItineraryContext"
+      },
+      "ItineraryLeg": {
+        "properties": {
+          "from_id": {
+            "type": "string",
+            "title": "From Id"
+          },
+          "to_id": {
+            "type": "string",
+            "title": "To Id"
+          },
+          "from_name": {
+            "type": "string",
+            "title": "From Name"
+          },
+          "to_name": {
+            "type": "string",
+            "title": "To Name"
+          },
+          "distance_m": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Distance M"
+          },
+          "connector_m": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Connector M"
+          },
+          "walk_minutes_estimate": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Walk Minutes Estimate"
+          },
+          "coordinates": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Coordinates"
+          },
+          "route_kind": {
+            "type": "string",
+            "const": "osm_walking_graph_with_approximate_connectors",
+            "title": "Route Kind",
+            "default": "osm_walking_graph_with_approximate_connectors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_id",
+          "to_id",
+          "from_name",
+          "to_name",
+          "distance_m",
+          "connector_m",
+          "walk_minutes_estimate",
+          "coordinates"
+        ],
+        "title": "ItineraryLeg"
+      },
+      "ItineraryRequest": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon"
+          },
+          "available_minutes": {
+            "type": "integer",
+            "maximum": 180.0,
+            "minimum": 15.0,
+            "title": "Available Minutes"
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Query",
+            "default": "Хочу погулять"
+          },
+          "include_coffee": {
+            "type": "boolean",
+            "title": "Include Coffee",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "lat",
+          "lon",
+          "available_minutes"
+        ],
+        "title": "ItineraryRequest"
+      },
+      "ItineraryResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "no_match",
+              "network_unavailable"
+            ],
+            "title": "Status"
+          },
+          "mode": {
+            "type": "string",
+            "const": "local_graph",
+            "title": "Mode",
+            "default": "local_graph"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why",
+            "default": ""
+          },
+          "used_context": {
+            "$ref": "#/components/schemas/ItineraryContext"
+          },
+          "stops": {
+            "items": {
+              "$ref": "#/components/schemas/ItineraryStop"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Stops"
+          },
+          "legs": {
+            "items": {
+              "$ref": "#/components/schemas/ItineraryLeg"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Legs"
+          },
+          "route_coordinates": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Route Coordinates"
+          },
+          "distance_m": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Distance M",
+            "default": 0
+          },
+          "walking_minutes_estimate": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Walking Minutes Estimate",
+            "default": 0
+          },
+          "visit_minutes_estimate": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Visit Minutes Estimate",
+            "default": 0
+          },
+          "reserve_minutes": {
+            "type": "integer",
+            "minimum": 5.0,
+            "title": "Reserve Minutes"
+          },
+          "total_minutes_estimate": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Minutes Estimate",
+            "default": 0
+          },
+          "remaining_minutes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Remaining Minutes",
+            "default": 0
+          },
+          "suggested_minimum_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 180.0,
+                "minimum": 15.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Minimum Minutes"
+          },
+          "network_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network Snapshot Id"
+          },
+          "network_collected_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network Collected At"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "privacy": {
+            "type": "string",
+            "title": "Privacy",
+            "default": "Маршрут рассчитан локально; координаты и текст запроса не сохраняются и не отправляются модели или внешнему маршрутизатору."
+          },
+          "attribution": {
+            "type": "string",
+            "title": "Attribution",
+            "default": "© OpenStreetMap contributors"
+          },
+          "license": {
+            "type": "string",
+            "title": "License",
+            "default": "ODbL 1.0"
+          },
+          "license_url": {
+            "type": "string",
+            "title": "License Url",
+            "default": "https://opendatacommons.org/licenses/odbl/1-0/"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message",
+          "used_context",
+          "reserve_minutes"
+        ],
+        "title": "ItineraryResponse"
+      },
+      "ItineraryStop": {
+        "properties": {
+          "order": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Order"
+          },
+          "poi_id": {
+            "type": "string",
+            "title": "Poi Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          },
+          "activity": {
+            "type": "string",
+            "title": "Activity"
+          },
+          "visit_minutes_estimate": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Visit Minutes Estimate"
+          },
+          "arrival_minutes_estimate": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Arrival Minutes Estimate"
+          },
+          "departure_minutes_estimate": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Departure Minutes Estimate"
+          },
+          "opening_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Hours"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "collected_at": {
+            "type": "string",
+            "title": "Collected At"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "fact_source": {
+            "type": "string",
+            "enum": [
+              "OpenStreetMap",
+              "OpenStreetMap + official sources"
+            ],
+            "title": "Fact Source",
+            "default": "OpenStreetMap"
+          },
+          "activity_source": {
+            "type": "string",
+            "const": "suggested_idea",
+            "title": "Activity Source",
+            "default": "suggested_idea"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order",
+          "poi_id",
+          "name",
+          "lat",
+          "lon",
+          "category",
+          "description",
+          "why",
+          "activity",
+          "visit_minutes_estimate",
+          "arrival_minutes_estimate",
+          "departure_minutes_estimate",
+          "opening_hours",
+          "source_url",
+          "collected_at",
+          "warnings"
+        ],
+        "title": "ItineraryStop"
       },
       "Location": {
         "properties": {
@@ -350,7 +900,10 @@
           },
           "fact_source": {
             "type": "string",
-            "const": "OpenStreetMap",
+            "enum": [
+              "OpenStreetMap",
+              "OpenStreetMap + official sources"
+            ],
             "title": "Fact Source",
             "default": "OpenStreetMap"
           },
@@ -359,6 +912,61 @@
             "const": "suggested_idea",
             "title": "Activity Source",
             "default": "suggested_idea"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "time_margin_minutes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Time Margin Minutes",
+            "default": 0
+          },
+          "travel_basis": {
+            "type": "string",
+            "enum": [
+              "straight_line_estimate",
+              "osm_walking_graph"
+            ],
+            "title": "Travel Basis",
+            "default": "straight_line_estimate"
+          },
+          "route_distance_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Distance M"
+          },
+          "return_route_distance_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Route Distance M"
+          },
+          "route_connector_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Connector M"
           }
         },
         "type": "object",

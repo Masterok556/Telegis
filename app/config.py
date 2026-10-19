@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class Settings:
     data_dir: Path = ROOT / "data"
     static_dir: Path = ROOT / "static"
+    walking_dir: Path | None = None
     llm_base_url: str = "https://api.openai.com/v1"
     llm_api_key: str = field(default="", repr=False)
     llm_model: str = ""

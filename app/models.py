@@ -81,6 +81,16 @@ class POI(BaseModel):
         return value
 
 
+class Evidence(BaseModel):
+    id: str
+    text: str
+    source_url: str
+    collected_at: str
+    kind: Literal["osm_tag", "official"]
+    confidence: Literal["source_reported"] = "source_reported"
+    published_at: str | None = None
+
+
 class Recommendation(BaseModel):
     poi_id: str
     name: str
@@ -101,8 +111,14 @@ class Recommendation(BaseModel):
     description: str = ""
     phone: str | None = None
     website: str | None = None
-    fact_source: Literal["OpenStreetMap"] = "OpenStreetMap"
+    fact_source: Literal["OpenStreetMap", "OpenStreetMap + official sources"] = "OpenStreetMap"
     activity_source: Literal["suggested_idea"] = "suggested_idea"
+    evidence: list[Evidence] = Field(default_factory=list)
+    time_margin_minutes: int = Field(default=0, ge=0)
+    travel_basis: Literal["straight_line_estimate", "osm_walking_graph"] = "straight_line_estimate"
+    route_distance_m: int | None = None
+    return_route_distance_m: int | None = None
+    route_connector_m: int | None = None
 
 
 class RecommendResponse(BaseModel):

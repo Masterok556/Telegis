@@ -47,6 +47,10 @@ PUBLIC_TAGS = {
     "phone", "contact:phone", "addr:street", "addr:housenumber",
     "cuisine", "internet_access", "socket", "wheelchair", "outdoor_seating",
     "access", "fee", "description", "description:ru", "level", "indoor",
+    "artwork_type", "artist_name", "start_date", "architect", "height", "memorial",
+    "garden:type", "alt_name", "official_name", "indoor_seating", "takeaway",
+    "internet_access:fee", "smoking", "toilets", "stroller", "wikidata", "wikipedia",
+    "brand", "operator", "material", "diet:vegetarian", "diet:vegan", "drink:coffee",
 }
 
 

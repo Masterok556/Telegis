@@ -1,0 +1,70 @@
+{
+  "mode": "fallback",
+  "used_context": {
+    "lat": 51.0890897,
+    "lon": 71.4073303,
+    "available_minutes": 120,
+    "category": "walk",
+    "effective_minutes": 120,
+    "max_distance_m": 2500.0,
+    "required_features": [],
+    "excluded_categories": []
+  },
+  "recommendations": [
+    {
+      "poi_id": "osm_way_1470723968",
+      "name": "Японский сад",
+      "lat": 51.0921362,
+      "lon": 71.3994992,
+      "category": "garden",
+      "distance_m": 643,
+      "distance_kind": "straight_line",
+      "walk_minutes_estimate": 28,
+      "visit_minutes_estimate": 15,
+      "total_minutes_estimate": 71,
+      "why": "По статье Nazarbayev University, камни для этого японского сада привезли из Японии. Около 71 мин с возвращением: 15 мин на месте и примерно по 28 мин в каждую сторону.",
+      "activity": "Если вход на кампус и композиция доступны, попробуйте с дорожки найти 14 видимых камней, затем смените точку наблюдения. Выделите около 15 мин; зимой камни могут быть укрыты.",
+      "opening_hours": null,
+      "source_url": "https://www.openstreetmap.org/way/1470723968",
+      "collected_at": "2026-10-19T17:00:13+00:00",
+      "warnings": [
+        "Расстояние distance_m — по прямой; время рассчитано по сети OSM с приблизительными подходами и запасом на вход. Обходы, временные ограничения и доступность входов не проверены.",
+        "Часы работы не подтверждены.",
+        "Координаты обозначают центр объекта, не проверенный вход.",
+        "Сведения об устройстве сада взяты из статьи NU от 09.07.2019; нынешний вид и доступ на кампус не подтверждены.",
+        "По статье NU, зимой камни укрывают; видимость композиции зависит от сезона. Не сходите с дорожек и не трогайте камни."
+      ],
+      "description": "По статье Nazarbayev University, камни для этого японского сада привезли из Японии. В описании NU — композиция из 15 камней: с одной точки видны 14. Это идея для внимательного наблюдения.",
+      "phone": null,
+      "website": null,
+      "fact_source": "OpenStreetMap + official sources",
+      "activity_source": "suggested_idea",
+      "evidence": [
+        {
+          "id": "official_japan_stones",
+          "text": "По статье Nazarbayev University, камни для этого японского сада привезли из Японии.",
+          "source_url": "https://nu.edu.kz/news-en/place-oriental-philosophy-nu-campus/",
+          "collected_at": "2026-10-19T18:13:51+00:00",
+          "kind": "official",
+          "confidence": "source_reported",
+          "published_at": "2019-07-09"
+        },
+        {
+          "id": "official_fourteen_stones",
+          "text": "В описании NU — композиция из 15 камней: с одной точки видны 14. Это идея для внимательного наблюдения.",
+          "source_url": "https://nu.edu.kz/news-en/place-oriental-philosophy-nu-campus/",
+          "collected_at": "2026-10-19T18:13:51+00:00",
+          "kind": "official",
+          "confidence": "source_reported",
+          "published_at": "2019-07-09"
+        }
+      ],
+      "time_margin_minutes": 49,
+      "travel_basis": "osm_walking_graph",
+      "route_distance_m": 1803,
+      "return_route_distance_m": 1803,
+      "route_connector_m": 258
+    }
+  ],
+  "message": "Модель не подключена. Показаны рекомендации по данным и шаблонам (fallback)."
+}
