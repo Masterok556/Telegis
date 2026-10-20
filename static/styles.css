@@ -1903,6 +1903,57 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Интерактивные плашки зданий и ориентиров EXPO (2GIS / Google Maps style) */
+.landmark-pill-marker-wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.landmark-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #f8fafc;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.2);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.landmark-pill-btn:hover {
+  transform: scale(1.1) translateY(-3px);
+  background: #0f172a;
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.45);
+  z-index: 1000;
+}
+
+.landmark-pill-btn:active {
+  transform: scale(0.97);
+}
+
+.landmark-pill-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.landmark-pill-title {
+  line-height: 1.2;
+}
+
 .drawer-gallery {
   position: relative;
   width: 100%;

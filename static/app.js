@@ -465,6 +465,117 @@
   let drawerAbortController = null;
   let cachedHealth = null;
 
+  const VERIFIED_LANDMARK_PHOTOS = {
+    'Mega Silk Way': {
+      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/%D0%A2%D0%A0%D0%A6_MEGA_Silk-way_%D0%B8_%D0%BE%D1%82%D0%B5%D0%BB%D1%8C_Hilton.jpg/960px-%D0%A2%D0%A0%D0%A6_MEGA_Silk-way_%D0%B8_%D0%BE%D1%82%D0%B5%D0%BB%D1%8C_Hilton.jpg',
+      license: 'Wikimedia Commons · CC BY-SA 4.0'
+    },
+    'Astana IT University': {
+      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/%D0%9A%D0%BE%D0%B2%D0%BE%D1%80%D0%BA%D0%B8%D0%BD%D0%B3_Astana_IT_University_%281%29.jpg/960px-%D0%9A%D0%BE%D0%B2%D0%BE%D1%80%D0%BA%D0%B8%D0%BD%D0%B3_Astana_IT_University_%281%29.jpg',
+      license: 'Wikimedia Commons · CC BY-SA 4.0'
+    },
+    'Astana Hub': {
+      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Oljas_Bektenov_and_Aljaksandar_Tur%C4%8Dyn_at_Astana_Hub.jpg/960px-Oljas_Bektenov_and_Aljaksandar_Tur%C4%8Dyn_at_Astana_Hub.jpg',
+      license: 'Wikimedia Commons · CC BY 4.0'
+    },
+    'Сфера «Нұр Әлем»': {
+      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Astana%2C_view.jpg/960px-Astana%2C_view.jpg',
+      license: 'Wikimedia Commons · CC0'
+    },
+    'Alem.ai': {
+      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Astana%2C_view.jpg/960px-Astana%2C_view.jpg',
+      license: 'Wikimedia Commons · Павильон B1 EXPO'
+    },
+    'МФЦА / AIFC': {
+      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Astana_International_Financial_Centre_logo.jpg/960px-Astana_International_Financial_Centre_logo.jpg',
+      license: 'Wikimedia Commons · AIFC'
+    },
+    'Ботанический сад': {
+      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/%D0%90%D1%81%D1%82%D0%B0%D0%BD%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%B1%D0%BE%D1%82%D0%B0%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%81%D0%B0%D0%B4.jpg/960px-%D0%90%D1%81%D1%82%D0%B0%D0%BD%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%B1%D0%BE%D1%82%D0%B0%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%81%D0%B0%D0%B4.jpg',
+      license: 'Wikimedia Commons · CC BY-SA 4.0'
+    },
+    'Триумфальная арка': {
+      thumb: 'https://upload.wikimedia.org/wikipedia/commons/1/11/Stamps_of_Kazakhstan%2C_2012-32.jpg',
+      license: 'Wikimedia Commons · Общественное достояние'
+    }
+  };
+
+  const wikiPhotoCache = new Map();
+
+  async function loadWikimediaPhoto(poi, controller) {
+    if (typeof window === 'undefined' || !window.location?.protocol?.startsWith('http')) return;
+    const name = (poi.name || '').trim();
+    if (!name) return;
+
+    for (const [key, val] of Object.entries(VERIFIED_LANDMARK_PHOTOS)) {
+      if (name.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(name.toLowerCase())) {
+        applyPhotoToDrawer(val.thumb, val.license, controller);
+        return;
+      }
+    }
+
+    if (wikiPhotoCache.has(name)) {
+      const cached = wikiPhotoCache.get(name);
+      if (cached) applyPhotoToDrawer(cached.thumb, cached.license, controller);
+      return;
+    }
+
+    const cleaned = name.replace(/·\s*OSM.*$/i, '').replace(/[\(\)]/g, '').trim();
+    if (cleaned.length < 3) return;
+
+    try {
+      const url = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=' +
+        encodeURIComponent(cleaned + ' Astana') + '&gsrlimit=1&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*';
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (controller.signal.aborted) return;
+      const pages = data.query?.pages;
+      if (!pages) {
+        wikiPhotoCache.set(name, null);
+        return;
+      }
+      const page = Object.values(pages)[0];
+      const info = page.imageinfo?.[0];
+      const thumb = info?.thumburl || info?.url;
+      if (thumb) {
+        const license = info.extmetadata?.LicenseShortName?.value || 'Wikimedia Commons';
+        const photoData = { thumb, license: `Wikimedia Commons · ${license}` };
+        wikiPhotoCache.set(name, photoData);
+        applyPhotoToDrawer(thumb, photoData.license, controller);
+      } else {
+        wikiPhotoCache.set(name, null);
+      }
+    } catch (_) {}
+  }
+
+  function applyPhotoToDrawer(url, licenseText, controller) {
+    const img = document.getElementById('drawerHeroImg');
+    const placeholder = document.getElementById('drawerHeroPlaceholder');
+    const tag = document.getElementById('drawerGalleryTag');
+    if (!img) return;
+
+    const onDone = () => {
+      if (controller && controller.signal.aborted) return;
+      img.classList.remove('hidden');
+      img.style.visibility = 'visible';
+      if (placeholder) placeholder.classList.add('hidden');
+      if (tag) tag.textContent = '📸 ' + licenseText;
+    };
+
+    img.onload = onDone;
+    img.onerror = () => {
+      img.classList.add('hidden');
+      img.style.visibility = 'hidden';
+      if (placeholder) placeholder.classList.remove('hidden');
+    };
+    img.referrerPolicy = 'no-referrer';
+    img.src = url;
+    if (img.complete && img.naturalWidth > 0) {
+      onDone();
+    }
+  }
+
   function openPoiDrawer(poi) {
     const drawer = document.getElementById('poiDrawer');
     if (!drawer || !poi) return;
@@ -506,7 +617,12 @@
     };
     const heroIcon = document.getElementById('drawerHeroIcon');
     if (heroIcon) heroIcon.textContent = catIcons[poi.category] || '🧭';
+    const placeholder = document.getElementById('drawerHeroPlaceholder');
+    if (placeholder) placeholder.classList.remove('hidden');
     field('drawerGalleryTag', '📍 Фотография объекта пока не подтверждена');
+
+    // Load real sourced photo from Wikimedia Commons (if available)
+    loadWikimediaPhoto(poi, controller);
     const features = document.getElementById('drawerFeaturesGrid');
     if (features) {
       features.replaceChildren();
@@ -559,7 +675,7 @@
     }
     const routeBtn = document.getElementById('drawerRouteBtn');
     if (routeBtn) routeBtn.disabled = poi.recommendable === false;
-    if (!isMockMode && poi.poi_id) {
+    if (!isMockMode && poi.poi_id && !String(poi.poi_id).startsWith('loc_') && !String(poi.poi_id).startsWith('bld_')) {
       fetch('/api/poi_ai_info', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ poi_id: poi.poi_id }), signal: controller.signal,
@@ -634,10 +750,152 @@
     showMapToast(`📍 Стартовая точка: ${lat.toFixed(4)}, ${lon.toFixed(4)} (нажмите «Найти»)`);
   }
 
+  // --- Interactive Building & Landmark Badges on Map (2GIS / OSM Style) ---
+  const VERIFIED_BUILDINGS = [
+    {
+      id: 'bld_mega',
+      poi_id: 'osm_way_499328514',
+      name: 'Mega Silk Way',
+      subtitle: 'ТРЦ & Отель Hilton',
+      category: 'mall',
+      icon: '🛍️',
+      lat: 51.0890897,
+      lon: 71.4073303,
+      description: 'Крупнейший торгово-развлекательный центр в районе EXPO с фудкортом, кинотеатром и прямым входом в отель Hilton Astana.'
+    },
+    {
+      id: 'bld_alem',
+      poi_id: 'loc_alem_ai',
+      name: 'Alem.ai',
+      subtitle: 'Центр искусственного интеллекта',
+      category: 'attraction',
+      icon: '💡',
+      lat: 51.0892381,
+      lon: 71.4162196,
+      description: 'Казахстанский научно-образовательный центр искусственного интеллекта (Павильон B1 на территории EXPO).'
+    },
+    {
+      id: 'bld_astana_hub',
+      poi_id: 'loc_astana_hub',
+      name: 'Astana Hub',
+      subtitle: 'Международный IT-технопарк',
+      category: 'attraction',
+      icon: '🚀',
+      lat: 51.0883541,
+      lon: 71.4145878,
+      description: 'Крупнейший технологический хаб Центральной Азии (Павильон C4.6 на территории EXPO).'
+    },
+    {
+      id: 'bld_aifc',
+      poi_id: 'loc_aifc',
+      name: 'МФЦА / AIFC',
+      subtitle: 'Международный финансовый центр',
+      category: 'attraction',
+      icon: '🏛️',
+      lat: 51.0880703,
+      lon: 71.4168534,
+      description: 'Международный финансовый центр «Астана» (Павильон C3.3, проспект Мәңгілік Ел 55/18).'
+    },
+    {
+      id: 'bld_aitu',
+      poi_id: 'loc_aitu',
+      name: 'Astana IT University',
+      subtitle: 'Университет AITU',
+      category: 'attraction',
+      icon: '🎓',
+      lat: 51.0906792,
+      lon: 71.4181709,
+      description: 'Ведущий технологический университет Казахстана (Павильон C1.1 на территории EXPO).'
+    },
+    {
+      id: 'bld_nur_alem',
+      poi_id: 'loc_nur_alem',
+      name: 'Сфера «Нұр Әлем»',
+      subtitle: 'Музей энергии будущего',
+      category: 'museum',
+      icon: '🌐',
+      lat: 51.0905556,
+      lon: 71.4183333,
+      description: 'Уникальное сферическое здание диаметром 30 метров, архитектурная доминанта EXPO-2017 и музей будущего.'
+    },
+    {
+      id: 'bld_botanic',
+      poi_id: 'osm_way_1196402246',
+      name: 'Ботанический сад',
+      subtitle: 'Главный парк столицы',
+      category: 'park',
+      icon: '🌿',
+      lat: 51.1061652,
+      lon: 71.4165705,
+      description: 'Крупнейший ботанический сад Астаны с оранжереей, озером, велосипедными дорожками и прогулочными мостами.'
+    },
+    {
+      id: 'bld_park25',
+      poi_id: 'osm_way_1460763574',
+      name: '25-ти летие Независимости',
+      subtitle: 'Парк у EXPO',
+      category: 'park',
+      icon: '🌳',
+      lat: 51.0934524,
+      lon: 71.4175645,
+      description: 'Парковая зона и прогулочная аллея рядом с выставочным комплексом EXPO.'
+    },
+    {
+      id: 'bld_arch',
+      poi_id: 'osm_way_549307755',
+      name: 'Триумфальная арка',
+      subtitle: 'Мәңгілік Ел',
+      category: 'attraction',
+      icon: '🏛️',
+      lat: 51.1043034,
+      lon: 71.4300836,
+      description: 'Архитектурный монумент и смотровая площадка на главном проспекте столицы Мәңгілік Ел.'
+    }
+  ];
+
+  let landmarksLayer = null;
+
+  function renderLandmarkButtons() {
+    if (!leafletMap) return;
+    if (!landmarksLayer) {
+      landmarksLayer = L.layerGroup().addTo(leafletMap);
+    } else {
+      landmarksLayer.clearLayers();
+    }
+
+    VERIFIED_BUILDINGS.forEach((bld) => {
+      poiCatalog.set(bld.poi_id, bld);
+      poiCatalog.set(bld.id, bld);
+
+      const landmarkIcon = L.divIcon({
+        className: 'landmark-pill-marker-wrap',
+        html: `
+          <button type="button" class="landmark-pill-btn" title="${escapeHtml(bld.name)} · ${escapeHtml(bld.subtitle)}">
+            <span class="landmark-pill-icon">${bld.icon}</span>
+            <span class="landmark-pill-title">${escapeHtml(bld.name)}</span>
+          </button>
+        `,
+        iconSize: [140, 32],
+        iconAnchor: [70, 16]
+      });
+
+      const m = L.marker([bld.lat, bld.lon], { icon: landmarkIcon, zIndexOffset: 700 }).addTo(landmarksLayer);
+      if (typeof m.on === 'function') {
+        m.on('click', () => {
+          if (leafletMap && typeof leafletMap.flyTo === 'function') {
+            leafletMap.flyTo([bld.lat, bld.lon], 16, { duration: 0.6 });
+          }
+          openPoiDrawer(bld);
+        });
+      }
+    });
+  }
+
   // --- Render All Verified OSM POIs as Interactive Badges ---
   let allPoisLayer = null;
   async function loadAndRenderAllPoisOnMap() {
     try {
+      renderLandmarkButtons();
       let data;
       if (isMockMode) {
         await ensureMockData();
@@ -726,6 +984,7 @@
       backgroundTiles.addTo(leafletMap);
 
       poiMarkersLayer = L.layerGroup().addTo(leafletMap);
+      renderLandmarkButtons();
 
       // Enable interactive map clicking
       leafletMap.on('click', (e) => {
