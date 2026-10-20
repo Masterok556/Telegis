@@ -6,10 +6,11 @@ from app.facts import facts_for
 def scenario_flags(query: str) -> tuple[str, ...]:
     q = query.lower()
     q = re.sub(r"ноч\w*\s+прогул\w*\s+не\s+нуж\w*|no\s+night\s+walk|без\s+ноч\w*\s+прогул\w*", "", q)
+    q = re.sub(r"\bтүн\w*(?:\s+серуен\w*)?\s+(?:(?:қажет|керек)\s+)?емес\b", "", q)
     flags = []
-    if re.search(r"реб[её]н\w*|детьми|детск\w*|children|child\b|kids?\b", q):
+    if re.search(r"реб[её]н\w*|детьми|детск\w*|children|child\b|kids?\b|баламен|балалар\w*", q):
         flags.append("family")
-    if re.search(r"\b(?:ноч\w*|night\w*|круглосуточ\w*)\b", q):
+    if re.search(r"\b(?:ноч\w*|night\w*|круглосуточ\w*|түн\w*)\b", q):
         flags.append("night")
     if re.search(r"\b(?:турист\w*|tourist\w*|sightseeing|впервые)\b", q):
         flags.append("tourist")
@@ -18,25 +19,25 @@ def scenario_flags(query: str) -> tuple[str, ...]:
 
 def scenario_rejection(query: str) -> str:
     q = query.lower()
-    if re.search(r"открыт\w*\s+сейчас|сейчас\s+открыт\w*|open\s+now|вылет\w*|аэропорт\w*|flight|airport", q):
+    if re.search(r"открыт\w*\s+сейчас|сейчас\s+открыт\w*|open\s+now|вылет\w*|аэропорт\w*|flight|airport|қазір\s+ашық|әуежай\w*|ұшуға", q):
         return "Доступность сейчас и время поездки в аэропорт не проверяются. Нельзя обещать посещение до вылета."
-    if re.search(r"коляск\w*|stroller|без\s+(?:лестниц\w*|ступен\w*)|no\s+stairs|step[ -]?free", q):
+    if re.search(r"коляск\w*|stroller|без\s+(?:лестниц\w*|ступен\w*)|no\s+stairs|step[ -]?free|арбамен|баспалдақсыз", q):
         return "Доступность всего пути с коляской, отсутствие лестниц и доступность входов не подтверждены."
     if re.search(r"аллерг\w*|allerg\w*|игров\w*\s+зон\w*|play\s+area|live\s+music|жив\w*\s+музык\w*|ночн\w*\s+клуб\w*|nightclub|вечерин\w*|концерт\w*", q):
         return "В источниках нет подтверждения указанного специального условия. Оно не будет заменено обычной рекомендацией."
     if re.search(r"интерактив\w*|interactive", q):
         return "Подтверждённых действующих интерактивных экспозиций в текущем датасете нет. Можно отдельно искать детские площадки или обычную прогулку."
-    if re.search(r"\b(?:бесплат\w*|деш[её]в\w*|бюджетн\w*|бюджет\s+(?:до\s+)?\d+(?!\d)(?!\s*(?:минут\w*|мин\b|час\w*|ч\b))|\d+\s*(?:₸|тенге|тг\b)|под\s+крышей|в\s+помещении)", q):
+    if re.search(r"\b(?:бесплат\w*|деш[её]в\w*|бюджетн\w*|тегін|арзан|бюджет\s+(?:до\s+)?\d+(?!\d)(?!\s*(?:минут\w*|мин\b|час\w*|ч\b))|\d+\s*(?:₸|тенге|теңге|тг\b))", q):
         return "В данных недостаточно сведений для подтверждения дополнительного условия. Уточните запрос."
     return ""
 
 
 def scenario_allows(poi, query: str) -> bool:
     flags = scenario_flags(query)
-    if poi.category == "playground" and "family" not in flags and not re.search(r"playground|площадк", query.lower()):
+    if poi.category == "playground" and "family" not in flags and not re.search(r"playground|площадк|балалар\s+алаң", query.lower()):
         return False
     if "family" in flags and poi.category != "cafe":
-        explicit_museum = bool(re.search(r"музе|museum|галере|gallery", query.lower()))
+        explicit_museum = bool(re.search(r"музе|museum|галере|gallery|мұражай", query.lower()))
         if not explicit_museum and poi.category not in {"park", "garden", "playground"}:
             return False
     if "tourist" in flags and "family" not in flags and poi.category in {"playground", "mall"}:

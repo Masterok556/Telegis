@@ -25,6 +25,7 @@ class CatalogResponse(BaseModel):
 class PlaceInfoRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     poi_id: str = Field(pattern=r"^osm_(node|way|relation)_[1-9][0-9]*$", max_length=100)
+    locale: Literal["ru", "kz", "en"] = "ru"
 
 
 class PlaceInfoResponse(BaseModel):

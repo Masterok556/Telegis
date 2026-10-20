@@ -20,6 +20,7 @@ from app.generation import activities_for
 from app.geo import distance_m
 from app.models import Evidence, POI
 from app.scenarios import scenario_allows, scenario_rejection, scenario_warnings
+from app.climate import ClimateContext, climate_context, climate_allows, indoor_evidence
 from app.retrieval import (
     Candidate, CATEGORY_PATTERNS, FEATURE_LABELS, LABELS, VISIT_MINUTES, category_constraints,
     explicit_limits, lexical_scores, required_features,
@@ -36,6 +37,8 @@ class ItineraryRequest(BaseModel):
     available_minutes: int = Field(ge=15, le=180, strict=True)
     query: str = Field(default="Хочу погулять", min_length=1, max_length=1000)
     include_coffee: bool = Field(default=True, strict=True)
+    climate_shield: bool = Field(default=False, strict=True)
+    locale: Literal["ru", "kz", "en"] = "ru"
 
 
 class ItineraryContext(BaseModel):
@@ -49,6 +52,9 @@ class ItineraryContext(BaseModel):
     required_features: list[str]
     excluded_categories: list[str]
     return_to_start: Literal[True] = True
+    climate_shield: bool = False
+    climate: ClimateContext = Field(default_factory=ClimateContext)
+    locale: Literal["ru", "kz", "en"] = "ru"
 
 
 class ItineraryStop(BaseModel):
@@ -71,6 +77,8 @@ class ItineraryStop(BaseModel):
     fact_source: Literal["OpenStreetMap", "OpenStreetMap + official sources"] = "OpenStreetMap"
     activity_source: Literal["suggested_idea"] = "suggested_idea"
     warnings: list[str]
+    indoor_evidence: list[Evidence] = Field(default_factory=list)
+    climate_shielded: bool = False
 
 
 class ItineraryLeg(BaseModel):
@@ -140,7 +148,7 @@ def _unsupported(q: str, payload: ItineraryRequest, dataset: Dataset) -> str:
 
 
 def _candidate_pool(payload: ItineraryRequest, dataset: Dataset, radius: float,
-                    features: tuple[str, ...]) -> tuple[list[POI], str, dict[str, float]]:
+                    features: tuple[str, ...], climate: ClimateContext | None = None) -> tuple[list[POI], str, dict[str, float]]:
     q = payload.query.lower()
     interests, excluded = category_constraints(q)
     if payload.include_coffee and "cafe" in excluded:
@@ -151,7 +159,7 @@ def _candidate_pool(payload: ItineraryRequest, dataset: Dataset, radius: float,
     # Walking is an activity rather than a POI category, so category_constraints
     # does not report it. Preserve the common "walk and coffee" request while
     # continuing to reject requests that really only ask for coffee.
-    walk_terms = r"(?:прогул\w*|погуля\w*|пройтись|walk\w*|stroll\w*)"
+    walk_terms = r"(?:прогул\w*|погуля\w*|пройтись|walk\w*|stroll\w*|серуен\w*)"
     positive_walk_text = re.sub(r"\b(?:без|не(?:\s+хочу)?|no|without)\s+(?:a\s+)?" + walk_terms + r"\b", "", q)
     explicit_walk = bool(re.search(r"\b" + walk_terms + r"\b", positive_walk_text))
     if interests == {"cafe"} and not explicit_walk:
@@ -166,6 +174,7 @@ def _candidate_pool(payload: ItineraryRequest, dataset: Dataset, radius: float,
     allowed -= excluded
     eligible = [p for p in dataset.pois if p.category in allowed and not excluded_from_routes(p)
                 and scenario_allows(p, q)
+                and climate_allows(p, climate or climate_context(payload.climate_shield), q)
                 and all(p.confirmed_features.get(f) is True for f in features)
                 and distance_m(payload.lat, payload.lon, p.lat, p.lon) <= radius]
     scores = lexical_scores(payload.query, eligible)
@@ -215,8 +224,9 @@ def _activity(poi: POI, minutes: int) -> str:
 
 
 def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
-                    network: WalkingNetwork | None) -> ItineraryResponse:
+                    network: WalkingNetwork | None, climate: ClimateContext | None = None) -> ItineraryResponse:
     q = payload.query.lower()
+    climate = climate or climate_context(payload.climate_shield)
     effective, radius = explicit_limits(q, payload.available_minutes)
     features = required_features(q)
     _, excluded = category_constraints(q)
@@ -224,20 +234,25 @@ def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
     context = ItineraryContext(lat=payload.lat, lon=payload.lon, available_minutes=payload.available_minutes,
                                effective_minutes=effective, include_coffee=payload.include_coffee,
                                max_distance_m=radius, required_features=list(features),
-                               excluded_categories=sorted(excluded))
+                               excluded_categories=sorted(excluded), climate=climate,
+                               climate_shield=payload.climate_shield, locale=payload.locale)
 
     def empty(status: str, message: str, suggested: int | None = None) -> ItineraryResponse:
         return ItineraryResponse(status=status, message=message, used_context=context,
                                  reserve_minutes=reserve, suggested_minimum_minutes=suggested,
                                  warnings=scenario_warnings(q))
 
+    if climate.policy == "paused":
+        return empty("no_match", climate.message)
     blocked = _unsupported(q, payload, dataset)
     if blocked:
         return empty("no_match", blocked)
     if "wheelchair" in features:
         return empty("no_match", "Безбарьерность всех переходов и входов не подтверждена. Даже отметка доступности отдельного места не подтверждает доступность всего маршрута.")
-    pool, rejection, relevance = _candidate_pool(payload, dataset, radius, features)
+    pool, rejection, relevance = _candidate_pool(payload, dataset, radius, features, climate)
     if rejection:
+        if climate.policy == "indoor_only":
+            rejection += " Климатический режим допускает только остановки с явными данными о помещении."
         return empty("no_match", rejection)
     if network is None:
         return empty("network_unavailable", "Пешеходная сеть недоступна. Маршрут не построен: прямые линии не заменяют реальные дорожки.")
@@ -305,6 +320,8 @@ def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
             warnings.append("Точка обозначает центр объекта, а не проверенный вход.")
         warnings.extend(warnings_for(poi))
         warnings.extend(scenario_warnings(q))
+        if climate.policy == "indoor_only":
+            warnings.append(climate.message)
         facts = facts_for(poi)
         why = " ".join(f["text"] for f in facts[:2])
         if not why:
@@ -318,6 +335,7 @@ def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
                                    arrival_minutes_estimate=elapsed, departure_minutes_estimate=elapsed + minutes,
                                    opening_hours=poi.opening_hours, source_url=poi.source_url,
                                    collected_at=poi.collected_at, evidence=facts, warnings=warnings,
+                                   indoor_evidence=indoor_evidence(poi), climate_shielded=bool(indoor_evidence(poi)),
                                    fact_source="OpenStreetMap + official sources" if any(f["kind"] == "official" for f in facts) else "OpenStreetMap"))
         elapsed += minutes
     coordinates = []
@@ -329,9 +347,11 @@ def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
            f"включая возвращение, {best.visiting} мин на остановки и {reserve} мин запаса. "
            f"Итого примерно {total} из {effective} мин.")
     warnings = ["Время приблизительное: скорость 70 м/мин, длительность посещений по категории; запас не гарантирует возвращение к точному сроку.",
-                "Дорожки взяты из OSM; временные перекрытия, погода, состояние покрытия и доступность входов не проверены.",
+                "Дорожки взяты из OSM; временные перекрытия, состояние покрытия и доступность входов не проверены.",
                 "Маршрут и идеи занятий рассчитаны кодом; сведения о местах взяты из OSM и указанных официальных источников."]
     warnings.extend(scenario_warnings(q))
+    if climate.policy == "indoor_only":
+        warnings.append(climate.message)
     if any(item.connector_m for item in result_legs):
         warnings.append("Короткие соединения координат с сетью приблизительны и могут пересекать препятствия; проверяйте подходы на месте. Их длина включена во время.")
     metadata = getattr(network, "metadata", {})

@@ -1,0 +1,217 @@
+{
+  "checked_at": "2026-10-20T17:57:21.850209+00:00",
+  "audited_remote_head": "97e734269fe75de322eb3657f458825f1136ebc8",
+  "branch": "codex/verified-weather-and-demo",
+  "publication": "local branch only; no push, main merge, release or video upload",
+  "scope": "Current repository, API, static frontend, data evidence, docs and six-slide PDF",
+  "checks": [
+    {
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp=<fresh-workspace-temp>",
+      "actual_python": "C:\\Users\\tileu\\Documents\\Codex\\2026-10-19\\jp\\work\\backend-venv\\Scripts\\python.exe",
+      "result": "356 passed in 18.42s",
+      "passed": true
+    },
+    {
+      "command": "node tests/frontend_contract.cjs",
+      "result": "PASS: strict payloads, cancellation, geometry, weather states, GPS consent, errors, focus, RU/KZ/EN",
+      "type": "Node VM, not a browser/layout test",
+      "passed": true
+    },
+    {
+      "command": "python scripts/verify_expanded_scenarios.py --output-dir <workspace>/work/current-scenario-evidence",
+      "result": "35/35 scenarios; 594/594 checks; paid LLM calls: 0",
+      "artifact": "docs/current-scenarios/expanded-scenarios.json",
+      "passed": true
+    },
+    {
+      "command": "python -m scripts.verify_climate",
+      "result": "17/17 scenarios; external HTTP attempts: 0",
+      "synthetic_weather_test": true,
+      "real_poi_and_walking_snapshot": true,
+      "artifact": "docs/climate-verification.json",
+      "passed": true
+    },
+    {
+      "command": "python scripts/doctor.py --live",
+      "result": "passed=true, mode=rag, llm_status=ok",
+      "passed": true
+    },
+    {
+      "command": "python scripts/check_live.py --base-url http://127.0.0.1:8010 --require-rag --output docs/live-rag-verification.json",
+      "result": "passed=true, mode=rag, 2 recommendations, 2.28 seconds",
+      "artifact": "docs/live-rag-verification.json",
+      "passed": true
+    },
+    {
+      "command": "git diff --check",
+      "result": "exit 0; no whitespace errors",
+      "passed": true
+    },
+    {
+      "command": "python test_suite.py --offline --output docs/integration-offline-current.json",
+      "result": "24/24 passed; model disabled",
+      "passed": true
+    },
+    {
+      "command": "python test_suite.py --base-url http://127.0.0.1:8010 --output docs/integration-server-current.json",
+      "result": "22/22 passed; positive LLM cases explicitly skipped, separately checked by check_live.py",
+      "passed": true
+    },
+    {
+      "command": "node --check static/app.js; node --check static/ui-copy.js; node --check scripts/generate_slides_pdf.js",
+      "result": "all exit 0",
+      "passed": true
+    },
+    {
+      "command": "Compare json.load(docs/openapi.json) with app.openapi()",
+      "result": "exact match",
+      "passed": true
+    }
+  ],
+  "browser_checks": {
+    "method": "Codex CUA in-app browser, observed UI and screenshots",
+    "viewports": [
+      "1440x900 desktop",
+      "390x844 mobile; document width=390"
+    ],
+    "actual_services": "8010: configured OpenRouter + Open-Meteo",
+    "failure_fixture": "8011: temporary QA server with weather disabled and no LLM key; not shipped as normal demo",
+    "passed": [
+      "RU 60-minute walk: 2 real RAG recommendations, evidence and warnings visible",
+      "Point route to Alleya: 1254 m, 18 min one-way; graph geometry and approximate-connector warning",
+      "Climate enabled with fresh normal model weather: itinerary accepted, no 422",
+      "Mini-route 120 minutes: 3 stops, 45 walking + 50 visiting + 12 reserve = 107, remaining 13, return to start",
+      "KZ family query: 3 matching park/playground/garden results with localized explanations",
+      "EN quiet coffee with power outlet: 0 places, explicit unknown socket/quietness conditions",
+      "Language switch cleared old results and reloaded catalog",
+      "Enter opened system audit, Escape closed it, focus returned to systemStatusBtn",
+      "Weather unavailable + enabled climate: paused and explicit refusal; no fake values",
+      "Explicitly disabling climate on failure fixture restored 2 fallback recommendations",
+      "No warning/error entries in queried browser console logs for tested pages"
+    ],
+    "not_claimed": [
+      "real GPS permission/device accuracy",
+      "all browser engines",
+      "field or independent user study"
+    ],
+    "screenshots": [
+      "docs/screenshots/verified-point-route.png",
+      "docs/screenshots/verified-mobile-kz.png",
+      "docs/screenshots/verified-weather-unavailable.png",
+      "docs/screenshots/verified-mini-route.png"
+    ]
+  },
+  "data": {
+    "poi_count": 134,
+    "snapshot_id": "20261020T112234Z-47247bf6",
+    "categories": {
+      "cafe": 28,
+      "playground": 85,
+      "memorial": 2,
+      "monument": 1,
+      "artwork": 5,
+      "park": 6,
+      "garden": 2,
+      "attraction": 2,
+      "mall": 2,
+      "museum": 1
+    },
+    "quality": {
+      "with_opening_hours": 15,
+      "with_contacts": 14,
+      "confirmed_features": {
+        "wifi": 5,
+        "socket": 0,
+        "quiet": 0,
+        "wheelchair": 0
+      },
+      "ratings_available": false,
+      "with_informative_facts": 35,
+      "attributed_fact_count": 75,
+      "official_fact_count": 9,
+      "with_explicit_indoor_evidence": 3,
+      "excluded_pending_verification": [
+        {
+          "poi_id": "osm_way_1467797207",
+          "name": "NU Park",
+          "warnings": [
+            "Официальная публикация от 22.05.2026 описывает NU Park как будущий проект. Подтверждения ввода всех зон нет; точка исключена из прогулочных маршрутов."
+          ]
+        }
+      ]
+    },
+    "walking_network": {
+      "available": true,
+      "snapshot_id": "20261019T181502Z-5dc1e80a",
+      "collected_at": "2026-10-19T18:15:02+00:00",
+      "node_count": 30829,
+      "directed_edge_count": 73816,
+      "source_data_timestamp": "2026-10-19T18:13:51Z",
+      "max_snap_m": 120
+    }
+  },
+  "actual_weather_check": {
+    "status": "live",
+    "source": "Open-Meteo",
+    "source_url": "https://open-meteo.com/en/docs",
+    "location": {
+      "name": "Астана · EXPO",
+      "lat": 51.089,
+      "lon": 71.419,
+      "kind": "fixed_area"
+    },
+    "valid_at": "2026-10-20T17:45:00Z",
+    "fetched_at": "2026-10-20T17:50:47.426715Z",
+    "age_seconds": 741,
+    "current": {
+      "temperature_c": 2.8,
+      "apparent_temperature_c": -4.9,
+      "wind_m_s": 9.01,
+      "gust_m_s": 14.4,
+      "precipitation_mm": 0.0,
+      "precipitation_interval_seconds": 900,
+      "weather_code": 3,
+      "is_day": false
+    },
+    "policy": {
+      "mode": "normal",
+      "reasons": [],
+      "message": "Порогов климатического режима по этим модельным данным не обнаружено. Это не подтверждение безопасности, проходимости или неизменности погоды."
+    },
+    "warnings": [
+      "Погода — модельная оценка для района EXPO, а не измерение у вашей точки.",
+      "Осадки указаны в мм за предыдущие 15 мин, а не в мм/ч.",
+      "Текущие условия не являются прогнозом на всё время прогулки.",
+      "Пороговые правила Telegis служат выбору формата прогулки и не заменяют официальные предупреждения."
+    ],
+    "attribution": "Weather data: Open-Meteo · CC BY 4.0"
+  },
+  "weather_limit": "Only 3 explicitly indoor cafes; all exceed 2.5 km from EXPO center. A public Zebra cafe starting point verifies the 3 matches; EXPO cold-weather refusal is expected.",
+  "presentation": {
+    "pages": 6,
+    "all_pages_rendered_and_visually_checked": true,
+    "sha256": "deea82bfd321b3ae0df7feb61158af1a4469c749483efe505e0852ea43f7ac91",
+    "evidence": "presentation/pdf-verification.md",
+    "youtube_uploaded": false
+  },
+  "self_assessment": {
+    "relevance": 8.5,
+    "context": 9.0,
+    "explanations": 8.8,
+    "ux": 8.5,
+    "creativity": 9.0,
+    "ethics_privacy": 9.0,
+    "completion": 8.3,
+    "unweighted_mean": 8.7,
+    "jury_score_prediction": false
+  },
+  "remaining_limits": [
+    "134 POI in a limited EXPO/Mega area; 75 attributed facts cover 35 POI",
+    "No ratings, confirmed sockets, quietness, live opening status or whole-route accessibility",
+    "OSM connectors, entrances, surfaces and actual walking speeds not field-verified",
+    "Weather is a fixed-area model estimate and climate thresholds are product heuristics",
+    "RU/KZ/EN common templates tested; unknown future source prose is labelled original, no native-speaker user study",
+    "YouTube recording/upload and independent field/user checks remain external work",
+    "Configured model and weather succeeded now; results do not guarantee future provider availability"
+  ]
+}

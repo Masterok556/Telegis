@@ -107,7 +107,7 @@
       tag_quiet: '🌿 Тыныш саябақ',
       tag_togo: '☕ Алып кету',
       init_head: 'Интеллектуалды серуен радары',
-      init_text: 'Уақыт пен форматты таңдаңыз — Telegis OpenStreetMap жолдар графигі бойынша EXPO аймағындағы ең жақсы нұсқаларды ұсынады.',
+      init_text: 'Уақыт пен форматты таңдаңыз — Telegis сақталған OSM деректерінен 3 орынға дейін ұсынып, шектеулерді көрсетеді.',
       preset_label: 'Жылдам сценарийлер:',
       preset_1: '🚶 EXPO маңында 60 мин',
       preset_2: '☕ 30 мин кофе ішу',
@@ -139,7 +139,7 @@
       start_point: 'Бастау',
       finish_point: 'Бастапқы нүктеге қайту',
       basis_graph: '🚶 OSM жолдар графигі (Dijkstra)',
-      verified_fact: '🏛️ Тексерілген дерек (Ресми дереккөз)',
+      verified_fact: '🏛️ Ресми дереккөз бойынша',
       evidence_sha: 'Дереккөз мәліметі',
       why_ai_chose: 'ЖИ ТАҢДАУЫ: НЕГЕ БҰЛ ОРЫН ТАҢДАЛДЫ',
       btn_route: 'Бағыт',
@@ -177,7 +177,7 @@
       tag_quiet: '🌿 Quiet park',
       tag_togo: '☕ Takeaway',
       init_head: 'Intelligent Walking Radar',
-      init_text: 'Select your time and category — Telegis scans OpenStreetMap pedestrian networks to find verified places in the EXPO area.',
+      init_text: 'Select your time and category — Telegis suggests up to 3 places from saved OSM data and shows their limitations.',
       preset_label: 'Quick Scenarios:',
       preset_1: '🚶 60 min around EXPO',
       preset_2: '☕ 30 min coffee break',
@@ -258,6 +258,10 @@
   let locationsList = [];
   let userGeoLocation = null;
   let lastRequestPayload = null;
+  let initialized = false;
+  let pointRouteController = null;
+  let drawerFocusOrigin = null;
+  let modalFocusOrigin = null;
   const poiCatalog = new Map();
 
   // Map state
@@ -340,13 +344,19 @@
   // --- Initialization ---
   async function init() {
     checkMockMode();
+    const initialParams = new URLSearchParams(window.location.search);
+    setLanguage(initialParams.get('lang') || 'ru');
+    initialized = true;
     initMap();
     bindEvents();
     loadAndRenderAllPoisOnMap();
+    loadWeather();
+    if (window.setInterval) window.setInterval(() => {
+      if (!document.hidden) loadWeather();
+    }, 300000);
     renderTimeSelector();
     await loadLocations();
     await loadSystemMeta();
-    autoRequestUserLocation();
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('lang')) {
@@ -376,9 +386,7 @@
         const found = Array.from(poiCatalog.values()).find(p => p.poi_id === drawerKey || (p.name && p.name.includes(drawerKey)));
         if (found) {
           openPoiDrawer(found);
-        } else if (poiCatalog.size > 0) {
-          openPoiDrawer(Array.from(poiCatalog.values())[0]);
-        }
+        } else showMapToast(t('no_evidence'));
       }, 600);
     }
     if (params.get('auto') === '1') {
@@ -404,13 +412,17 @@
   // --- Multilanguage Engine ---
   function setLanguage(lang) {
     if (!I18N[lang]) return;
+    const changed = currentLang !== lang;
     currentLang = lang;
+    if (document.documentElement) document.documentElement.lang = lang === 'kz' ? 'kk' : lang;
+    document.title = t('page_title');
 
     langButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+      btn.setAttribute('aria-pressed', String(btn.getAttribute('data-lang') === lang));
     });
 
-    const dict = I18N[lang];
+    const dict = new Proxy(I18N[lang], { get: (_, key) => t(key) });
 
     // Translate all data-i18n elements
     document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -449,15 +461,156 @@
     updateCategoryLabels();
     updateReachRadius();
     updateSystemStatusText();
+    applyAccessibleLabels();
+    renderWeather();
+    document.querySelectorAll('.time-chip-btn').forEach(el => {
+      el.textContent = el.textContent.replace(/(?:мин|min)$/, t('minute'));
+    });
+    if (changed && initialized) {
+      invalidateSearch();
+      closePoiDrawer();
+      closeTelemetryModal();
+      poiCatalog.clear();
+      allPoisLayer?.clearLayers();
+      landmarksLayer?.clearLayers();
+      loadAndRenderAllPoisOnMap();
+      setGeoStatus('', '');
+      loadWeather();
+    }
   }
 
-  function t(key) {
-    return (I18N[currentLang] && I18N[currentLang][key]) || (I18N['ru'] && I18N['ru'][key]) || key;
+  function t(key, values = {}) {
+    const copy = window.TELEGIS_UI_COPY?.[key]?.[currentLang] ||
+      (I18N[currentLang] && I18N[currentLang][key]) || (I18N.ru && I18N.ru[key]) || key;
+    return copy.replace(/\{(\w+)\}/g, (_, name) => String(values[name] ?? `{${name}}`));
   }
 
   function categoryName(value) {
     const names = CATEGORY_NAMES[currentLang] || CATEGORY_NAMES.ru;
     return Object.prototype.hasOwnProperty.call(names, value) ? names[value] : names.unknown;
+  }
+
+  function httpErrorMessage(status) {
+    const key = status === 503 ? 'service_unavailable' : status === 404 ? 'resource_missing'
+      : status === 422 ? 'validation_error' : null;
+    return key ? `${t(key)} (HTTP ${status})` : t('api_error', { status });
+  }
+
+  function applyAccessibleLabels() {
+    const labels = {
+      locationSelect: 'start_control', geoBtn: 'gps_button', queryInput: 'query_label',
+      timeRangeSlider: 'time_label', toggleSidebarBtn: 'collapse', openSidebarBtn: 'expand',
+      zoomInBtn: 'zoom_in', zoomOutBtn: 'zoom_out', mapCenterBtn: 'start_control',
+      drawerCloseBtn: 'close', modalCloseBtn: 'close', closeRouteBannerBtn: 'close_route',
+      systemStatusBtn: 'modal_audit_title', osmMap: 'map_label', gisSidebar: 'panel_label',
+      itineraryView: 'route_ready_title', routeSummaryBar: 'route_to', sheetHandle: 'panel_label',
+      submitBtn: appMode === 'itinerary' ? 'btn_build_route' : 'btn_find'
+    };
+    Object.entries(labels).forEach(([id, key]) => {
+      const element = document.getElementById(id);
+      element?.setAttribute('aria-label', t(key));
+      if (element && !['osmMap', 'gisSidebar', 'itineraryView'].includes(id)) element.setAttribute('title', t(key));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => el.setAttribute('title', t(el.getAttribute('data-i18n-title'))));
+    document.querySelector('.lang-switch-group')?.setAttribute('aria-label', t('language_label'));
+    document.querySelector('.segmented-control')?.setAttribute('aria-label', t('format_label'));
+    timeSelector?.setAttribute('aria-label', t('time_label'));
+  }
+
+  function setModalBackgroundInert(inert) {
+    ['gisSidebar', 'osmMap', 'radiusBadge', 'routeSummaryBar', 'openSidebarBtn'].forEach(id => {
+      const element = document.getElementById(id);
+      if (inert) element?.setAttribute('inert', '');
+      else element?.removeAttribute('inert');
+    });
+    document.querySelector('.floating-map-controls')?.toggleAttribute?.('inert', inert);
+  }
+
+  function trapModalFocus(event) {
+    if (event.key !== 'Tab' || !telemetryModal || telemetryModal.classList.contains('hidden')) return;
+    const items = Array.from(telemetryModal.querySelectorAll?.('button:not([disabled]), a[href], input:not([disabled]), [tabindex="0"]') || []);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+
+  let weatherSnapshot = null;
+  let weatherController = null;
+  let weatherLoading = false;
+  let lastClimateContext = null;
+
+  async function loadWeather() {
+    if (weatherController) weatherController.abort();
+    const controller = new AbortController();
+    weatherController = controller;
+    weatherLoading = true;
+    renderWeather();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      let data;
+      if (isMockMode) {
+        // Mock mode never silently calls a live endpoint.
+        data = { status: 'demo', current: null, source: null, warnings: [] };
+      } else {
+        const demo = new URLSearchParams(window.location.search).get('weather_demo') === '1';
+        const response = await fetch(`/api/weather?locale=${currentLang}${demo ? '&demo=true' : ''}`, {
+          cache: 'no-store', signal: controller.signal, headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        data = await response.json();
+      }
+      if (weatherController !== controller || controller.signal.aborted) return;
+      weatherSnapshot = data;
+    } catch (_) {
+      if (weatherController === controller) weatherSnapshot = { status: 'unavailable', current: null };
+    } finally {
+      clearTimeout(timeout);
+      if (weatherController === controller) {
+        weatherController = null; weatherLoading = false; renderWeather();
+      }
+    }
+  }
+
+  function formatTimestamp(value) {
+    if (!value) return t('unknown');
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return t('unknown');
+    return date.toLocaleString(currentLang === 'kz' ? 'kk-KZ' : currentLang === 'en' ? 'en-GB' : 'ru-RU', {
+      timeZone: 'Asia/Almaty', day: '2-digit', month: '2-digit',
+      hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+    });
+  }
+
+  function renderWeather() {
+    const badge = document.getElementById('climateWeatherBadge');
+    if (!badge) return;
+    badge.replaceChildren();
+    const snapshot = lastClimateContext?.weather || weatherSnapshot || {};
+    const status = ['live', 'stale', 'unavailable', 'demo'].includes(snapshot.status) ? snapshot.status : 'unavailable';
+    badge.dataset.weatherStatus = weatherLoading && !weatherSnapshot ? 'loading' : status;
+    const line = text => {
+      const row = document.createElement('div'); row.textContent = text; badge.appendChild(row); return row;
+    };
+    line(weatherLoading && !weatherSnapshot ? t('weather_loading') : t(`weather_${status}`));
+    const current = snapshot.current;
+    if (current && status !== 'unavailable') {
+      const values = [];
+      if (Number.isFinite(current.temperature_c)) values.push(`${current.temperature_c} °C`);
+      if (Number.isFinite(current.apparent_temperature_c)) values.push(`${t('weather_feels')} ${current.apparent_temperature_c} °C`);
+      if (Number.isFinite(current.wind_m_s)) values.push(`${t('weather_wind')} ${current.wind_m_s} ${t('wind_unit')}`);
+      if (Number.isFinite(current.gust_m_s)) values.push(`${t('weather_gusts')} ${current.gust_m_s} ${t('wind_unit')}`);
+      if (values.length) line(values.join(' · '));
+    }
+    if (snapshot.valid_at) line(`${t('weather_observed')}: ${formatTimestamp(snapshot.valid_at)}`);
+    if (snapshot.fetched_at) line(`${t('weather_fetched')}: ${formatTimestamp(snapshot.fetched_at)}`);
+    if (snapshot.source) {
+      const source = line(`${t('source_label')}: ${snapshot.source}`);
+      appendSource(source, snapshot.source_url, t('source'));
+    }
+    if (climateShieldCheck?.checked) line(t('climate_selected'));
+    if (lastClimateContext?.requested && lastClimateContext.message) line(lastClimateContext.message);
+    badge.classList.remove('hidden');
   }
 
   // --- Time Selector Renderer ---
@@ -530,117 +683,6 @@
   let drawerAbortController = null;
   let cachedHealth = null;
 
-  const VERIFIED_LANDMARK_PHOTOS = {
-    'Mega Silk Way': {
-      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/%D0%A2%D0%A0%D0%A6_MEGA_Silk-way_%D0%B8_%D0%BE%D1%82%D0%B5%D0%BB%D1%8C_Hilton.jpg/960px-%D0%A2%D0%A0%D0%A6_MEGA_Silk-way_%D0%B8_%D0%BE%D1%82%D0%B5%D0%BB%D1%8C_Hilton.jpg',
-      license: 'Wikimedia Commons · CC BY-SA 4.0'
-    },
-    'Astana IT University': {
-      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/%D0%9A%D0%BE%D0%B2%D0%BE%D1%80%D0%BA%D0%B8%D0%BD%D0%B3_Astana_IT_University_%281%29.jpg/960px-%D0%9A%D0%BE%D0%B2%D0%BE%D1%80%D0%BA%D0%B8%D0%BD%D0%B3_Astana_IT_University_%281%29.jpg',
-      license: 'Wikimedia Commons · CC BY-SA 4.0'
-    },
-    'Astana Hub': {
-      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Oljas_Bektenov_and_Aljaksandar_Tur%C4%8Dyn_at_Astana_Hub.jpg/960px-Oljas_Bektenov_and_Aljaksandar_Tur%C4%8Dyn_at_Astana_Hub.jpg',
-      license: 'Wikimedia Commons · CC BY 4.0'
-    },
-    'Сфера «Нұр Әлем»': {
-      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Astana%2C_view.jpg/960px-Astana%2C_view.jpg',
-      license: 'Wikimedia Commons · CC0'
-    },
-    'Alem.ai': {
-      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Astana%2C_view.jpg/960px-Astana%2C_view.jpg',
-      license: 'Wikimedia Commons · Павильон B1 EXPO'
-    },
-    'МФЦА / AIFC': {
-      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Astana_International_Financial_Centre_logo.jpg/960px-Astana_International_Financial_Centre_logo.jpg',
-      license: 'Wikimedia Commons · AIFC'
-    },
-    'Ботанический сад': {
-      thumb: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/%D0%90%D1%81%D1%82%D0%B0%D0%BD%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%B1%D0%BE%D1%82%D0%B0%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%81%D0%B0%D0%B4.jpg/960px-%D0%90%D1%81%D1%82%D0%B0%D0%BD%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%B1%D0%BE%D1%82%D0%B0%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%81%D0%B0%D0%B4.jpg',
-      license: 'Wikimedia Commons · CC BY-SA 4.0'
-    },
-    'Триумфальная арка': {
-      thumb: 'https://upload.wikimedia.org/wikipedia/commons/1/11/Stamps_of_Kazakhstan%2C_2012-32.jpg',
-      license: 'Wikimedia Commons · Общественное достояние'
-    }
-  };
-
-  const wikiPhotoCache = new Map();
-
-  async function loadWikimediaPhoto(poi, controller) {
-    if (typeof window === 'undefined' || !window.location?.protocol?.startsWith('http')) return;
-    const name = (poi.name || '').trim();
-    if (!name) return;
-
-    for (const [key, val] of Object.entries(VERIFIED_LANDMARK_PHOTOS)) {
-      if (name.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(name.toLowerCase())) {
-        applyPhotoToDrawer(val.thumb, val.license, controller);
-        return;
-      }
-    }
-
-    if (wikiPhotoCache.has(name)) {
-      const cached = wikiPhotoCache.get(name);
-      if (cached) applyPhotoToDrawer(cached.thumb, cached.license, controller);
-      return;
-    }
-
-    const cleaned = name.replace(/·\s*OSM.*$/i, '').replace(/[\(\)]/g, '').trim();
-    if (cleaned.length < 3) return;
-
-    try {
-      const url = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=' +
-        encodeURIComponent(cleaned + ' Astana') + '&gsrlimit=1&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*';
-      const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (controller.signal.aborted) return;
-      const pages = data.query?.pages;
-      if (!pages) {
-        wikiPhotoCache.set(name, null);
-        return;
-      }
-      const page = Object.values(pages)[0];
-      const info = page.imageinfo?.[0];
-      const thumb = info?.thumburl || info?.url;
-      if (thumb) {
-        const license = info.extmetadata?.LicenseShortName?.value || 'Wikimedia Commons';
-        const photoData = { thumb, license: `Wikimedia Commons · ${license}` };
-        wikiPhotoCache.set(name, photoData);
-        applyPhotoToDrawer(thumb, photoData.license, controller);
-      } else {
-        wikiPhotoCache.set(name, null);
-      }
-    } catch (_) {}
-  }
-
-  function applyPhotoToDrawer(url, licenseText, controller) {
-    const img = document.getElementById('drawerHeroImg');
-    const placeholder = document.getElementById('drawerHeroPlaceholder');
-    const tag = document.getElementById('drawerGalleryTag');
-    if (!img) return;
-
-    const onDone = () => {
-      if (controller && controller.signal.aborted) return;
-      img.classList.remove('hidden');
-      img.style.visibility = 'visible';
-      if (placeholder) placeholder.classList.add('hidden');
-      if (tag) tag.textContent = '📸 ' + licenseText;
-    };
-
-    img.onload = onDone;
-    img.onerror = () => {
-      img.classList.add('hidden');
-      img.style.visibility = 'hidden';
-      if (placeholder) placeholder.classList.remove('hidden');
-    };
-    img.referrerPolicy = 'no-referrer';
-    img.src = url;
-    if (img.complete && img.naturalWidth > 0) {
-      onDone();
-    }
-  }
-
   function openPoiDrawer(poi) {
     const drawer = document.getElementById('poiDrawer');
     if (!drawer || !poi) return;
@@ -661,16 +703,16 @@
       categoryBadge.dataset.poiCategory = poi.category || '';
       categoryBadge.dataset.categoryPrefix = '📍 ';
     }
-    field('drawerDistBadge', Number.isFinite(poi.distance_m) ? `${poi.distance_m} м по прямой` : 'Расстояние не рассчитано');
-    field('drawerTitle', poi.name || 'Объект Telegis');
+    field('drawerDistBadge', Number.isFinite(poi.distance_m) ? `${poi.distance_m} ${t('meter')} ${t('straight_short')}` : t('distance_unknown'));
+    field('drawerTitle', poi.name || categoryName('unknown'));
     const street = poi.tags?.['addr:street'];
-    field('drawerAddress', street ? `📍 ${street} ${poi.tags['addr:housenumber'] || ''}` : 'Адрес в данных не указан');
+    field('drawerAddress', street ? `📍 ${street} ${poi.tags['addr:housenumber'] || ''}` : t('no_address'));
 
     // A stock illustration must never be presented as a photograph of this POI.
     const img = document.getElementById('drawerHeroImg');
     if (img) {
       img.removeAttribute('src');
-      img.alt = 'Фотография объекта не подтверждена';
+      img.alt = t('no_photo');
       img.classList.add('hidden');
       img.style.visibility = 'hidden';
     }
@@ -684,20 +726,19 @@
     if (heroIcon) heroIcon.textContent = catIcons[poi.category] || '🧭';
     const placeholder = document.getElementById('drawerHeroPlaceholder');
     if (placeholder) placeholder.classList.remove('hidden');
-    field('drawerGalleryTag', '📍 Фотография объекта пока не подтверждена');
+    field('drawerGalleryTag', `📍 ${t('no_photo')}`);
 
-    // Load real sourced photo from Wikimedia Commons (if available)
-    loadWikimediaPhoto(poi, controller);
+    // Keep the illustration placeholder until a canonical photograph is sourced.
     const features = document.getElementById('drawerFeaturesGrid');
     if (features) {
       features.replaceChildren();
       const f = poi.confirmed_features || {};
-      const feature = (key, label) => `${label}: ${f[key] === true ? 'указано в OSM' : f[key] === false ? 'не отмечено как доступное' : 'нет подтверждённых данных'}`;
+      const feature = (key, label) => `${label}: ${f[key] === true ? t('osm_yes') : f[key] === false ? t('osm_no') : t('no_evidence')}`;
       [
-        poi.opening_hours ? `🕒 По данным источника: ${poi.opening_hours}. Проверьте перед визитом.` : '🕒 Часы не подтверждены',
-        feature('wifi', '📶 Wi-Fi'), feature('socket', '⚡ Розетки'),
-        feature('wheelchair', '♿ Доступность'), feature('quiet', '🌿 Тишина'),
-        poi.phone ? `📞 ${poi.phone}` : '📞 Телефон не указан'
+        poi.opening_hours ? `🕒 ${t('hours_source', { hours: poi.opening_hours })}` : t('unconfirmed_hours'),
+        feature('wifi', '📶 Wi-Fi'), feature('socket', `⚡ ${t('socket')}`),
+        feature('wheelchair', `♿ ${t('wheelchair')}`), feature('quiet', `🌿 ${t('quiet')}`),
+        poi.phone ? `📞 ${poi.phone}` : `📞 ${t('no_phone')}`
       ].forEach(text => {
         const item = document.createElement('div');
         item.className = 'drawer-feat-item';
@@ -714,7 +755,7 @@
         const item = document.createElement('li');
         item.className = 'drawer-fact-item';
         item.textContent = fact.text;
-        appendSource(item, fact.source_url, `Источник · ${formatDate(fact.collected_at)}`);
+        appendSource(item, fact.source_url, `${t('source_label')} · ${formatDate(fact.collected_at)}`);
         factsList.appendChild(item);
       });
       (warnings || []).forEach(warning => {
@@ -726,11 +767,11 @@
       factsSection.classList.toggle('hidden', factsList.children.length === 0);
     };
     showFacts(poi.evidence, poi.warnings);
-    field('drawerAiSummary', poi.description || 'Описание в данных отсутствует.');
-    field('drawerAiVibe', isMockMode ? 'Тестовый пример · live API отключён' : 'Сведения из сохранённых источников');
+    field('drawerAiSummary', poi.description || t('no_description'));
+    field('drawerAiVibe', isMockMode ? `${t('mock_mode_text')} ${currentLang === 'ru' ? '' : t('mock_language')}` : t('saved_sources'));
     const tipBox = document.getElementById('drawerAiTipBox');
     if (tipBox) tipBox.style.display = poi.activity ? 'flex' : 'none';
-    field('drawerAiTip', poi.activity ? `Идея занятия: ${poi.activity}` : '');
+    field('drawerAiTip', poi.activity ? `${t('act_label')} ${poi.activity}` : '');
     const osmLink = document.getElementById('drawerOsmLink');
     if (osmLink) {
       const url = safeHttpUrl(poi.source_url);
@@ -743,24 +784,27 @@
     if (!isMockMode && poi.poi_id && !String(poi.poi_id).startsWith('loc_') && !String(poi.poi_id).startsWith('bld_')) {
       fetch('/api/poi_ai_info', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ poi_id: poi.poi_id }), signal: controller.signal,
+        body: JSON.stringify({ poi_id: poi.poi_id, locale: currentLang }), signal: controller.signal,
         cache: 'no-store'
       }).then(response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
       }).then(data => {
         if (drawerAbortController !== controller || controller.signal.aborted) return;
-        field('drawerAiSummary', data.summary || poi.description || 'Описание отсутствует.');
-        field('drawerAiTip', data.tip ? `Идея занятия: ${data.tip}` : '');
+        field('drawerAiSummary', data.summary || poi.description || t('no_description'));
+        field('drawerAiTip', data.tip ? `${t('act_label')} ${data.tip}` : '');
         if (tipBox) tipBox.style.display = data.tip ? 'flex' : 'none';
         showFacts(data.evidence || poi.evidence, data.warnings || poi.warnings);
       }).catch(error => {
         if (drawerAbortController !== controller || error.name === 'AbortError') return;
-        field('drawerAiVibe', 'Дополнительные сведения недоступны; показаны данные карточки.');
+        field('drawerAiVibe', t('detail_unavailable'));
       });
     }
     drawer.classList.add('open');
+    drawerFocusOrigin = document.activeElement;
+    drawer.removeAttribute('inert');
     drawer.setAttribute('aria-hidden', 'false');
+    document.getElementById('drawerCloseBtn')?.focus();
   }
 
   function closePoiDrawer() {
@@ -768,7 +812,10 @@
     drawerAbortController = null;
     const drawer = document.getElementById('poiDrawer');
     if (drawer) {
+      const wasOpen = drawer.classList.contains('open');
       drawer.classList.remove('open');
+      drawer.setAttribute('inert', '');
+      if (wasOpen) drawerFocusOrigin?.focus?.();
       drawer.setAttribute('aria-hidden', 'true');
     }
   }
@@ -781,7 +828,7 @@
     } catch (_) { return null; }
   }
 
-  function appendSource(container, value, label = 'Источник ↗') {
+  function appendSource(container, value, label = t('source')) {
     const url = safeHttpUrl(value);
     if (!url) return;
     const link = document.createElement('a');
@@ -805,129 +852,22 @@
       clickOpt.value = 'map_click';
       locationSelect.insertBefore(clickOpt, locationSelect.firstChild);
     }
-    clickOpt.textContent = label || `📍 Точка на карте (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+    clickOpt.textContent = label || `📍 ${t('map_point')} (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
     clickOpt.dataset.lat = lat;
     clickOpt.dataset.lon = lon;
     clickOpt.selected = true;
 
     updateStartMarker(lat, lon, clickOpt.textContent);
     updateReachRadius();
-    showMapToast(`📍 Стартовая точка: ${lat.toFixed(4)}, ${lon.toFixed(4)} (нажмите «Найти»)`);
+    showMapToast(t('start_selected'));
   }
 
   // --- Interactive Building & Landmark Badges on Map (2GIS / OSM Style) ---
-  const VERIFIED_BUILDINGS = [
-    {
-      id: 'bld_mega',
-      poi_id: 'osm_way_499328514',
-      name: 'Mega Silk Way',
-      subtitle: 'ТРЦ & Кинотеатр',
-      category: 'mall',
-      icon: '🛍️',
-      lat: 51.0890897,
-      lon: 71.4073303,
-      description: 'Крупнейший торгово-развлекательный центр в районе EXPO с фудкортом, магазинами и кинотеатром.'
-    },
-    {
-      id: 'bld_hilton',
-      poi_id: 'osm_node_5199672688',
-      name: 'Hilton Astana',
-      subtitle: 'Отель & Бизнес',
-      category: 'attraction',
-      icon: '🏨',
-      lat: 51.0906596,
-      lon: 71.4106232,
-      description: 'Современный пятизвездочный отель и бизнес-комплекс на территории делового района EXPO.'
-    },
-    {
-      id: 'bld_congress',
-      poi_id: 'osm_node_5033100222',
-      name: 'Конгресс-центр EXPO',
-      subtitle: 'Международный конгресс-холл',
-      category: 'attraction',
-      icon: '🏛️',
-      lat: 51.0924049,
-      lon: 71.4113474,
-      description: 'Главная конгрессная и концертная арена EXPO для масштабных международных форумов и мероприятий.'
-    },
-    {
-      id: 'bld_astana_hub',
-      poi_id: 'loc_astana_hub',
-      name: 'Astana Hub',
-      subtitle: 'Международный IT-технопарк',
-      category: 'attraction',
-      icon: '🚀',
-      lat: 51.0883541,
-      lon: 71.4145878,
-      description: 'Крупнейший технологический хаб Центральной Азии (Павильон C4.6 на территории EXPO).'
-    },
-    {
-      id: 'bld_alem',
-      poi_id: 'loc_alem_ai',
-      name: 'Alem.ai',
-      subtitle: 'Центр искусственного интеллекта',
-      category: 'attraction',
-      icon: '💡',
-      lat: 51.0892381,
-      lon: 71.4162196,
-      description: 'Казахстанский научно-образовательный центр искусственного интеллекта (Павильон B1 на территории EXPO).'
-    },
-    {
-      id: 'bld_aifc',
-      poi_id: 'loc_aifc',
-      name: 'МФЦА / AIFC',
-      subtitle: 'Международный финансовый центр',
-      category: 'attraction',
-      icon: '🏛️',
-      lat: 51.0880703,
-      lon: 71.4168534,
-      description: 'Международный финансовый центр «Астана» (Павильон C3.3, проспект Мәңгілік Ел 55/18).'
-    },
-    {
-      id: 'bld_aitu',
-      poi_id: 'loc_aitu',
-      name: 'Astana IT University',
-      subtitle: 'Университет AITU',
-      category: 'attraction',
-      icon: '🎓',
-      lat: 51.0908607,
-      lon: 71.4184149,
-      description: 'Ведущий технологический университет Казахстана (Павильон C1 на территории EXPO).'
-    },
-    {
-      id: 'bld_botanic',
-      poi_id: 'osm_way_1196402246',
-      name: 'Ботанический сад',
-      subtitle: 'Главный парк столицы',
-      category: 'park',
-      icon: '🌿',
-      lat: 51.1061652,
-      lon: 71.4165705,
-      description: 'Крупнейший ботанический сад Астаны с оранжереей, озером, велосипедными дорожками и прогулочными мостами.'
-    },
-    {
-      id: 'bld_park25',
-      poi_id: 'osm_way_1460763574',
-      name: '25-ти летие Независимости',
-      subtitle: 'Парк у EXPO',
-      category: 'park',
-      icon: '🌳',
-      lat: 51.0934524,
-      lon: 71.4175645,
-      description: 'Парковая зона и прогулочная аллея рядом с выставочным комплексом EXPO.'
-    },
-    {
-      id: 'bld_arch',
-      poi_id: 'osm_way_549307755',
-      name: 'Триумфальная арка',
-      subtitle: 'Мәңгілік Ел',
-      category: 'attraction',
-      icon: '🏛️',
-      lat: 51.1043034,
-      lon: 71.4300836,
-      description: 'Архитектурный монумент и смотровая площадка на главном проспекте столицы Мәңгілік Ел.'
-    }
-  ];
+  // Visual emphasis only. All names, coordinates and facts come from the catalogue.
+  const LANDMARK_IDS = new Set([
+    'osm_way_499328514', 'osm_way_1196402246', 'osm_way_1460763574',
+    'osm_way_549307755'
+  ]);
 
   let landmarksLayer = null;
 
@@ -960,15 +900,14 @@
       landmarksLayer.clearLayers();
     }
 
-    VERIFIED_BUILDINGS.forEach((bld) => {
-      poiCatalog.set(bld.poi_id, bld);
-      poiCatalog.set(bld.id, bld);
+    Array.from(poiCatalog.values()).filter(poi => LANDMARK_IDS.has(poi.poi_id)).forEach((bld) => {
+      const icon = bld.category === 'mall' ? '🛍️' : bld.category === 'park' || bld.category === 'garden' ? '🌿' : '🏛️';
 
       const landmarkIcon = L.divIcon({
         className: 'landmark-pill-marker-wrap',
         html: `
-          <button type="button" class="landmark-pill-btn" title="${escapeHtml(bld.name)} · ${escapeHtml(bld.subtitle)}">
-            <span class="landmark-pill-icon">${bld.icon}</span>
+          <button type="button" class="landmark-pill-btn" title="${escapeHtml(bld.name)} · ${escapeHtml(categoryName(bld.category))}">
+            <span class="landmark-pill-icon">${icon}</span>
             <span class="landmark-pill-title">${escapeHtml(bld.name)}</span>
           </button>
         `,
@@ -994,21 +933,27 @@
 
   // --- Render All Verified OSM POIs as Interactive Badges ---
   let allPoisLayer = null;
+  let catalogController = null;
   async function loadAndRenderAllPoisOnMap() {
+    if (catalogController) catalogController.abort();
+    const controller = new AbortController();
+    catalogController = controller;
     try {
-      renderLandmarkButtons();
       let data;
       if (isMockMode) {
         await ensureMockData();
         data = { pois: mockData.pois || [] };
       } else {
-        const resp = await fetch('/api/pois', { cache: 'no-store' });
+        const resp = await fetch(`/api/pois?locale=${currentLang}`, { cache: 'no-store', signal: controller.signal });
         if (!resp.ok) return;
         data = await resp.json();
       }
+      if (controller.signal.aborted || catalogController !== controller) return;
       const pois = data.pois || [];
+      poiCatalog.clear();
       pois.forEach(poi => poiCatalog.set(poi.poi_id, poi));
       if (!leafletMap) return;
+      renderLandmarkButtons();
 
       if (!allPoisLayer) {
         allPoisLayer = L.layerGroup().addTo(leafletMap);
@@ -1034,7 +979,7 @@
       };
 
       pois.forEach(p => {
-        if (!Number.isFinite(p.lat) || !Number.isFinite(p.lon)) return;
+        if (!Number.isFinite(p.lat) || !Number.isFinite(p.lon) || p.recommendable === false) return;
         const iconEmoji = categoryIcons[p.category] || '📍';
         const markerIcon = L.divIcon({
           className: 'subtle-map-poi-marker',
@@ -1064,7 +1009,7 @@
     }
 
     try {
-      const defaultCenter = [51.0890897, 71.4073303]; // Real Mega Silk Way (Main Entrance)
+      const defaultCenter = [51.0890897, 71.4073303]; // Approximate OSM centre, not a verified entrance.
       leafletMap = L.map('osmMap', {
         center: defaultCenter,
         zoom: 15,
@@ -1091,13 +1036,12 @@
         // Remove the failing raster layer once, without retry loops or requests
         // to a second provider. Local POIs and computed paths remain usable.
         setTimeout(() => leafletMap.removeLayer(backgroundTiles), 0);
-        showMapBackgroundStatus('Фон карты недоступен. Точки и рассчитанные маршруты работают; улицы на фоне не показаны.');
+        showMapBackgroundStatus(t('map_unavailable'));
         if (!isMockMode) loadWalkingBackground();
       });
       backgroundTiles.addTo(leafletMap);
 
       poiMarkersLayer = L.layerGroup().addTo(leafletMap);
-      renderLandmarkButtons();
 
       if (typeof leafletMap.on === 'function') {
         leafletMap.on('zoom', updateAllMarkersZoomVisibility);
@@ -1150,7 +1094,7 @@
         interactive: false,
         style: { color: '#94a3b8', weight: 1.4, opacity: 0.75 }
       }).addTo(leafletMap);
-      showMapBackgroundStatus('Локальная схема дорожек OSM. Фоновая карта недоступна; показан сохранённый граф, точки и маршруты.');
+      showMapBackgroundStatus(t('map_local'));
     } catch (_) {
       // Keep the explicit plain-background notice. A missing graph is never
       // replaced by imaginary streets or an unlabelled external provider.
@@ -1169,7 +1113,7 @@
     const startIcon = L.divIcon({
       className: 'custom-start-marker',
       html: `
-        <div class="svg-pin-wrapper start-pin-wrapper" title="Стартовая точка">
+        <div class="svg-pin-wrapper start-pin-wrapper" title="${t('start_control')}">
           <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M17 0C7.61 0 0 7.61 0 17C0 29.75 17 44 17 44C17 44 34 29.75 34 17C34 7.61 26.39 0 17 0Z" fill="#ef4444"/>
             <circle cx="17" cy="17" r="7.5" fill="white"/>
@@ -1206,7 +1150,7 @@
     }
 
     if (radiusIndicator) {
-      radiusIndicator.textContent = `${t('radius_label')} ~${(radiusMeters / 1000).toFixed(1)} км (${currentMins} мин)`;
+      radiusIndicator.textContent = `${t('radius_label')} ~${(radiusMeters / 1000).toFixed(1)} ${t('kilometre')} (${currentMins} ${t('minute')})`;
     }
 
     const pos = startMarker.getLatLng();
@@ -1265,9 +1209,9 @@
       const popupHtml = `
         <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 2px;">
           <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">#${number} ${escapeHtml(poi.name)}</div>
-          <div style="color: #64748b; font-size: 12px; margin-bottom: 6px;">${categoryEmoji} ${escapeHtml(categoryName(poi.category))} • ~${poi.distance_m ?? 0} м по прямой</div>
+          <div style="color: #64748b; font-size: 12px; margin-bottom: 6px;">${categoryEmoji} ${escapeHtml(categoryName(poi.category))} • ~${poi.distance_m ?? 0} ${t('meter')} ${t('straight_short')}</div>
           <div style="background: #f0fdf4; color: #166534; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">
-            ${t('total_budget')} ~${totalTime} мин
+            ${t('total_budget')} ~${totalTime} ${t('minute')}
           </div>
         </div>
       `;
@@ -1349,8 +1293,8 @@
 
       const popupHtml = `
         <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 2px;">
-          <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">Остановка #${order}: ${escapeHtml(stop.name)}</div>
-          <div style="color: #0369a1; font-weight: 600; font-size: 11px; margin-bottom: 4px;">От старта: +${stop.arrival_minutes_estimate} мин • На месте: ${stop.visit_minutes_estimate} мин</div>
+          <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">${t('stop')} #${order}: ${escapeHtml(stop.name)}</div>
+          <div style="color: #0369a1; font-weight: 600; font-size: 11px; margin-bottom: 4px;">${t('elapsed')}: +${stop.arrival_minutes_estimate} ${t('minute')} • ${t('onsite')}: ${stop.visit_minutes_estimate} ${t('minute')}</div>
           <div style="color: #64748b; font-size: 12px;">${escapeHtml(stop.activity || '')}</div>
         </div>
       `;
@@ -1390,6 +1334,8 @@
   }
 
   function clearRoutePolyline() {
+    if (pointRouteController) pointRouteController.abort();
+    pointRouteController = null;
     if (routePolyline && leafletMap) {
       leafletMap.removeLayer(routePolyline);
       routePolyline = null;
@@ -1400,40 +1346,61 @@
   }
 
   // --- 2GIS / Google Maps Style Point-to-Point Route Builder ---
-  function buildWalkingRouteToPoi(poi) {
-    if (!leafletMap || !poi?.lat || !poi?.lon) return;
+  async function buildWalkingRouteToPoi(poi) {
+    if (!leafletMap || !Number.isFinite(poi?.lat) || !Number.isFinite(poi?.lon)) return;
     clearRoutePolyline();
-
-    const startLat = startMarker ? startMarker.getLatLng().lat : (currentLocation?.lat || 51.0890897);
-    const startLon = startMarker ? startMarker.getLatLng().lng : (currentLocation?.lon || 71.4073303);
-    const startName = (locationSelect && locationSelect.selectedOptions[0]?.textContent) || t('start_point');
-
-    const latLngs = [[startLat, startLon], [poi.lat, poi.lon]];
-
-    routePolyline = L.polyline(latLngs, {
-      color: '#0284c7',
-      weight: 6,
-      opacity: 0.92,
-      lineCap: 'round',
-      lineJoin: 'round',
-      dashArray: '2, 8'
-    }).addTo(leafletMap);
-
-    const distM = poi.route_distance_m || Math.round(L.latLng(startLat, startLon).distanceTo(L.latLng(poi.lat, poi.lon)));
-    const walkMins = poi.walk_minutes_estimate || Math.max(1, Math.round(distM / 70));
-
-    if (routeSummaryBar && routeBannerTitle && routeBannerStats) {
-      routeBannerTitle.textContent = `${t('route_to')} ${poi.name}`;
-      routeBannerStats.textContent = `~${walkMins} мин (${distM} м) • ${startName}`;
-      routeSummaryBar.classList.remove('hidden');
+    const start = locationSelect?.selectedOptions[0];
+    if (!start?.dataset.lat || !start?.dataset.lon || poi.recommendable === false) {
+      showMapToast(t('route_unavailable')); return;
     }
-
-    const bounds = L.latLngBounds([[startLat, startLon], [poi.lat, poi.lon]]);
+    if (isMockMode) { showMapToast(t('route_mock_unavailable')); return; }
+    const controller = new AbortController();
+    pointRouteController = controller;
+    const payload = {
+      lat: Number(start.dataset.lat), lon: Number(start.dataset.lon),
+      poi_id: poi.poi_id, locale: currentLang,
+      climate_shield: Boolean(climateShieldCheck?.checked)
+    };
+    routeBannerTitle.textContent = `${t('route_to')} ${poi.name}`;
+    routeBannerStats.textContent = t('route_loading');
+    routeSummaryBar.classList.remove('hidden');
+    const timeout = setTimeout(() => controller.abort(), 20000);
     try {
-      leafletMap.fitBounds(bounds, mapViewPadding());
-    } catch (_) {}
-
-    showMapToast(`🚶 ${t('route_to')} ${poi.name}: ~${walkMins} мин (${distM} м)`);
+      const response = await fetch('/api/route', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload), signal: controller.signal, cache: 'no-store'
+      });
+      if (!response.ok) throw new Error(httpErrorMessage(response.status));
+      const data = await response.json();
+      if (pointRouteController !== controller || controller.signal.aborted) return;
+      if (data.used_context?.climate) { lastClimateContext = data.used_context.climate; renderWeather(); }
+      const coordinates = data.coordinates;
+      if (data.status !== 'ready' || !Array.isArray(coordinates) || coordinates.length < 2 ||
+          !coordinates.every(c => Array.isArray(c) && c.length === 2 && c.every(Number.isFinite))) {
+        routeBannerStats.textContent = data.message || t('route_unavailable');
+        showMapToast(data.message || t('route_unavailable')); return;
+      }
+      // Only the backend walking graph may supply a route. Never join start/end with a fabricated line.
+      routePolyline = L.polyline(coordinates.map(c => [c[1], c[0]]), {
+        color: '#0284c7', weight: 6, opacity: 0.92,
+        lineCap: 'round', lineJoin: 'round', dashArray: '2, 8'
+      }).addTo(leafletMap);
+      routeBannerStats.textContent = `${t('one_way')} ~${data.walk_minutes_estimate} ${t('minute')} (${data.distance_m} ${t('meter')})`;
+      if (data.warnings?.length) {
+        const note = document.createElement('div');
+        note.className = 'route-access-note';
+        note.textContent = data.warnings.join(' ');
+        routeBannerStats.appendChild(note);
+      }
+      leafletMap.fitBounds(routePolyline.getBounds(), mapViewPadding());
+    } catch (error) {
+      if (pointRouteController !== controller) return;
+      routeBannerStats.textContent = error.name === 'AbortError' || error instanceof TypeError
+        ? t('connection_error') : error.message || t('route_unavailable');
+    } finally {
+      clearTimeout(timeout);
+      if (pointRouteController === controller) pointRouteController = null;
+    }
   }
 
   function focusPoiOnMap(poiId) {
@@ -1482,20 +1449,9 @@
     // Climate Shield Checkbox
     if (climateShieldCheck) {
       climateShieldCheck.addEventListener('change', () => {
-        const badge = document.getElementById('climateWeatherBadge');
-        if (climateShieldCheck.checked) {
-          if (badge) badge.classList.remove('hidden');
-          showMapBackgroundStatus('💨 Климатический щит активен: приоритет крытым хабам (Mega Silk Way, AITU, коворкинги), открытые площадки исключены.');
-          if (locationSelect) {
-            const megaOpt = Array.from(locationSelect.options).find(o => o.value.includes('Mega') || o.text.includes('Mega'));
-            if (megaOpt) {
-              locationSelect.value = megaOpt.value;
-              locationSelect.dispatchEvent(new Event('change'));
-            }
-          }
-        } else {
-          if (badge) badge.classList.add('hidden');
-        }
+        invalidateSearch();
+        renderWeather();
+        loadWeather();
       });
     }
 
@@ -1529,6 +1485,7 @@
 
     // GPS button
     if (geoBtn) {
+      geoBtn.setAttribute('aria-describedby', 'geoPrivacyNote');
       geoBtn.addEventListener('click', handleGeoLocation);
     }
 
@@ -1551,6 +1508,9 @@
     }
 
     if (sheetHandle) {
+      sheetHandle.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); sheetHandle.click(); }
+      });
       sheetHandle.addEventListener('click', () => {
         gisSidebar.scrollTop = 0;
         gisSidebar.classList.toggle('collapsed');
@@ -1594,20 +1554,22 @@
     tagChips.forEach((chip) => {
       chip.addEventListener('click', () => {
         invalidateSearch();
-        const fillText = chip.getAttribute('data-fill');
+        const sourceText = chip.getAttribute('data-fill');
+        const fillKey = {'С ребёнком':'fill_child','Я турист':'fill_tourist','Ночью':'fill_night','панорамный вид':'fill_view','тихое место':'fill_quiet','кофе навынос':'fill_togo'}[sourceText];
+        const fillText = fillKey ? t(fillKey) : sourceText;
         if (queryInput) {
           queryInput.value = fillText;
           queryInput.focus();
         }
         // Auto-adapt minutes and category for common scenarios
-        if (['С ребёнком', 'Я турист', 'Ночью', 'панорамный вид', 'тихое место'].includes(fillText)) {
+        if (['С ребёнком', 'Я турист', 'Ночью', 'панорамный вид', 'тихое место'].includes(sourceText)) {
           const radioWalk = document.querySelector('input[name="category"][value="walk"]');
           if (radioWalk) radioWalk.checked = true;
           const curMins = getSelectedMinutes();
           if (curMins < 60) {
             selectMinutes(60);
           }
-        } else if (fillText === 'кофе навынос') {
+        } else if (sourceText === 'кофе навынос') {
           const radioCafe = document.querySelector('input[name="category"][value="cafe"]');
           if (radioCafe) radioCafe.checked = true;
         }
@@ -1617,6 +1579,7 @@
     // Keyboard shortcuts: Escape closes drawer and telemetry modal
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
       window.addEventListener('keydown', (e) => {
+        trapModalFocus(e);
         if (e.key === 'Escape') {
           closePoiDrawer();
           closeTelemetryModal();
@@ -1645,7 +1608,8 @@
           }
         }
 
-        if (q && queryInput) queryInput.value = q;
+        if (q && queryInput) queryInput.value = cat === 'cafe' ? t('default_coffee') : t('default_walk');
+        if (min) selectMinutes(Number(min));
         if (recommendForm) recommendForm.dispatchEvent(new Event('submit', { cancelable: true }));
       });
     });
@@ -1659,7 +1623,7 @@
       drawerSetStartBtn.addEventListener('click', () => {
         if (currentDrawerPoi) {
           handleMapClick(currentDrawerPoi.lat, currentDrawerPoi.lon, currentDrawerPoi.name);
-          showMapToast(`📍 Стартовая точка: ${currentDrawerPoi.name}`);
+          showMapToast(t('start_selected'));
           closePoiDrawer();
         }
       });
@@ -1705,12 +1669,16 @@
     appMode = mode;
     tabPlaces.classList.toggle('active', mode === 'places');
     tabItinerary.classList.toggle('active', mode === 'itinerary');
+    tabPlaces.setAttribute('aria-pressed', String(mode === 'places'));
+    tabItinerary.setAttribute('aria-pressed', String(mode === 'itinerary'));
+    if (timeRangeSlider) timeRangeSlider.min = mode === 'itinerary' ? '15' : '10';
 
     if (btnText) {
       btnText.textContent = mode === 'itinerary' ? t('btn_build_route') : t('btn_find');
     }
 
     renderTimeSelector();
+    applyAccessibleLabels();
     updateCategoryLabels();
     setUIState('initial');
     clearRoutePolyline();
@@ -1730,7 +1698,7 @@
         await ensureMockData();
         locationsList = mockData.locations || [];
       } else {
-        const response = await fetch('/api/locations', {
+        const response = await fetch(`/api/locations?locale=${currentLang}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
           cache: 'no-store'
@@ -1749,37 +1717,21 @@
       errOpt.value = '';
       errOpt.disabled = true;
       errOpt.selected = true;
-      errOpt.textContent = 'Локации недоступны — проверьте сервер или выберите точку на карте';
+      errOpt.textContent = t('locations_unavailable');
       locationSelect.appendChild(errOpt);
     }
   }
-
-  const VERIFIED_EXPO_ANCHORS = [
-    { id: 'osm_way_499328514', name: 'Mega Silk Way', lat: 51.0890897, lon: 71.4073303 },
-    { id: 'loc_alem_ai', name: 'Alem.ai (Павильон B1)', lat: 51.0892381, lon: 71.4162196 },
-    { id: 'loc_astana_hub', name: 'Astana Hub (Павильон C4.6)', lat: 51.0883541, lon: 71.4145878 },
-    { id: 'loc_aifc', name: 'МФЦА / AIFC (Павильон C3.3)', lat: 51.0880703, lon: 71.4168534 },
-    { id: 'loc_aitu', name: 'Astana IT University (AITU)', lat: 51.0906792, lon: 71.4181709 },
-    { id: 'osm_way_1460763574', name: '25-ти летие Независимости', lat: 51.0934524, lon: 71.4175645 }
-  ];
 
   function populateLocationsSelect(locations) {
     locationSelect.innerHTML = '';
 
     const list = Array.isArray(locations) ? [...locations] : [];
-    VERIFIED_EXPO_ANCHORS.forEach(anchor => {
-      const exists = list.some(l => l.id === anchor.id || (Math.abs(l.lat - anchor.lat) < 0.0005 && Math.abs(l.lon - anchor.lon) < 0.0005));
-      if (!exists) {
-        list.push(anchor);
-      }
-    });
-
     if (list.length === 0) {
       const opt = document.createElement('option');
       opt.value = '';
       opt.disabled = true;
       opt.selected = true;
-      opt.textContent = 'Локации недоступны';
+      opt.textContent = t('locations_unavailable');
       locationSelect.appendChild(opt);
       return;
     }
@@ -1807,7 +1759,7 @@
       updateSystemStatusText();
       return;
     }
-    const responses = await Promise.allSettled(['/api/meta', '/api/health'].map(async path => {
+    const responses = await Promise.allSettled([`/api/meta?locale=${currentLang}`, '/api/health'].map(async path => {
       const response = await fetch(path, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
@@ -1819,20 +1771,20 @@
   }
 
   function modelStatus() {
-    if (isMockMode) return 'Тестовый режим';
-    if (!systemStatusLoaded) return 'Проверяем состояние API…';
-    if (!cachedHealth) return 'Статус API недоступен';
-    if (!cachedHealth.llm_configured) return 'Локальный подбор · LLM не настроена';
-    if (cachedHealth.llm_last_status === 'ok') return 'Последний вызов LLM: успешно';
-    if (cachedHealth.llm_last_status === 'not_checked') return 'LLM настроена, вызов ещё не проверен';
-    return `LLM: ${cachedHealth.llm_last_status || 'статус неизвестен'} · доступен локальный подбор`;
+    if (isMockMode) return t('mock_status');
+    if (!systemStatusLoaded) return t('status_loading');
+    if (!cachedHealth) return t('api_unavailable');
+    if (!cachedHealth.llm_configured) return t('local_no_llm');
+    if (cachedHealth.llm_last_status === 'ok') return t('llm_ok');
+    if (cachedHealth.llm_last_status === 'not_checked') return t('llm_unchecked');
+    return t('llm_fallback');
   }
 
   function updateSystemStatusText() {
     if (!statusSummaryText) return;
     const m = cachedSystemMeta;
     statusSummaryText.textContent = m
-      ? `Сеть: ${m.walking_network?.node_count?.toLocaleString() ?? '—'} узлов OSM • ${m.poi_count ?? '—'} POI • ${modelStatus()}`
+      ? `${t('network_summary', {nodes: m.walking_network?.node_count?.toLocaleString() ?? '—', pois: m.poi_count ?? '—'})} • ${modelStatus()}`
       : modelStatus();
   }
 
@@ -1842,50 +1794,58 @@
     const number = value => Number.isFinite(value) ? value.toLocaleString() : '—';
     telemetryModalBody.innerHTML = `
       <div>
-        <div class="telemetry-section-title">🗺️ Пешеходная сеть OpenStreetMap</div>
+        <div class="telemetry-section-title">🗺️ ${t('network_title')}</div>
         <div class="telemetry-grid">
-          <div class="telemetry-card"><span class="telemetry-val">${number(m.walking_network?.node_count)}</span><span class="telemetry-lbl">Вершин графа</span></div>
-          <div class="telemetry-card"><span class="telemetry-val">${number(m.walking_network?.directed_edge_count)}</span><span class="telemetry-lbl">Направленных рёбер</span></div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.walking_network?.node_count)}</span><span class="telemetry-lbl">${t('nodes')}</span></div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.walking_network?.directed_edge_count)}</span><span class="telemetry-lbl">${t('edges')}</span></div>
         </div>
       </div>
       <div>
-        <div class="telemetry-section-title">📍 Данные сохранённого снимка</div>
+        <div class="telemetry-section-title">📍 ${t('dataset_title')}</div>
         <div class="telemetry-grid">
-          <div class="telemetry-card"><span class="telemetry-val">${number(m.poi_count)}</span><span class="telemetry-lbl">Объектов</span></div>
-          <div class="telemetry-card"><span class="telemetry-val">${number(m.data_quality?.attributed_fact_count)}</span><span class="telemetry-lbl">Сведений (${number(m.data_quality?.official_fact_count)} официальных)</span></div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.poi_count)}</span><span class="telemetry-lbl">${t('objects')}</span></div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.data_quality?.attributed_fact_count)}</span><span class="telemetry-lbl">${t('facts_count', {official: number(m.data_quality?.official_fact_count)})}</span></div>
         </div>
       </div>
       <div>
-        <div class="telemetry-section-title">⚡ Теги удобств в OSM</div>
+        <div class="telemetry-section-title">⚡ ${t('amenities_title')}</div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-          <span class="feature-pill">🔌 Розетки: ${number(m.data_quality?.confirmed_features?.socket)}</span>
+          <span class="feature-pill">🔌 ${t('socket')}: ${number(m.data_quality?.confirmed_features?.socket)}</span>
           <span class="feature-pill">📶 Wi-Fi: ${number(m.data_quality?.confirmed_features?.wifi)}</span>
-          <span class="feature-pill">♿ Доступность: ${number(m.data_quality?.confirmed_features?.wheelchair)}</span>
-          <span class="feature-pill">🌿 Тишина: ${number(m.data_quality?.confirmed_features?.quiet)}</span>
+          <span class="feature-pill">♿ ${t('wheelchair')}: ${number(m.data_quality?.confirmed_features?.wheelchair)}</span>
+          <span class="feature-pill">🌿 ${t('quiet')}: ${number(m.data_quality?.confirmed_features?.quiet)}</span>
         </div>
       </div>
       <div>
-        <div class="telemetry-section-title">🔒 Подбор и приватность</div>
-        <div class="telemetry-info-row"><span class="telemetry-info-key">Состояние LLM</span><span class="telemetry-info-val">${escapeHtml(modelStatus())}</span></div>
-        <div class="telemetry-info-row"><span class="telemetry-info-key">Источники</span><span class="telemetry-info-val">OpenStreetMap и официальные страницы; актуальность не гарантируется</span></div>
-        <div class="telemetry-info-row"><span class="telemetry-info-key">Координаты</span><span class="telemetry-info-val">Бэкенд не сохраняет GPS; тайлы OSM загружаются браузером с внешнего сервера</span></div>
-        <div class="telemetry-info-row"><span class="telemetry-info-key">Лицензия</span><span class="telemetry-info-val">© OpenStreetMap contributors · ODbL 1.0</span></div>
+        <div class="telemetry-section-title">🔒 ${t('privacy_title')}</div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">${t('llm_status')}</span><span class="telemetry-info-val">${escapeHtml(modelStatus())}</span></div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">${t('sources')}</span><span class="telemetry-info-val">${t('sources_caveat')}</span></div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">${t('coordinates')}</span><span class="telemetry-info-val">${t('geo_explanation')}</span></div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">${t('license')}</span><span class="telemetry-info-val">© OpenStreetMap contributors · ODbL 1.0</span></div>
       </div>`;
+    modalFocusOrigin = document.activeElement;
+    closePoiDrawer();
     telemetryModal.classList.remove('hidden');
+    modalCloseBtn?.focus();
+    setModalBackgroundInert(true);
   }
 
   function closeTelemetryModal() {
+    const wasOpen = telemetryModal && !telemetryModal.classList.contains('hidden');
     if (telemetryModal) telemetryModal.classList.add('hidden');
+    setModalBackgroundInert(false);
+    if (wasOpen) modalFocusOrigin?.focus?.();
   }
 
   // --- GPS Geolocation Handler ---
   function handleGeoLocation() {
+    if (isMockMode) { setGeoStatus(t('gps_mock'), 'active'); return; }
     if (!navigator.geolocation) {
-      setGeoStatus('GPS не поддерживается вашим браузером.', 'error');
+      setGeoStatus(t('gps_unsupported'), 'error');
       return;
     }
 
-    setGeoStatus('Определение координат через GPS...', 'active');
+    setGeoStatus(t('gps_loading'), 'active');
     geoBtn.disabled = true;
 
     navigator.geolocation.getCurrentPosition(
@@ -1909,53 +1869,16 @@
         userOpt.dataset.lon = lon;
         userOpt.selected = true;
 
-        updateStartMarker(lat, lon, 'Моя текущая позиция');
+        updateStartMarker(lat, lon, t('my_location'));
         if (leafletMap) leafletMap.flyTo([lat, lon], 15, { duration: 0.8 });
-        setGeoStatus('Координаты определены (хранятся только в сессии).', 'active');
+        setGeoStatus(t('gps_ready'), 'active');
       },
       (error) => {
         geoBtn.disabled = false;
-        setGeoStatus('Не удалось получить сигнал GPS.', 'error');
+        setGeoStatus(error.code === 1 ? t('gps_denied') : t('gps_error'), 'error');
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
-  }
-
-  function autoRequestUserLocation() {
-    if (!navigator.geolocation || isMockMode) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('loc')) return;
-
-    try {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          userGeoLocation = { lat, lon };
-
-          if (locationSelect) {
-            let userOpt = locationSelect.querySelector('option[value="user_geo"]');
-            if (!userOpt) {
-              userOpt = document.createElement('option');
-              userOpt.value = 'user_geo';
-              locationSelect.insertBefore(userOpt, locationSelect.firstChild);
-            }
-            userOpt.textContent = `🎯 ${t('my_location')} (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
-            userOpt.dataset.lat = lat;
-            userOpt.dataset.lon = lon;
-            userOpt.selected = true;
-          }
-
-          updateStartMarker(lat, lon, t('my_location'));
-          if (leafletMap) leafletMap.flyTo([lat, lon], 15, { duration: 0.8 });
-          setGeoStatus(t('my_location'), 'active');
-        },
-        (_err) => {
-          // Gracefully fallback to default EXPO anchor
-        },
-        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
-      );
-    } catch (_) {}
   }
 
   function setGeoStatus(text, type) {
@@ -1970,16 +1893,17 @@
     e.preventDefault();
     const option = locationSelect.selectedOptions[0];
     if (!option?.dataset.lat || !option?.dataset.lon) {
-      handleSearchError('Выберите стартовую точку из списка, на карте или через GPS.');
+      handleSearchError(t('select_start'));
       return;
     }
     const category = document.querySelector('input[name="category"]:checked')?.value || 'walk';
     const common = {
-      query: queryInput.value.trim() || (appMode === 'itinerary' ? 'Хочу погулять' : category === 'cafe' ? 'Кофе' : 'Прогулка'),
+      query: queryInput.value.trim() || (category === 'cafe' && appMode !== 'itinerary' ? t('default_coffee') : t('default_walk')),
+      locale: currentLang,
       lat: Number(option.dataset.lat),
       lon: Number(option.dataset.lon),
       available_minutes: getSelectedMinutes(),
-      ...(climateShieldCheck && climateShieldCheck.checked ? { climate_shield: true } : {})
+      climate_shield: Boolean(climateShieldCheck?.checked)
     };
     const payload = appMode === 'itinerary'
       ? { ...common, include_coffee: category === 'cafe' }
@@ -1989,6 +1913,8 @@
   }
 
   function invalidateSearch() {
+    lastClimateContext = null;
+    renderWeather();
     if (activeAbortController) activeAbortController.abort();
     activeAbortController = null;
     lastRequestPayload = null;
@@ -2008,8 +1934,8 @@
   function updateCategoryLabels() {
     const walk = document.querySelector('[data-i18n="cat_walk"]');
     const cafe = document.querySelector('[data-i18n="cat_cafe"]');
-    if (walk) walk.textContent = appMode === 'itinerary' ? 'Без кофе' : t('cat_walk');
-    if (cafe) cafe.textContent = appMode === 'itinerary' ? 'С остановкой на кофе' : t('cat_cafe');
+    if (walk) walk.textContent = appMode === 'itinerary' ? t('without_coffee') : t('cat_walk');
+    if (cafe) cafe.textContent = appMode === 'itinerary' ? t('with_coffee') : t('cat_cafe');
   }
 
   function selectMinutes(value) {
@@ -2050,9 +1976,9 @@
     await ensureMockData();
     const matches = (mockData.scenarios || []).find(item =>
       item.mode === mode && Object.entries(item.request).every(([key, value]) => payload[key] === value));
-    if (matches) return structuredClone(matches.response);
+    if (matches && !payload.climate_shield && (payload.locale || 'ru') === 'ru') return structuredClone(matches.response);
     const used_context = { ...payload, effective_minutes: payload.available_minutes, required_features: [] };
-    const message = 'Тестовый режим: для этих параметров нет записанного примера. Отключите ?mock=1 для настоящего расчёта. Записанные ответы не пересчитываются и не выдают выдуманные маршруты.';
+    const message = t('mock_missing');
     return mode === 'itinerary'
       ? { status: 'no_match', mode: 'mock', message, used_context, stops: [], legs: [] }
       : { mode: 'mock', message, used_context, recommendations: [] };
@@ -2081,14 +2007,7 @@
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify(payload), signal: controller.signal, cache: 'no-store'
         });
-        if (!response.ok) {
-          let message = `Ошибка API: HTTP ${response.status}`;
-          try {
-            const error = await response.json();
-            if (error.detail) message = Array.isArray(error.detail) ? error.detail.map(item => item.msg).join('; ') : String(error.detail);
-          } catch (_) {}
-          throw new Error(message);
-        }
+        if (!response.ok) throw new Error(httpErrorMessage(response.status));
         data = await response.json();
       }
       if (controller.signal.aborted || activeAbortController !== controller || appMode !== mode) return;
@@ -2124,14 +2043,14 @@
         const sugBtn = document.createElement('button');
         sugBtn.className = 'gis-btn-secondary retry-action-btn';
         sugBtn.style.marginTop = '0.5rem';
-        sugBtn.textContent = `⏱️ Выбрать ${data.suggested_minimum_minutes} мин и построить маршрут`;
+        sugBtn.textContent = t('suggested_budget', { minutes: data.suggested_minimum_minutes });
         sugBtn.addEventListener('click', () => {
           selectMinutes(data.suggested_minimum_minutes);
           if (data.used_context?.effective_minutes < data.used_context?.available_minutes ||
               /\d+\s*(?:мин|min|час|hour|ч\b)/i.test(queryInput.value)) {
             const note = document.createElement('p');
             note.className = 'warning-item';
-            note.textContent = 'Время изменено в переключателе. В тексте запроса остаётся более короткий лимит — измените его вручную и нажмите «Построить маршрут». Текстовые ограничения сохранены.';
+            note.textContent = t('query_time_conflict');
             emptyAdviceContainer.appendChild(note);
             queryInput.focus();
             return;
@@ -2167,7 +2086,7 @@
     title.textContent = `🚶 ${t('route_ready_title')}`;
     const badge = document.createElement('span');
     badge.className = 'itin-badge-graph';
-    badge.textContent = isMockMode ? 'Записанный тестовый пример' : 'Локальный граф OSM';
+    badge.textContent = isMockMode ? t('recorded_example') : t('graph_local');
     headRow.appendChild(title);
     headRow.appendChild(badge);
     summaryCard.appendChild(headRow);
@@ -2185,26 +2104,26 @@
 
     statsGrid.innerHTML = `
       <div class="itin-stat-item">
-        <span class="itin-stat-val">~${data.total_minutes_estimate || 0} мин</span>
+        <span class="itin-stat-val">~${data.total_minutes_estimate || 0} ${t('minute')}</span>
         <span class="itin-stat-lbl">${t('stat_total')}</span>
       </div>
       <div class="itin-stat-item">
-        <span class="itin-stat-val">~${data.walking_minutes_estimate || data.total_walk_minutes_estimate || 0} мин</span>
+        <span class="itin-stat-val">~${data.walking_minutes_estimate || data.total_walk_minutes_estimate || 0} ${t('minute')}</span>
         <span class="itin-stat-lbl">${t('stat_walk')}</span>
       </div>
       <div class="itin-stat-item">
-        <span class="itin-stat-val">~${data.visit_minutes_estimate || data.total_visit_minutes_estimate || 0} мин</span>
+        <span class="itin-stat-val">~${data.visit_minutes_estimate || data.total_visit_minutes_estimate || 0} ${t('minute')}</span>
         <span class="itin-stat-lbl">${t('stat_visit')}</span>
       </div>
       <div class="itin-stat-item">
-        <span class="itin-stat-val">~${data.reserve_minutes || data.time_reserve_minutes || 0} мин</span>
+        <span class="itin-stat-val">~${data.reserve_minutes || data.time_reserve_minutes || 0} ${t('minute')}</span>
         <span class="itin-stat-lbl">${t('stat_reserve')}</span>
       </div>
     `;
     summaryCard.appendChild(statsGrid);
     const contextLine = document.createElement('p');
     contextLine.className = 'itin-why';
-    contextLine.textContent = `Бюджет: ${data.used_context?.effective_minutes ?? data.used_context?.available_minutes ?? '—'} мин. Остаток: ${data.remaining_minutes ?? '—'} мин. Запас уже включён в итог. Все времена ниже — от момента старта.`;
+    contextLine.textContent = t('itinerary_budget', {budget: data.used_context?.effective_minutes ?? data.used_context?.available_minutes ?? '—', remaining: data.remaining_minutes ?? '—'});
     summaryCard.appendChild(contextLine);
     itineraryView.appendChild(summaryCard);
 
@@ -2216,6 +2135,12 @@
     stops.forEach((stop) => {
       const stopCard = document.createElement('div');
       stopCard.className = 'itin-stop-card';
+      stopCard.tabIndex = 0;
+      stopCard.addEventListener('keydown', event => {
+        if (event.target === stopCard && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault(); openPoiDrawer(stop);
+        }
+      });
       stopCard.addEventListener('click', () => {
         focusPoiOnMap(stop.poi_id);
       });
@@ -2230,7 +2155,7 @@
       const stTime = document.createElement('div');
       stTime.className = 'itin-stop-time';
       const depTime = stop.departure_minutes_estimate || (stop.arrival_minutes_estimate + (stop.visit_minutes_estimate || 20));
-      stTime.textContent = `+${stop.arrival_minutes_estimate}–${depTime} мин от старта`;
+      stTime.textContent = `+${stop.arrival_minutes_estimate}–${depTime} ${t('minute')} ${t('elapsed')}`;
 
       stHead.appendChild(stName);
       stHead.appendChild(stTime);
@@ -2245,23 +2170,23 @@
       if (stop.activity) {
         const actP = document.createElement('div');
         actP.className = 'itin-stop-activity';
-        actP.textContent = `💡 Идея занятия: ${stop.activity}`;
+        actP.textContent = `${t('act_label')} ${stop.activity}`;
         stopCard.appendChild(actP);
       }
 
       (stop.evidence || []).forEach(fact => {
         const line = document.createElement('p');
         line.className = 'card-evidence-box';
-        line.textContent = `${fact.kind === 'official' ? 'Официальный источник' : 'OSM'}: ${fact.text}`;
-        appendSource(line, fact.source_url, `Источник · ${formatDate(fact.collected_at)}`);
+        line.textContent = `${fact.kind === 'official' ? t('official_source') : 'OSM'}: ${fact.text}`;
+        appendSource(line, fact.source_url, `${t('source_label')} · ${formatDate(fact.collected_at)}`);
         stopCard.appendChild(line);
       });
       const hours = document.createElement('p');
       hours.className = 'hours-badge';
-      hours.textContent = stop.opening_hours ? `Часы по источнику: ${stop.opening_hours}` : t('unconfirmed_hours');
+      hours.textContent = stop.opening_hours ? t('hours_source', {hours: stop.opening_hours}) : t('unconfirmed_hours');
       stopCard.appendChild(hours);
       appendWarnings(stopCard, stop.warnings);
-      appendSource(stopCard, stop.source_url, `POI в OSM · ${formatDate(stop.collected_at)}`);
+      appendSource(stopCard, stop.source_url, `OSM · ${formatDate(stop.collected_at)}`);
       timeline.appendChild(stopCard);
     });
 
@@ -2272,9 +2197,9 @@
     finishCard.innerHTML = `
       <div class="itin-stop-header">
         <div class="itin-stop-name" style="color: #059669;">🏁 ${t('finish_point')}</div>
-        <div class="itin-stop-time">~${data.walking_minutes_estimate + data.visit_minutes_estimate} мин + ${data.reserve_minutes} мин запаса</div>
+        <div class="itin-stop-time">~${data.walking_minutes_estimate + data.visit_minutes_estimate} ${t('minute')} + ${data.reserve_minutes} ${t('minute')} ${t('buffer')}</div>
       </div>
-      <div class="itin-stop-activity">План возвращения в исходную точку. Время приблизительное; проверьте доступность проходов на месте.</div>
+      <div class="itin-stop-activity">${t('return_plan')}</div>
     `;
     timeline.appendChild(finishCard);
 
@@ -2305,21 +2230,13 @@
     renderUsedContext(data.used_context);
 
     if (resultsCountBadge) {
-      resultsCountBadge.textContent = `${recommendations.length} ${pluralize(recommendations.length, ['место', 'места', 'мест'])}`;
+      resultsCountBadge.textContent = t('place_count', {count: recommendations.length});
       resultsCountBadge.classList.remove('hidden');
     }
 
     if (fallbackNotice) {
-      if (isMockMode) {
-        fallbackNotice.className = 'fallback-banner';
-        fallbackNotice.innerHTML = '<span class="banner-icon">ℹ️</span><div class="banner-text"><strong>Тестовый режим:</strong> Live API отключён.</div>';
-      } else if (data.mode === 'rag') {
-        fallbackNotice.className = 'ai-active-banner';
-        fallbackNotice.innerHTML = '<span class="banner-icon">✨</span><div class="banner-text"><strong>RAG-генерация:</strong> модель подобрала места по базе POI с проверкой времени.</div>';
-      } else {
-        fallbackNotice.className = 'fallback-banner';
-        fallbackNotice.innerHTML = '<span class="banner-icon">⚡</span><div class="banner-text"><strong>Локальный расчёт:</strong> проверенная база POI и граф дорог OSM без вызова LLM.</div>';
-      }
+      fallbackNotice.className = data.mode === 'rag' && !isMockMode ? 'ai-active-banner' : 'fallback-banner';
+      fallbackNotice.textContent = isMockMode ? t('mock_mode_text') : data.mode === 'rag' ? t('rag_mode_text') : t('fallback_mode_text');
       fallbackNotice.classList.remove('hidden');
     }
 
@@ -2336,7 +2253,7 @@
           const sugBtn = document.createElement('button');
           sugBtn.className = 'gis-btn-secondary retry-action-btn';
           sugBtn.style.marginTop = '0.75rem';
-          sugBtn.textContent = '⏱️ Увеличить время до 60 мин и найти';
+          sugBtn.textContent = t('increase_time');
           sugBtn.addEventListener('click', () => {
             selectMinutes(60);
             if (recommendForm) recommendForm.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -2363,6 +2280,8 @@
   }
 
   function renderUsedContext(context) {
+    lastClimateContext = context?.climate || null;
+    renderWeather();
     if (!usedContextTag) return;
     if (!context) {
       usedContextTag.classList.add('hidden');
@@ -2371,21 +2290,21 @@
 
     const catName = context.category === 'cafe' ? (currentLang === 'kz' ? '☕ Кофе' : (currentLang === 'en' ? '☕ Coffee' : '☕ Кофе')) : (currentLang === 'kz' ? '🚶 Серуен' : (currentLang === 'en' ? '🚶 Walk' : '🚶 Прогулка'));
     const minutes = context.effective_minutes ?? context.available_minutes;
-    const coords = Number.isFinite(context.lat) && Number.isFinite(context.lon) ? `${context.lat.toFixed(4)}, ${context.lon.toFixed(4)}` : 'старт не указан';
+    const coords = Number.isFinite(context.lat) && Number.isFinite(context.lon) ? `${context.lat.toFixed(4)}, ${context.lon.toFixed(4)}` : t('select_start');
 
-    let tagStr = `${catName} • ${minutes}м • ${coords}`;
+    let tagStr = `${catName} • ${minutes} ${t('minute')} • ${coords}`;
     if (context.required_features && context.required_features.length > 0) {
       const featNames = {
-        socket: '🔌 Розетки',
+        socket: `🔌 ${t('socket')}`,
         wifi: '📶 Wi-Fi',
-        quiet: '🌿 Тихо',
-        wheelchair: '♿ Доступность'
+        quiet: `🌿 ${t('quiet')}`,
+        wheelchair: `♿ ${t('wheelchair')}`
       };
       const feats = context.required_features.map(f => featNames[f] || f).join(', ');
       tagStr += ` • ${feats}`;
     }
     if (context.effective_minutes && context.effective_minutes < (context.available_minutes || 60)) {
-      tagStr += ` • ⏱️ Сужение: ${context.effective_minutes}м`;
+      tagStr += ` • ⏱️ ${t('narrowed')}: ${context.effective_minutes} ${t('minute')}`;
     }
 
     usedContextTag.textContent = tagStr;
@@ -2402,6 +2321,12 @@
       card.className = 'poi-card';
       card.setAttribute('role', 'listitem');
       card.dataset.poiId = poi.poi_id;
+      card.tabIndex = 0;
+      card.addEventListener('keydown', event => {
+        if (event.target === card && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault(); focusPoiOnMap(poi.poi_id); openPoiDrawer(poi);
+        }
+      });
 
       card.addEventListener('click', () => {
         focusPoiOnMap(poi.poi_id);
@@ -2422,7 +2347,7 @@
       const nameWrapper = document.createElement('div');
       const nameEl = document.createElement('h3');
       nameEl.className = 'card-name';
-      nameEl.textContent = poi.name || 'Точка интереса';
+      nameEl.textContent = poi.name || categoryName('unknown');
 
       const categoryBadge = document.createElement('span');
       categoryBadge.className = 'card-category-badge';
@@ -2446,11 +2371,11 @@
       mDistance.className = 'metric-item';
       const mDistanceLabel = document.createElement('span');
       mDistanceLabel.className = 'metric-label';
-      mDistanceLabel.textContent = poi.travel_basis === 'osm_walking_graph' && Number.isFinite(poi.route_distance_m) ? 'По графу OSM:' : t('straight_dist');
+      mDistanceLabel.textContent = poi.travel_basis === 'osm_walking_graph' && Number.isFinite(poi.route_distance_m) ? t('graph_distance') : t('straight_dist');
       const mDistanceVal = document.createElement('span');
       mDistanceVal.className = 'metric-value';
       const displayDist = poi.route_distance_m ?? poi.distance_m ?? 0;
-      mDistanceVal.textContent = `${displayDist} м`;
+      mDistanceVal.textContent = `${displayDist} ${t('meter')}`;
       mDistance.appendChild(mDistanceLabel);
       mDistance.appendChild(mDistanceVal);
 
@@ -2458,7 +2383,7 @@
         const basisBadge = document.createElement('span');
         basisBadge.className = 'basis-badge';
         basisBadge.textContent = t('basis_graph');
-        basisBadge.title = 'Маршрут по сохранённому графу OSM с приблизительными подходами к точкам; доступность проходов не проверена в реальном времени';
+        basisBadge.title = t('graph_caveat');
         mDistance.appendChild(basisBadge);
       }
 
@@ -2470,7 +2395,7 @@
       mWalkLabel.textContent = t('one_way');
       const mWalkVal = document.createElement('span');
       mWalkVal.className = 'metric-value';
-      mWalkVal.textContent = `~${poi.walk_minutes_estimate ?? 0} мин`;
+      mWalkVal.textContent = `~${poi.walk_minutes_estimate ?? 0} ${t('minute')}`;
       mWalk.appendChild(mWalkLabel);
       mWalk.appendChild(mWalkVal);
 
@@ -2483,7 +2408,7 @@
       const mTotalVal = document.createElement('span');
       mTotalVal.className = 'metric-value metric-highlight';
       const totalMin = poi.total_minutes_estimate || (2 * (poi.walk_minutes_estimate || 0) + (poi.visit_minutes_estimate || 0));
-      mTotalVal.textContent = `~${totalMin} мин`;
+      mTotalVal.textContent = `~${totalMin} ${t('minute')}`;
       mTotal.appendChild(mTotalLabel);
       mTotal.appendChild(mTotalVal);
 
@@ -2493,44 +2418,44 @@
       card.appendChild(metrics);
       const duration = document.createElement('p');
       duration.className = 'card-timing-note';
-      duration.textContent = `На месте: ${poi.visit_minutes_estimate} мин. Возврат включён в итог. Свободно в бюджете: ${poi.time_margin_minutes ?? '—'} мин.`;
+      duration.textContent = t('timing_note', {visit: poi.visit_minutes_estimate, margin: poi.time_margin_minutes ?? '—'});
       card.appendChild(duration);
 
       // --- Confirmed Infrastructure Tags (WiFi, Socket, Wheelchair) ---
       if (poi.confirmed_features) {
         const featRow = document.createElement('div');
         featRow.className = 'feature-pills-row';
-        if (poi.confirmed_features.socket) {
+        if (poi.confirmed_features.socket === true) {
           const p = document.createElement('span');
           p.className = 'feature-pill active';
-          p.textContent = '🔌 Розетки';
+          p.textContent = `🔌 ${t('socket')}`;
           featRow.appendChild(p);
         }
-        if (poi.confirmed_features.wifi) {
+        if (poi.confirmed_features.wifi === true) {
           const p = document.createElement('span');
           p.className = 'feature-pill active';
           p.textContent = '📶 Wi-Fi';
           featRow.appendChild(p);
         }
-        if (poi.confirmed_features.wheelchair) {
+        if (poi.confirmed_features.wheelchair === true) {
           const p = document.createElement('span');
           p.className = 'feature-pill active';
-          p.textContent = '♿ Доступная среда';
+          p.textContent = `♿ ${t('wheelchair')}`;
           featRow.appendChild(p);
         }
-        if (poi.confirmed_features.quiet) {
+        if (poi.confirmed_features.quiet === true) {
           const p = document.createElement('span');
           p.className = 'feature-pill active';
-          p.textContent = '🌿 Тихий сквер';
+          p.textContent = `🌿 ${t('quiet')}`;
           featRow.appendChild(p);
         }
-        if (poi.climate_shielded) {
+        if (poi.climate_shielded === true && (poi.indoor_evidence?.length || poi.tags?.indoor === 'yes' || poi.tags?.indoor_seating === 'yes')) {
           const p = document.createElement('span');
           p.className = 'feature-pill active';
           p.style.background = '#e0f2fe';
           p.style.color = '#0369a1';
           p.style.borderColor = '#7dd3fc';
-          p.textContent = '🛡️ Теплый хаб (Защита от ветра)';
+          p.textContent = `🛡️ ${t('climate_indoor')}`;
           featRow.appendChild(p);
         }
         if (featRow.children.length > 0) {
@@ -2564,7 +2489,7 @@
         if (poi.activity) {
           const actLine = document.createElement('div');
           actLine.className = 'ai-act-line';
-          actLine.innerHTML = `<strong>💡 ${t('act_label')}</strong> ${escapeHtml(poi.activity)}`;
+          actLine.innerHTML = `<strong>${t('act_label')}</strong> ${escapeHtml(poi.activity)}`;
           aiBox.appendChild(actLine);
         }
 
@@ -2597,7 +2522,7 @@
           evIcon.textContent = ev.kind === 'official' ? '🏛️' : '📋';
           const evTitle = document.createElement('span');
           evTitle.className = 'evidence-title';
-          evTitle.textContent = ev.kind === 'official' ? t('verified_fact') : 'По данным OpenStreetMap';
+          evTitle.textContent = ev.kind === 'official' ? t('verified_fact') : t('osm_source');
           evHead.appendChild(evIcon);
           evHead.appendChild(evTitle);
           evBox.appendChild(evHead);
@@ -2611,7 +2536,7 @@
           evMeta.className = 'evidence-meta';
           const evBadge = document.createElement('span');
           evBadge.className = 'evidence-badge';
-          evBadge.textContent = `${t('evidence_sha')} · ${formatDate(ev.collected_at)}${ev.published_at ? ` · публикация: ${formatDate(ev.published_at)}` : ''}`;
+          evBadge.textContent = `${t('evidence_sha')} · ${formatDate(ev.collected_at)}${ev.published_at ? ` · ${t('published')}: ${formatDate(ev.published_at)}` : ''}`;
           evMeta.appendChild(evBadge);
 
           if (safeHttpUrl(ev.source_url)) {
@@ -2620,7 +2545,7 @@
             evLink.href = ev.source_url;
             evLink.target = '_blank';
             evLink.rel = 'noopener noreferrer';
-            evLink.textContent = 'Источник ↗';
+            evLink.textContent = t('source');
             evLink.addEventListener('click', e => e.stopPropagation());
             evMeta.appendChild(evLink);
           }
@@ -2636,7 +2561,7 @@
       const hoursBadge = document.createElement('div');
       hoursBadge.className = 'hours-badge';
       if (poi.opening_hours) {
-        hoursBadge.textContent = `🕒 По источнику: ${poi.opening_hours} · уточните перед визитом`;
+        hoursBadge.textContent = `🕒 ${t('hours_source', {hours: poi.opening_hours})}`;
       } else {
         hoursBadge.classList.add('hours-unconfirmed');
         hoursBadge.textContent = t('unconfirmed_hours');
@@ -2647,7 +2572,7 @@
         const phoneBadge = document.createElement('a');
         phoneBadge.className = 'hours-badge';
         phoneBadge.style.textDecoration = 'none';
-        phoneBadge.href = `tel:${poi.phone}`;
+        phoneBadge.href = `tel:${String(poi.phone).replace(/[^+0-9,;]/g, '')}`;
         phoneBadge.textContent = `📞 ${poi.phone}`;
         phoneBadge.addEventListener('click', e => e.stopPropagation());
         infoRow.appendChild(phoneBadge);
@@ -2671,7 +2596,7 @@
       const footer = document.createElement('div');
       footer.className = 'card-footer';
 
-      if (poi.source_url && (poi.source_url.startsWith('https://') || poi.source_url.startsWith('http://'))) {
+      if (safeHttpUrl(poi.source_url)) {
         const sourceLink = document.createElement('a');
         sourceLink.className = 'card-source-link';
         sourceLink.href = poi.source_url;
@@ -2687,7 +2612,7 @@
       }
 
       const dateEl = document.createElement('span');
-      let dateString = poi.collected_at ? formatDate(poi.collected_at) : 'не указана';
+      let dateString = poi.collected_at ? formatDate(poi.collected_at) : t('unknown');
       dateEl.textContent = `${t('collected_at')} ${dateString}`;
       footer.appendChild(dateEl);
 
@@ -2700,7 +2625,7 @@
     try {
       const d = new Date(isoStr);
       if (isNaN(d.getTime())) return isoStr;
-      return d.toLocaleDateString('ru-RU', {
+      return d.toLocaleDateString(currentLang === 'kz' ? 'kk-KZ' : currentLang === 'en' ? 'en-GB' : 'ru-RU', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
@@ -2782,7 +2707,7 @@
   async function ensureMockData() {
     if (mockData) return;
     const res = await fetch('/static/mock.json');
-    if (!res.ok) throw new Error('Не удалось загрузить mock.json');
+    if (!res.ok) throw new Error(t('mock_load_error'));
     mockData = await res.json();
   }
 

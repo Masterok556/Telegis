@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Telegis",
-    "description": "AI-гид по Астане: факты с источниками и мини-маршруты с возвращением и запасом времени.",
-    "version": "1.3.0"
+    "description": "AI-гид по Астане: факты с источниками, проверяемая погода и мини-маршруты с возвращением и запасом времени.",
+    "version": "1.4.0"
   },
   "paths": {
     "/api/health": {
@@ -26,6 +26,23 @@
       "get": {
         "summary": "Locations",
         "operationId": "locations_api_locations_get",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "ru",
+                "kz",
+                "en"
+              ],
+              "type": "string",
+              "default": "ru",
+              "title": "Locale"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -33,6 +50,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LocationsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -44,6 +71,23 @@
       "get": {
         "summary": "Pois",
         "operationId": "pois_api_pois_get",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "ru",
+                "kz",
+                "en"
+              ],
+              "type": "string",
+              "default": "ru",
+              "title": "Locale"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -51,6 +95,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -116,12 +170,94 @@
       "get": {
         "summary": "Meta",
         "operationId": "meta_api_meta_get",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "ru",
+                "kz",
+                "en"
+              ],
+              "type": "string",
+              "default": "ru",
+              "title": "Locale"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/weather": {
+      "get": {
+        "summary": "Get Weather",
+        "operationId": "get_weather_api_weather_get",
+        "parameters": [
+          {
+            "name": "demo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Demo"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "ru",
+                "kz",
+                "en"
+              ],
+              "type": "string",
+              "default": "ru",
+              "title": "Locale"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherSnapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -203,6 +339,44 @@
           }
         }
       }
+    },
+    "/api/route": {
+      "post": {
+        "summary": "Route",
+        "operationId": "route_api_route_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -227,6 +401,92 @@
           "snapshot_id"
         ],
         "title": "CatalogResponse"
+      },
+      "ClimateContext": {
+        "properties": {
+          "requested": {
+            "type": "boolean",
+            "title": "Requested",
+            "default": false
+          },
+          "applied": {
+            "type": "boolean",
+            "title": "Applied",
+            "default": false
+          },
+          "policy": {
+            "type": "string",
+            "enum": [
+              "off",
+              "normal",
+              "indoor_only",
+              "paused"
+            ],
+            "title": "Policy",
+            "default": "off"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reason Codes"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Климатический режим выключен; погода не влияет на выбор."
+          },
+          "weather": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeatherSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outdoor_travel_unverified": {
+            "type": "boolean",
+            "const": true,
+            "title": "Outdoor Travel Unverified",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ClimateContext"
+      },
+      "ClimatePolicy": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "prefer_indoor",
+              "avoid_outdoor",
+              "unknown"
+            ],
+            "title": "Mode"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "message"
+        ],
+        "title": "ClimatePolicy"
       },
       "Evidence": {
         "properties": {
@@ -346,6 +606,24 @@
             "const": true,
             "title": "Return To Start",
             "default": true
+          },
+          "climate_shield": {
+            "type": "boolean",
+            "title": "Climate Shield",
+            "default": false
+          },
+          "climate": {
+            "$ref": "#/components/schemas/ClimateContext"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "kz",
+              "en"
+            ],
+            "title": "Locale",
+            "default": "ru"
           }
         },
         "type": "object",
@@ -455,6 +733,21 @@
             "type": "boolean",
             "title": "Include Coffee",
             "default": true
+          },
+          "climate_shield": {
+            "type": "boolean",
+            "title": "Climate Shield",
+            "default": false
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "kz",
+              "en"
+            ],
+            "title": "Locale",
+            "default": "ru"
           }
         },
         "additionalProperties": false,
@@ -730,6 +1023,18 @@
             },
             "type": "array",
             "title": "Warnings"
+          },
+          "indoor_evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Indoor Evidence"
+          },
+          "climate_shielded": {
+            "type": "boolean",
+            "title": "Climate Shielded",
+            "default": false
           }
         },
         "type": "object",
@@ -959,6 +1264,16 @@
             "maxLength": 100,
             "pattern": "^osm_(node|way|relation)_[1-9][0-9]*$",
             "title": "Poi Id"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "kz",
+              "en"
+            ],
+            "title": "Locale",
+            "default": "ru"
           }
         },
         "additionalProperties": false,
@@ -1071,6 +1386,21 @@
               "cafe"
             ],
             "title": "Category"
+          },
+          "climate_shield": {
+            "type": "boolean",
+            "title": "Climate Shield",
+            "default": false
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "kz",
+              "en"
+            ],
+            "title": "Locale",
+            "default": "ru"
           }
         },
         "additionalProperties": false,
@@ -1297,6 +1627,18 @@
               }
             ],
             "title": "Route Connector M"
+          },
+          "climate_shielded": {
+            "type": "boolean",
+            "title": "Climate Shielded",
+            "default": false
+          },
+          "indoor_evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Indoor Evidence"
           }
         },
         "type": "object",
@@ -1318,6 +1660,183 @@
           "warnings"
         ],
         "title": "Recommendation"
+      },
+      "RouteContext": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "poi_id": {
+            "type": "string",
+            "title": "Poi Id"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "kz",
+              "en"
+            ],
+            "title": "Locale"
+          },
+          "climate_shield": {
+            "type": "boolean",
+            "title": "Climate Shield"
+          },
+          "climate": {
+            "$ref": "#/components/schemas/ClimateContext"
+          },
+          "return_to_start": {
+            "type": "boolean",
+            "const": false,
+            "title": "Return To Start",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon",
+          "poi_id",
+          "locale",
+          "climate_shield",
+          "climate"
+        ],
+        "title": "RouteContext"
+      },
+      "RouteRequest": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon"
+          },
+          "poi_id": {
+            "type": "string",
+            "maxLength": 100,
+            "pattern": "^osm_(node|way|relation)_[1-9][0-9]*$",
+            "title": "Poi Id"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "kz",
+              "en"
+            ],
+            "title": "Locale",
+            "default": "ru"
+          },
+          "climate_shield": {
+            "type": "boolean",
+            "title": "Climate Shield",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "lat",
+          "lon",
+          "poi_id"
+        ],
+        "title": "RouteRequest"
+      },
+      "RouteResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "no_match",
+              "network_unavailable"
+            ],
+            "title": "Status"
+          },
+          "used_context": {
+            "$ref": "#/components/schemas/RouteContext"
+          },
+          "coordinates": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Coordinates"
+          },
+          "distance_m": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Distance M",
+            "default": 0
+          },
+          "walk_minutes_estimate": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Walk Minutes Estimate",
+            "default": 0
+          },
+          "connector_m": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Connector M",
+            "default": 0
+          },
+          "route_kind": {
+            "type": "string",
+            "const": "osm_walking_graph_with_approximate_connectors",
+            "title": "Route Kind",
+            "default": "osm_walking_graph_with_approximate_connectors"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "network_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network Snapshot Id"
+          },
+          "attribution": {
+            "type": "string",
+            "title": "Attribution",
+            "default": "© OpenStreetMap contributors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "used_context",
+          "message"
+        ],
+        "title": "RouteResponse"
       },
       "UsedContext": {
         "properties": {
@@ -1356,6 +1875,24 @@
             "type": "number",
             "title": "Max Distance M",
             "default": 2500
+          },
+          "climate_shield": {
+            "type": "boolean",
+            "title": "Climate Shield",
+            "default": false
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "kz",
+              "en"
+            ],
+            "title": "Locale",
+            "default": "ru"
+          },
+          "climate": {
+            "$ref": "#/components/schemas/ClimateContext"
           },
           "required_features": {
             "items": {
@@ -1413,6 +1950,198 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WeatherCurrent": {
+        "properties": {
+          "temperature_c": {
+            "type": "number",
+            "maximum": 70.0,
+            "minimum": -100.0,
+            "title": "Temperature C"
+          },
+          "apparent_temperature_c": {
+            "type": "number",
+            "maximum": 80.0,
+            "minimum": -120.0,
+            "title": "Apparent Temperature C"
+          },
+          "wind_m_s": {
+            "type": "number",
+            "maximum": 120.0,
+            "minimum": 0.0,
+            "title": "Wind M S"
+          },
+          "gust_m_s": {
+            "type": "number",
+            "maximum": 150.0,
+            "minimum": 0.0,
+            "title": "Gust M S"
+          },
+          "precipitation_mm": {
+            "type": "number",
+            "maximum": 500.0,
+            "minimum": 0.0,
+            "title": "Precipitation Mm"
+          },
+          "precipitation_interval_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 60.0,
+            "title": "Precipitation Interval Seconds"
+          },
+          "weather_code": {
+            "type": "integer",
+            "title": "Weather Code"
+          },
+          "is_day": {
+            "type": "boolean",
+            "title": "Is Day"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "temperature_c",
+          "apparent_temperature_c",
+          "wind_m_s",
+          "gust_m_s",
+          "precipitation_mm",
+          "precipitation_interval_seconds",
+          "weather_code",
+          "is_day"
+        ],
+        "title": "WeatherCurrent"
+      },
+      "WeatherLocation": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": "Астана · EXPO"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat",
+            "default": 51.089
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon",
+            "default": 71.419
+          },
+          "kind": {
+            "type": "string",
+            "const": "fixed_area",
+            "title": "Kind",
+            "default": "fixed_area"
+          }
+        },
+        "type": "object",
+        "title": "WeatherLocation"
+      },
+      "WeatherSnapshot": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "live",
+              "stale",
+              "unavailable",
+              "demo"
+            ],
+            "title": "Status"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "location": {
+            "$ref": "#/components/schemas/WeatherLocation"
+          },
+          "valid_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid At"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "age_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Seconds"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeatherCurrent"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "policy": {
+            "$ref": "#/components/schemas/ClimatePolicy"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "attribution": {
+            "type": "string",
+            "title": "Attribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "source",
+          "source_url",
+          "valid_at",
+          "fetched_at",
+          "age_seconds",
+          "current",
+          "policy",
+          "attribution"
+        ],
+        "title": "WeatherSnapshot"
       }
     }
   }

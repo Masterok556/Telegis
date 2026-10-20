@@ -1,5 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from app.climate import ClimateContext
 
 
 class RecommendRequest(BaseModel):
@@ -9,7 +10,8 @@ class RecommendRequest(BaseModel):
     lon: float = Field(ge=-180, le=180)
     available_minutes: int = Field(ge=10, le=180, strict=True)
     category: Literal["walk", "cafe"]
-    climate_shield: bool = False
+    climate_shield: bool = Field(default=False, strict=True)
+    locale: Literal["ru", "kz", "en"] = "ru"
 
 
 class UsedContext(BaseModel):
@@ -20,6 +22,8 @@ class UsedContext(BaseModel):
     effective_minutes: int | None = None
     max_distance_m: float = 2500
     climate_shield: bool = False
+    locale: Literal["ru", "kz", "en"] = "ru"
+    climate: ClimateContext = Field(default_factory=ClimateContext)
     required_features: list[str] = Field(default_factory=list)
     excluded_categories: list[str] = Field(default_factory=list)
 
@@ -122,6 +126,7 @@ class Recommendation(BaseModel):
     return_route_distance_m: int | None = None
     route_connector_m: int | None = None
     climate_shielded: bool = False
+    indoor_evidence: list[Evidence] = Field(default_factory=list)
 
 
 class RecommendResponse(BaseModel):

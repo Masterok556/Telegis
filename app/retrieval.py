@@ -9,6 +9,7 @@ from app.geo import distance_m
 from app.models import POI, RecommendRequest
 from app.facts import facts_for, excluded_from_routes
 from app.scenarios import scenario_allows, scenario_flags, scenario_rejection
+from app.climate import ClimateContext, climate_context, climate_allows, indoor_evidence
 
 VISIT_MINUTES = {
     "cafe": 15, "park": 20, "garden": 15, "playground": 20,
@@ -28,21 +29,22 @@ ALIASES = {
     "прогул": "walk", "погул": "walk", "walk": "walk",
     "памят": "monument", "monument": "monument", "арт": "art", "art": "art",
     "дет": "children", "ребён": "children", "ребен": "children", "child": "children",
+    "саябақ": "park", "мұражай": "museum", "серуен": "walk", "бала": "children",
 }
 FEATURE_PATTERNS = {
     "socket": r"розет\w*|socket\w*|power\s*outlet\w*",
     "wifi": r"wi[ -]?fi|вай[ -]?фай|интернет\w*",
-    "quiet": r"тих\w*|тишин\w*|quiet\w*",
-    "wheelchair": r"инвалид\w*|wheelchair\w*|безбарьер\w*",
+    "quiet": r"тих\w*|тишин\w*|quiet\w*|тыныш\w*",
+    "wheelchair": r"инвалид\w*|wheelchair\w*|безбарьер\w*|мүгедек\w*",
 }
 FEATURE_LABELS = {"socket": "розетки", "wifi": "Wi-Fi", "quiet": "тишина", "wheelchair": "доступность для кресла-коляски"}
 CATEGORY_PATTERNS = (
-    (r"музе\w*|museums?", {"museum"}),
-    (r"парк(?:а|е|и|ом|ов|ам|ах|у)?|parks?", {"park", "garden"}),
+    (r"музе\w*|museums?|мұражай\w*", {"museum"}),
+    (r"парк(?:а|е|и|ом|ов|ам|ах|у)?|parks?|саябақ\w*", {"park", "garden"}),
     (r"сад(?:а|у|ом|ы|ов|ах)?|gardens?", {"garden"}),
     (r"галере\w*|galler(?:y|ies)", {"gallery"}),
     (r"смотров\w*(?:\s+площад\w*)?|viewpoints?", {"viewpoint"}),
-    (r"дет\w*\s+площад\w*|playgrounds?", {"playground"}),
+    (r"дет\w*\s+площад\w*|playgrounds?|балалар\s+алаң\w*", {"playground"}),
     (r"кофе|кафе|кофейн\w*|coffee|caf[eé]s?", {"cafe"}),
     (r"памятник\w*|monuments?", {"monument", "memorial"}),
     (r"мемориал\w*|memorials?", {"memorial"}),
@@ -88,7 +90,7 @@ def required_features(query: str) -> tuple[str, ...]:
     # Remove common explicitly waived requirements; other mentions are conservative constraints.
     q = query.lower()
     feature = "(?:" + "|".join(FEATURE_PATTERNS.values()) + ")"
-    waive = r"(?:не\s+(?:нуж\w*|обязательн\w*|важн\w*|требу\w*)|not\s+(?:needed|required|necessary))"
+    waive = r"(?:не\s+(?:нуж\w*|обязательн\w*|важн\w*|требу\w*)|not\s+(?:needed|required|necessary)|қажет\s+емес)"
     q = re.sub(r"\b(?:без|" + waive + r")\s+" + feature + r"(?:\s*(?:,|и|или|and|or)\s*" + feature + r")*", "", q)
     q = re.sub(feature + r"(?:\s*(?:,|и|или|and|or)\s*" + feature + r")*\s+" + waive, "", q)
     return tuple(key for key, pattern in FEATURE_PATTERNS.items() if re.search(r"\b(?:" + pattern + r")\b", q))
@@ -105,7 +107,7 @@ def category_constraints(query: str) -> tuple[set[str], set[str]]:
         for match in re.finditer(r"\b(?:" + pattern + r")\b", query):
             before, after = query[:match.start()], query[match.end():]
             if any(start <= match.start() < end for start, end in spans) or re.match(
-                r"\s+не\s+(?:нуж\w*|интересу\w*|надо)\b", after
+                r"\s+(?:не\s+(?:нуж\w*|интересу\w*|надо)|қажет\s+емес|керек\s+емес)\b", after
             ):
                 excluded.update(categories)
             elif re.search(r"\b(?:у|возле|около|рядом\s+с|near|next\s+to)\s+(?:здания\s+)?$", before) or re.search(
@@ -122,6 +124,9 @@ def explicit_limits(query: str, available_minutes: int) -> tuple[int, float]:
     minutes, radius = available_minutes, 2500.0
     for match in re.finditer(r"\b(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?\s*(minutes?|mins?|hours?|hrs?)\b", query):
         minutes = min(minutes, int(match[2] or match[1]) * (60 if match[3].startswith("h") else 1))
+    if re.search(r"[әғқңөұүһі]|серуен|баламен|кофе\s+керек", query):
+        for match in re.finditer(r"\b(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?\s*(минут\w*|сағат\w*)\b", query):
+            minutes = min(minutes, int(match[2] or match[1]) * (60 if match[3].startswith("сағат") else 1))
     for match in re.finditer(
         r"\b(?:на|за|есть|осталось|всего|меня|максимум|бюджет(?:\s+времени)?|не\s+(?:более|больше)|до|уложиться\s+в)\s+"
         r"(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?\s*(минут\w*|мин\b|час\w*|ч\b)", query
@@ -161,16 +166,20 @@ def lexical_scores(query: str, pois: list[POI]) -> dict[str, float]:
     return scores
 
 
-def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> RetrievalResult:
+def retrieve(request: RecommendRequest, dataset: Dataset, network=None,
+             climate: ClimateContext | None = None) -> RetrievalResult:
     q = request.query.lower()
     required = required_features(q)
     category_interests, excluded = category_constraints(q)
     available_minutes, max_distance = explicit_limits(q, request.available_minutes)
+    climate = climate or climate_context(request.climate_shield)
 
     def result(candidates: tuple[Candidate, ...], message: str) -> RetrievalResult:
         return RetrievalResult(candidates, message, required, available_minutes, max_distance, tuple(sorted(excluded)))
 
     coverage = dataset.manifest["coverage"]
+    if climate.policy == "paused":
+        return result((), climate.message)
     if distance_m(request.lat, request.lon, coverage["lat"], coverage["lon"]) > coverage["radius_m"]:
         return result((), "Пока доступны только места в районе EXPO / Mega Silk Way. Выберите стартовую точку в зоне покрытия.")
     blocked = scenario_rejection(q)
@@ -182,17 +191,17 @@ def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> Retri
         allowed &= category_interests
         if not allowed:
             return result((), "Текст запроса и выбранная категория расходятся. Переключите «Прогулка» / «Кофе» или уточните запрос.")
-    elif request.category == "walk" and re.search(r"\b(?:реб[её]н\w*|с\s+детьми|children|child)\b", q):
+    elif request.category == "walk" and "family" in scenario_flags(q):
         # Accompanying a child does not override an explicit museum or cafe interest.
         allowed &= {"park", "garden", "playground"}
-    climate_active = bool(getattr(request, "climate_shield", False) or re.search(r"\b(?:холод\w*|ветер\w*|мороз\w*|буран\w*|укрыт\w*|крыт\w*|indoor)\b", q))
-    if climate_active and "playground" in allowed and not re.search(r"площадк|playground", q):
-        allowed -= {"playground"}
     allowed -= excluded
     eligible = [p for p in dataset.pois if p.category in allowed and not excluded_from_routes(p) and scenario_allows(p, q)
+                and climate_allows(p, climate, q)
                 and all(p.confirmed_features.get(f) is True for f in required)]
     if not eligible:
         detail = " Не подтверждены условия: " + ", ".join(FEATURE_LABELS[f] for f in required) + "." if required else ""
+        if climate.policy == "indoor_only":
+            detail += " Нужны явные данные о помещении; категория кафе или музей этого не подтверждает."
         return result((), "В этой части датасета нет подходящих мест." + detail)
     scores = lexical_scores(request.query, eligible)
     max_score = max(scores.values(), default=0) or 1
@@ -222,21 +231,7 @@ def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> Retri
         score = 0.65 * (scores[poi.poi_id] / max_score) + 0.35 * (1 - meters / 2500)
         if "family" in scenario_flags(q) and poi.category == "playground":
             score += 0.4
-        is_shielded = (
-            poi.tags.get("indoor") == "yes"
-            or poi.tags.get("indoor_seating") == "yes"
-            or "mega" in poi.name.lower()
-            or "aitu" in poi.name.lower()
-            or "hub" in poi.name.lower()
-            or "alem" in poi.name.lower()
-            or poi.category in {"cafe", "museum", "gallery"}
-            or any("indoor" in str(v).lower() or "крыт" in str(v).lower() for v in poi.tags.values())
-        )
-        if climate_active:
-            if is_shielded:
-                score += 0.5
-            else:
-                score -= 0.3
+        is_shielded = bool(indoor_evidence(poi))
         candidates.append(Candidate(poi, meters, walk, visit, total, score,
                                     routed.distance_m if routed else None,
                                     returned.distance_m if returned else None,

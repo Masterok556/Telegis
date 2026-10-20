@@ -4,12 +4,14 @@ from datetime import datetime, timezone
 from functools import lru_cache
 import logging
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 
 from app.config import Settings
 from app.data_store import DataStore, DatasetUnavailable
@@ -21,6 +23,14 @@ from app.scenarios import scenario_warnings
 from app.itinerary import ItineraryRequest, ItineraryResponse, build_itinerary
 from app.walking import WalkingNetwork
 from app.catalog import CatalogResponse, PlaceInfoRequest, PlaceInfoResponse, place_card, place_info
+from app.climate import climate_context, indoor_evidence
+from app.weather import WeatherService, WeatherSnapshot
+from app.point_route import RouteRequest, RouteResponse, build_route
+
+
+def localized(value, locale: str):
+    from app.localization import localize_response
+    return localize_response(value.model_dump(mode="json") if hasattr(value, "model_dump") else value, locale)
 
 
 @lru_cache(maxsize=2)
@@ -48,14 +58,20 @@ class OptionalStaticFiles(StaticFiles):
         return None
 
 
-def create_app(settings: Settings | None = None, generator: Generator | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, generator: Generator | None = None,
+               weather_service: WeatherService | None = None) -> FastAPI:
     config = settings or Settings.from_env()
     store = DataStore(config.data_dir)
     generator = generator or Generator(config)
-    api = FastAPI(title="Telegis", version="1.3.0", description="AI-гид по Астане: факты с источниками и мини-маршруты с возвращением и запасом времени.")
+    weather_service = weather_service or WeatherService()
+    api = FastAPI(title="Telegis", version="1.4.0", description="AI-гид по Астане: факты с источниками, проверяемая погода и мини-маршруты с возвращением и запасом времени.")
     api.state.store = store
     api.state.settings = config
     api.state.generator = generator
+    api.state.weather = weather_service
+
+    async def request_climate(enabled: bool):
+        return climate_context(enabled, await weather_service.get() if enabled else None)
     # No access logs containing IPs/queries, no outbound HTTP logs with provider URLs.
     logging.getLogger("uvicorn.access").disabled = True
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -105,14 +121,14 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                                                          "llm_configured": config.llm_configured})
 
     @api.get("/api/locations", response_model=LocationsResponse)
-    async def locations():
-        return LocationsResponse(locations=list(store.get().locations))
+    async def locations(locale: Literal["ru", "kz", "en"] = "ru"):
+        return localized(LocationsResponse(locations=list(store.get().locations)), locale)
 
     @api.get("/api/pois", response_model=CatalogResponse)
-    def pois():
+    def pois(locale: Literal["ru", "kz", "en"] = "ru"):
         dataset = store.get()
-        return CatalogResponse(pois=[place_card(p) for p in dataset.pois],
-                               snapshot_id=dataset.manifest["snapshot_id"])
+        return localized(CatalogResponse(pois=[place_card(p) for p in dataset.pois],
+                               snapshot_id=dataset.manifest["snapshot_id"]), locale)
 
     @api.post("/api/poi_ai_info", response_model=PlaceInfoResponse)
     def poi_info(payload: PlaceInfoRequest):
@@ -121,7 +137,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
         poi = next((p for p in store.get().pois if p.poi_id == payload.poi_id), None)
         if poi is None:
             raise HTTPException(status_code=404, detail="Точка отсутствует в проверенном датасете.")
-        return place_info(poi)
+        return localized(place_info(poi), payload.locale)
 
     @api.get("/api/walking-map.geojson")
     def walking_map():
@@ -131,12 +147,12 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
         return network.map_geojson()
 
     @api.get("/api/meta")
-    async def meta():
+    async def meta(locale: Literal["ru", "kz", "en"] = "ru"):
         dataset = store.get()
         manifest = dataset.manifest
         network = walking_network(config.walking_dir or config.data_dir / "walking")
         all_facts = [facts_for(p) for p in dataset.pois]
-        return {key: manifest[key] for key in ("poi_count", "categories", "collected_at", "source_data_timestamp",
+        body = {key: manifest[key] for key in ("poi_count", "categories", "collected_at", "source_data_timestamp",
                                                "coverage", "attribution", "license", "license_url", "snapshot_id")} | {
             "retrieval": "geographic filters + lexical BM25",
             "llm_configured": config.llm_configured,
@@ -152,12 +168,18 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                 "with_informative_facts": sum(bool(facts) for facts in all_facts),
                 "attributed_fact_count": sum(len(facts) for facts in all_facts),
                 "official_fact_count": sum(f["kind"] == "official" for facts in all_facts for f in facts),
+                "with_explicit_indoor_evidence": sum(bool(indoor_evidence(p)) for p in dataset.pois),
                 "excluded_pending_verification": [
                     {"poi_id": p.poi_id, "name": p.name, "warnings": warnings_for(p)}
                     for p in dataset.pois if excluded_from_routes(p)
                 ],
             },
-            "capabilities": ["grounded_recommendations", "attributed_place_facts", "return_with_time_reserve"],
+            "capabilities": ["grounded_recommendations", "attributed_place_facts", "return_with_time_reserve",
+                             "model_weather_with_freshness", "evidence_based_climate_filter", "single_destination_graph_route"],
+            "weather": {"provider": "Open-Meteo", "location_kind": "fixed_public_area",
+                        "user_coordinates_sent": False, "source_url": "https://open-meteo.com/en/docs",
+                        "live_label_means": "fresh_model_estimate_not_station_observation",
+                        "demo_affects_recommendations": False},
             "walking_network": {"available": network is not None, **({
                 key: network.metadata.get(key) for key in ("snapshot_id", "collected_at", "node_count", "directed_edge_count", "source_data_timestamp", "max_snap_m")
             } if network else {})},
@@ -169,27 +191,24 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                             "Лексический поиск и правила понимают ограниченный набор условий."],
             "privacy": "Нет хранения запросов/GPS и аналитики; модели передаются выбранные POI и нормализованные ограничения, без исходного текста и координат пользователя.",
         }
+        return localized(body, locale)
 
-    @api.get("/api/weather")
-    async def get_weather():
-        return {
-            "city": "Астана",
-            "temperature_c": -3,
-            "wind_speed_ms": 7.5,
-            "condition": "Холодный ветер",
-            "shield_recommended": True,
-            "summary": "Астана: -3°C, ветер 7.5 м/с. Рекомендуется защита от ветра и открытых пространств."
-        }
+    @api.get("/api/weather", response_model=WeatherSnapshot)
+    async def get_weather(demo: bool = False, locale: Literal["ru", "kz", "en"] = "ru"):
+        return localized(await weather_service.get(demo=demo), locale)
 
     @api.post("/api/recommend", response_model=RecommendResponse)
     async def recommend(payload: RecommendRequest):
         dataset = store.get()
-        result = retrieve(payload, dataset, walking_network(config.walking_dir or config.data_dir / "walking"))
+        climate = await request_climate(payload.climate_shield)
+        result = await run_in_threadpool(retrieve, payload, dataset,
+                                        walking_network(config.walking_dir or config.data_dir / "walking"), climate)
         context = UsedContext(**payload.model_dump(exclude={"query"}),
                               effective_minutes=result.effective_minutes, max_distance_m=result.max_distance_m,
-                              required_features=list(result.required_features), excluded_categories=list(result.excluded_categories))
+                              required_features=list(result.required_features), excluded_categories=list(result.excluded_categories),
+                              climate=climate)
         if not result.candidates:
-            return RecommendResponse(mode="fallback", used_context=context, recommendations=[], message=result.message)
+            return localized(RecommendResponse(mode="fallback", used_context=context, recommendations=[], message=result.message), payload.locale)
         effective = payload.model_copy(update={"available_minutes": result.effective_minutes or payload.available_minutes})
         generated = await generator.generate(effective, result.candidates, result.required_features)
         recommendations = []
@@ -209,6 +228,8 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                 warnings.append("Датасет собран более недели назад; сведения могли измениться.")
             warnings.extend(warnings_for(poi))
             warnings.extend(scenario_warnings(payload.query))
+            if climate.policy == "indoor_only":
+                warnings.append(climate.message)
             recommendations.append(Recommendation(
                 poi_id=poi.poi_id, name=poi.name, lat=poi.lat, lon=poi.lon, category=poi.category,
                 distance_m=candidate.distance, walk_minutes_estimate=candidate.walk_minutes,
@@ -223,13 +244,23 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                 route_distance_m=candidate.route_distance_m, return_route_distance_m=candidate.return_route_distance_m,
                 route_connector_m=candidate.route_connector_m,
                 climate_shielded=candidate.climate_shielded,
+                indoor_evidence=indoor_evidence(poi),
             ))
-        return RecommendResponse(mode=generated.mode, used_context=context, recommendations=recommendations, message=generated.message)
+        return localized(RecommendResponse(mode=generated.mode, used_context=context, recommendations=recommendations, message=generated.message), payload.locale)
 
     @api.post("/api/itinerary", response_model=ItineraryResponse)
-    def itinerary(payload: ItineraryRequest):
-        # CPU-bound local path search runs in FastAPI's worker thread pool.
-        return build_itinerary(payload, store.get(), walking_network(config.walking_dir or config.data_dir / "walking"))
+    async def itinerary(payload: ItineraryRequest):
+        climate = await request_climate(payload.climate_shield)
+        result = await run_in_threadpool(build_itinerary, payload, store.get(),
+                                        walking_network(config.walking_dir or config.data_dir / "walking"), climate)
+        return localized(result, payload.locale)
+
+    @api.post("/api/route", response_model=RouteResponse)
+    async def route(payload: RouteRequest):
+        climate = await request_climate(payload.climate_shield)
+        result = await run_in_threadpool(build_route, payload, store.get(),
+                                        walking_network(config.walking_dir or config.data_dir / "walking"), climate)
+        return localized(result, payload.locale)
 
     @api.get("/", include_in_schema=False)
     async def index():

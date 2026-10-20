@@ -17,3 +17,4 @@ test_landmarks_and_photos.js
 *.png
 !static/images/*.png
 !docs/screenshots/itinerary-live.png
+!docs/screenshots/verified-*.png

@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-20T17:52:43.337575+00:00",
+  "syntheticWeatherTest": true,
+  "weather_test_notice": "All weather states and values are synthetic integration test inputs, not actual Astana weather.",
+  "real_dataset_snapshot": "20261020T112234Z-47247bf6",
+  "real_poi_count": 134,
+  "real_walking_snapshot": "20261019T181502Z-5dc1e80a",
+  "start_kind": "fixed_public_dataset_center_and_stored_public_poi",
+  "public_start_poi_ids": [
+    "osm_node_11927785970"
+  ],
+  "user_coordinates_used": false,
+  "environment_file_loaded": false,
+  "paid_llm_calls": 0,
+  "provider_weather_calls": 0,
+  "external_http_attempts": 0,
+  "passed": true,
+  "passed_count": 17,
+  "case_count": 17,
+  "checks": [
+    {
+      "name": "Climate off makes no weather request",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "weather_calls": 0,
+        "poi_ids": [
+          "osm_node_12990081501",
+          "osm_node_9047331879",
+          "osm_node_6408255389"
+        ]
+      }
+    },
+    {
+      "name": "Normal weather preserves recommendations and times",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "same_poi_ids": [
+          "osm_way_1456208624",
+          "osm_way_1470723968",
+          "osm_way_1424109192"
+        ],
+        "policy": "normal"
+      }
+    },
+    {
+      "name": "Cold weather returns exactly three sourced indoor cafés",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "public_start_poi_id": "osm_node_11927785970",
+        "poi_ids": [
+          "osm_node_11927785970",
+          "osm_node_13125546428",
+          "osm_node_13125556689"
+        ],
+        "evidence": [
+          {
+            "poi_id": "osm_node_11927785970",
+            "source_url": "https://www.openstreetmap.org/node/11927785970",
+            "indoor_tags": {
+              "indoor_seating": "yes"
+            }
+          },
+          {
+            "poi_id": "osm_node_13125546428",
+            "source_url": "https://www.openstreetmap.org/node/13125546428",
+            "indoor_tags": {
+              "indoor_seating": "yes"
+            }
+          },
+          {
+            "poi_id": "osm_node_13125556689",
+            "source_url": "https://www.openstreetmap.org/node/13125556689",
+            "indoor_tags": {
+              "indoor_seating": "yes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Cold weather does not silently widen EXPO search radius",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "public_start": "dataset_coverage_center",
+        "search_radius_m": 2500,
+        "recommendation_count": 0,
+        "reason": "The three source-verified indoor cafés are outside the EXPO-center search radius."
+      }
+    },
+    {
+      "name": "Cold weather refuses unsupported outdoor stops and loops",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "recommendation_count": 0,
+        "itinerary_status": "no_match"
+      }
+    },
+    {
+      "name": "Stale weather pauses all climate-enabled endpoints",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "weather_fixture_status": "stale",
+        "apparent_temperature_c": -15,
+        "endpoints_refused": [
+          "/api/recommend",
+          "/api/itinerary",
+          "/api/route"
+        ]
+      }
+    },
+    {
+      "name": "Unavailable weather pauses all climate-enabled endpoints",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "weather_fixture_status": "unavailable",
+        "apparent_temperature_c": 10,
+        "endpoints_refused": [
+          "/api/recommend",
+          "/api/itinerary",
+          "/api/route"
+        ]
+      }
+    },
+    {
+      "name": "Severe cold pauses all climate-enabled endpoints",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "weather_fixture_status": "live",
+        "apparent_temperature_c": -25,
+        "endpoints_refused": [
+          "/api/recommend",
+          "/api/itinerary",
+          "/api/route"
+        ]
+      }
+    },
+    {
+      "name": "Injected demo weather pauses all climate-enabled endpoints",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "weather_fixture_status": "demo",
+        "apparent_temperature_c": -18,
+        "endpoints_refused": [
+          "/api/recommend",
+          "/api/itinerary",
+          "/api/route"
+        ]
+      }
+    },
+    {
+      "name": "Explicit demo is labeled and isolated",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "demo_status": "demo",
+        "following_policy": "normal",
+        "weather_demo_arguments": [
+          true,
+          false
+        ]
+      }
+    },
+    {
+      "name": "Real graph loop preserves return, reserve and budget",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "poi_ids": [
+          "osm_way_1456208624",
+          "osm_way_1460763574",
+          "osm_node_12990081501"
+        ],
+        "legs": 4,
+        "total_minutes": 101,
+        "reserve_minutes": 12,
+        "coordinates_checked_against_saved_graph": true
+      }
+    },
+    {
+      "name": "Single destination follows the real graph and is one-way",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "poi_id": "osm_node_11927785970",
+        "distance_m": 3394,
+        "walk_minutes": 49,
+        "geometry_vertices": 104,
+        "one_way": true,
+        "cold_fixture": false
+      }
+    },
+    {
+      "name": "Cold single-destination route accepts sourced indoor café",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "poi_id": "osm_node_11927785970",
+        "distance_m": 3394,
+        "walk_minutes": 49,
+        "geometry_vertices": 104,
+        "one_way": true,
+        "cold_fixture": true
+      }
+    },
+    {
+      "name": "Missing real graph connection yields no invented geometry",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "poi_id": "osm_way_1462229151",
+        "source_url": "https://www.openstreetmap.org/way/1462229151",
+        "status": "no_match",
+        "geometry_vertices": 0
+      }
+    },
+    {
+      "name": "API localization preserves facts: ru",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "locale": "ru",
+        "endpoints_checked": 7,
+        "catalog_count": 134,
+        "source_identities_preserved": true,
+        "mini_route_status": "ready"
+      }
+    },
+    {
+      "name": "API localization preserves facts: kz",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "locale": "kz",
+        "endpoints_checked": 7,
+        "catalog_count": 134,
+        "source_identities_preserved": true,
+        "mini_route_status": "ready"
+      }
+    },
+    {
+      "name": "API localization preserves facts: en",
+      "passed": true,
+      "syntheticWeatherTest": true,
+      "details": {
+        "locale": "en",
+        "endpoints_checked": 7,
+        "catalog_count": 134,
+        "source_identities_preserved": true,
+        "mini_route_status": "ready"
+      }
+    }
+  ],
+  "limitations": [
+    "Integration assertions use injected synthetic weather and cannot establish live provider availability.",
+    "Indoor tags do not prove heating, current opening, accessible entrances, or covered outdoor walks.",
+    "OSM paths and approximate connectors do not establish current safety or absence of closures."
+  ]
+}

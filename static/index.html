@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Telegis — Умная интерактивная карта прогулок по Астане</title>
   <meta name="description" content="Telegis: интерактивная карта OpenStreetMap в стиле 2GIS и Flightradar24. Рекомендации прогулок, кофе и кольцевых маршрутов в Астане с честным расчётом времени.">
   <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
@@ -68,7 +68,7 @@
     </div>
 
     <!-- Мобильная плашка (Bottom Sheet Handle) -->
-    <div class="bottom-sheet-handle" id="sheetHandle" aria-hidden="true">
+    <div class="bottom-sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Свернуть или открыть панель">
       <span class="handle-bar"></span>
     </div>
 
@@ -102,6 +102,7 @@
           </button>
         </div>
         <div id="geoStatus" class="geo-status-text" role="status" aria-live="polite"></div>
+        <div id="geoPrivacyNote" class="geo-privacy-note" data-i18n="geo_explanation">GPS — только по кнопке и с разрешения браузера. Координаты используются сервером Telegis для поиска; сервер их не сохраняет. Карта OSM получает область просмотра.</div>
 
         <!-- Переключатель формата: Прогулка / Кофе -->
         <div class="form-group-block">
@@ -130,7 +131,7 @@
             <span id="timeSliderVal" class="time-slider-val-badge">60 мин</span>
           </div>
           <div class="time-slider-wrapper">
-            <input type="range" id="timeRangeSlider" class="time-range-slider" min="15" max="120" step="5" value="60" aria-label="Бюджет времени в минутах">
+            <input type="range" id="timeRangeSlider" class="time-range-slider" min="10" max="180" step="1" value="60" aria-label="Бюджет времени в минутах">
             <div class="time-slider-ticks" id="timeSliderTicks">
               <span data-mins="15">15 мин</span>
               <span data-mins="30">30 мин</span>
@@ -146,13 +147,11 @@
 
         <!-- Климатический фильтр Астаны (Защита от ветра и мороза) -->
         <div class="climate-shield-wrap">
-          <label class="climate-shield-label" title="При ветре и морозе в Астане отдавать приоритет крытым хабам (Mega Silk Way, Сфера, коворкинги)">
+          <label class="climate-shield-label" data-i18n-title="climate_help" title="При неблагоприятной погоде учитываются только места с подтверждённым признаком помещения. Подходы по улице остаются непроверенными.">
             <input type="checkbox" id="climateShieldCheck">
             <span data-i18n="climate_label">💨 Климат Астаны: защита от ветра и холода</span>
           </label>
-          <div id="climateWeatherBadge" class="climate-weather-badge hidden">
-            <span>💨 Астана: -3°C, ветер 7.5 м/с • Активен щит: открытые площадки исключены, приоритет крытым хабам (Mega Silk Way, AITU, коворкинги)</span>
-          </div>
+          <div id="climateWeatherBadge" class="climate-weather-badge" role="status" aria-live="polite"></div>
         </div>
 
         <!-- Поисковая строка и кнопка Найти -->
@@ -165,7 +164,6 @@
               class="form-input-gis" 
               placeholder="Пожелание: сквер, панорама, круассан..." 
               data-i18n-placeholder="query_placeholder"
-              maxlength="200"
               autocomplete="off"
             >
           </div>
@@ -260,7 +258,7 @@
       <!-- Футер сайдбара -->
       <footer class="sidebar-footer">
         <div class="footer-privacy-row">
-          <span>🔒 Бэкенд не сохраняет координаты; карта загружает тайлы OSM</span>
+          <span data-i18n="privacy_short">🔒 Бэкенд не сохраняет координаты; карта загружает тайлы OSM</span>
           <span>© OpenStreetMap (ODbL 1.0) • Smart City Astana</span>
         </div>
       </footer>
@@ -278,7 +276,7 @@
     <div class="route-banner-icon">🚶</div>
     <div class="route-banner-details">
       <div id="routeBannerTitle" class="route-banner-title">Пеший маршрут</div>
-      <div id="routeBannerStats" class="route-banner-stats">~12 мин пешком (850 м)</div>
+      <div id="routeBannerStats" class="route-banner-stats"></div>
     </div>
     <button type="button" id="closeRouteBannerBtn" class="close-route-btn" title="Сбросить маршрут">✕</button>
   </div>
@@ -286,7 +284,7 @@
   <!-- ПЛАВАЮЩАЯ КНОПКА ОТКРЫТИЯ САЙДБАРА -->
   <button type="button" id="openSidebarBtn" class="floating-open-sidebar-btn hidden" title="Развернуть панель Telegis">
     <span class="open-icon">🧭</span>
-    <span class="open-text">Панель Telegis</span>
+    <span class="open-text" data-i18n="expand">Панель Telegis</span>
   </button>
 
   <!-- ПЛАВАЮЩИЕ КНОПКИ УПРАВЛЕНИЯ КАРТОЙ (2GIS STYLE) -->
@@ -299,7 +297,7 @@
   </div>
 
   <!-- ПРАВОЕ БОКОВОЕ МЕНЮ ИНФОРМАЦИИ ОБ ОБЪЕКТЕ С ИИ И ФОТО (2GIS / GOOGLE MAPS STYLE) -->
-  <aside id="poiDrawer" class="poi-drawer" aria-label="Информация об объекте" aria-hidden="true">
+  <aside id="poiDrawer" class="poi-drawer" role="dialog" aria-labelledby="drawerTitle" aria-hidden="true" inert>
     <div class="drawer-header">
       <div class="drawer-header-left">
         <span id="drawerCategoryBadge" class="drawer-cat-badge">🏛️ Объект</span>
@@ -329,7 +327,7 @@
       <div class="drawer-ai-card">
         <div class="drawer-ai-badge">
           <span class="ai-sparkle">✨</span>
-          <span class="ai-label">Сведения об объекте · Telegis</span>
+          <span class="ai-label" data-i18n="place_info">Сведения об объекте · Telegis</span>
         </div>
         <div id="drawerAiSummary" class="drawer-ai-text">
           Загрузка сведений из источников...
@@ -394,6 +392,7 @@
 
   <!-- Скрипты: Локальный Leaflet + Модуль логики -->
   <script src="/static/vendor/leaflet/leaflet.js"></script>
+  <script src="/static/ui-copy.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

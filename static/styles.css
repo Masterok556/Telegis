@@ -2556,4 +2556,32 @@ html, body {
   transform: translateY(-1px);
 }
 
+/* Focus and privacy copy retain the existing panel and card layout. */
+button:focus-visible, a:focus-visible, input:focus-visible,
+select:focus-visible, [tabindex="0"]:focus-visible {
+  outline: 3px solid #0284c7;
+  outline-offset: 3px;
+}
+.seg-option input:focus-visible + .seg-btn,
+.time-chip input:focus-visible + .time-chip-btn {
+  outline: 3px solid #0284c7;
+  outline-offset: 2px;
+}
+.geo-privacy-note {
+  font-size: 10px;
+  line-height: 1.35;
+  color: #64748b;
+  margin: 2px 0 6px;
+}
+.climate-weather-badge div + div { margin-top: 3px; }
+.climate-weather-badge[data-weather-status="stale"],
+.climate-weather-badge[data-weather-status="demo"] { color: #92400e; }
+.route-access-note {
+  font-size: 10px;
+  line-height: 1.35;
+  margin-top: 4px;
+  max-height: 4.2em;
+  overflow: auto;
+}
+
 
