@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-19T18:22:08+00:00",
+  "checked_at": "2026-10-20T10:46:56+00:00",
   "metadata": {
     "poi_count": 49,
     "categories": {
@@ -27,6 +27,8 @@
     "snapshot_id": "20261019T181106Z-e7831bf2",
     "retrieval": "geographic filters + lexical BM25",
     "llm_configured": false,
+    "llm_last_status": "not_configured",
+    "llm_model": null,
     "service": "Telegis",
     "data_quality": {
       "with_opening_hours": 15,

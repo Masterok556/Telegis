@@ -1,12 +1,12 @@
 {
-  "checked_at": "2026-10-19T18:22:38.735104+00:00",
+  "checked_at": "2026-10-20T10:46:19.617773+00:00",
   "passed": true,
   "service": "Telegis",
   "poi_count": 49,
   "snapshot_id": "20261019T181106Z-e7831bf2",
   "category": "walk",
   "mode": "rag",
-  "elapsed_seconds": 7.33,
+  "elapsed_seconds": 3.67,
   "recommendations": [
     "Аллея мира и согласия",
     "25-ти летие Независимости"

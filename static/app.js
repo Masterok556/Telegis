@@ -1,5 +1,5 @@
 /**
- * TeleGIS — Fullscreen GIS Engine (v3.2)
+ * Telegis — Fullscreen GIS Engine (v3.2)
  * Features:
  * - Fullscreen OpenStreetMap canvas (Leaflet.js)
  * - Multilanguage: Қазақша (KZ), Русский (RU), English (EN)
@@ -20,6 +20,7 @@
       subtitle: 'ИИ-советчик для пеших прогулок',
       mode_places: 'Места вокруг',
       mode_itinerary: 'Маршрут',
+      route_return: 'С возвратом',
       loading_locations: 'Загрузка локаций...',
       cat_walk: 'Пешая прогулка',
       cat_cafe: 'Кофе и отдых',
@@ -33,21 +34,22 @@
       tag_quiet: '🌿 Тихий сквер',
       tag_togo: '☕ Навынос',
       init_head: 'Интеллектуальный радар прогулок',
-      init_text: 'Выберите время и категорию — TeleGIS просканирует пешеходный граф OpenStreetMap и подберёт идеальные варианты в районе EXPO.',
+      init_text: 'Выберите время и категорию — Telegis подберёт до 3 мест по сохранённым данным OSM и покажет ограничения.',
       preset_label: 'Быстрые сценарии:',
       preset_1: '🚶 60 мин вокруг EXPO',
       preset_2: '☕ Кофе на 30 мин',
       preset_3: '⚡ 20 мин размяться',
-      loading_head: 'TeleGIS анализирует местность...',
+      loading_head: 'Telegis анализирует местность...',
       loading_text: 'Вычисляем пешеходные расстояния по графу дорог и ранжируем локации.',
       empty_head: 'Точки не найдены',
       empty_text: 'В заданном радиусе и бюджете времени нет доступных мест.',
       empty_advice: 'Совет: увеличьте время или выберите другой формат отдыха.',
       error_head: 'Ошибка соединения',
+      connection_error: 'Не удалось связаться с сервером. Проверьте, что Telegis запущен, и повторите запрос.',
       btn_retry: 'Повторить попытку',
       fallback_title: 'Шаблонный режим:',
       fallback_desc: 'рекомендации подобраны по проверенной базе POI без вызова LLM.',
-      radius_label: 'Радиус пешей зоны:',
+      radius_label: 'Ориентир по прямой (не изохрона):',
       straight_dist: 'Прямая:',
       one_way: 'В одну сторону:',
       total_budget: 'Общий бюджет:',
@@ -64,8 +66,8 @@
       start_point: 'Старт',
       finish_point: 'Возврат к старту',
       basis_graph: '🚶 Граф дорог OSM',
-      verified_fact: '🏛️ Проверенный факт (Официальный источник)',
-      evidence_sha: 'Верифицировано SHA-256'
+      verified_fact: '🏛️ По официальному источнику',
+      evidence_sha: 'Сведения источника'
     },
     kz: {
       mock_title: 'ТЕСТТІК РЕЖИМ (MOCK)',
@@ -74,6 +76,7 @@
       subtitle: 'Жаяу серуендеуге арналған ЖИ-кеңесші',
       mode_places: 'Орындар',
       mode_itinerary: 'Бағыт',
+      route_return: 'Қайтып келу',
       loading_locations: 'Орындар жүктелуде...',
       cat_walk: 'Жаяу серуен',
       cat_cafe: 'Кофе және демалыс',
@@ -87,21 +90,22 @@
       tag_quiet: '🌿 Тыныш саябақ',
       tag_togo: '☕ Алып кету',
       init_head: 'Интеллектуалды серуен радары',
-      init_text: 'Уақыт пен форматты таңдаңыз — TeleGIS OpenStreetMap жолдар графигі бойынша EXPO аймағындағы ең жақсы нұсқаларды ұсынады.',
+      init_text: 'Уақыт пен форматты таңдаңыз — Telegis OpenStreetMap жолдар графигі бойынша EXPO аймағындағы ең жақсы нұсқаларды ұсынады.',
       preset_label: 'Жылдам сценарийлер:',
       preset_1: '🚶 EXPO маңында 60 мин',
       preset_2: '☕ 30 мин кофе ішу',
       preset_3: '⚡ 20 мин серуен',
-      loading_head: 'TeleGIS аймақты талдауда...',
+      loading_head: 'Telegis аймақты талдауда...',
       loading_text: 'Жаяу жүру қашықтығын есептеп, орындарды сұрыптаудамыз.',
       empty_head: 'Орындар табылмады',
       empty_text: 'Берілген уақыт пен қашықтықта қолжетімді орындар жоқ.',
       empty_advice: 'Кеңес: қолжетімді уақытты арттырыңыз немесе басқа форматты таңдаңыз.',
       error_head: 'Байланыс қатесі',
+      connection_error: 'Серверге қосылу мүмкін болмады. Telegis іске қосылғанын тексеріп, сұрауды қайталаңыз.',
       btn_retry: 'Қайта көру',
       fallback_title: 'Үлгілік режим:',
       fallback_desc: 'ұсыныстар ЖИ үлгісінсіз, тексерілген POI базасынан алынды.',
-      radius_label: 'Жаяу жүру радиусы:',
+      radius_label: 'Тікелей қашықтық бағдары:',
       straight_dist: 'Тікелей:',
       one_way: 'Бір бағытта:',
       total_budget: 'Жалпы бюджет:',
@@ -119,7 +123,7 @@
       finish_point: 'Бастапқы нүктеге қайту',
       basis_graph: '🚶 OSM жолдар графигі (Dijkstra)',
       verified_fact: '🏛️ Тексерілген дерек (Ресми дереккөз)',
-      evidence_sha: 'SHA-256 тексерілген'
+      evidence_sha: 'Дереккөз мәліметі'
     },
     en: {
       mock_title: 'TEST MODE (MOCK)',
@@ -128,6 +132,7 @@
       subtitle: 'AI Walking Companion & Navigator',
       mode_places: 'Places',
       mode_itinerary: 'Route',
+      route_return: 'Round trip',
       loading_locations: 'Loading starting points...',
       cat_walk: 'Walking',
       cat_cafe: 'Coffee & Relax',
@@ -141,21 +146,22 @@
       tag_quiet: '🌿 Quiet park',
       tag_togo: '☕ Takeaway',
       init_head: 'Intelligent Walking Radar',
-      init_text: 'Select your time and category — TeleGIS scans OpenStreetMap pedestrian networks to find verified places in the EXPO area.',
+      init_text: 'Select your time and category — Telegis scans OpenStreetMap pedestrian networks to find verified places in the EXPO area.',
       preset_label: 'Quick Scenarios:',
       preset_1: '🚶 60 min around EXPO',
       preset_2: '☕ 30 min coffee break',
       preset_3: '⚡ 20 min quick stroll',
-      loading_head: 'TeleGIS is analyzing the area...',
+      loading_head: 'Telegis is analyzing the area...',
       loading_text: 'Calculating pedestrian shortest paths and ranking candidate POIs.',
       empty_head: 'No places found',
       empty_text: 'No destinations match your time budget or category in this area.',
       empty_advice: 'Tip: Increase your available time or switch category.',
       error_head: 'Connection Error',
+      connection_error: 'Could not connect to the server. Check that Telegis is running and try again.',
       btn_retry: 'Retry Request',
       fallback_title: 'Fallback Mode:',
       fallback_desc: 'recommendations served from verified POI store without LLM.',
-      radius_label: 'Walking reach radius:',
+      radius_label: 'Straight-line guide (not an isochrone):',
       straight_dist: 'Straight line:',
       one_way: 'One way:',
       total_budget: 'Total budget:',
@@ -172,8 +178,32 @@
       start_point: 'Start',
       finish_point: 'Return to start',
       basis_graph: '🚶 OSM Walk Graph (Dijkstra)',
-      verified_fact: '🏛️ Verified Fact (Official Source)',
-      evidence_sha: 'Verified SHA-256'
+      verified_fact: '🏛️ Official source reports',
+      evidence_sha: 'Source-reported information'
+    }
+  };
+
+  const CATEGORY_NAMES = {
+    ru: {
+      cafe: 'Кафе', restaurant: 'Ресторан', fast_food: 'Быстрое питание',
+      park: 'Парк', garden: 'Сад', attraction: 'Достопримечательность',
+      monument: 'Памятник', memorial: 'Мемориал', artwork: 'Арт-объект',
+      museum: 'Музей', mall: 'Торговый центр', viewpoint: 'Смотровая площадка',
+      playground: 'Детская площадка', unknown: 'Место'
+    },
+    kz: {
+      cafe: 'Кафе', restaurant: 'Мейрамхана', fast_food: 'Жылдам тамақтану',
+      park: 'Саябақ', garden: 'Бақ', attraction: 'Көрікті жер',
+      monument: 'Ескерткіш', memorial: 'Мемориал', artwork: 'Өнер нысаны',
+      museum: 'Мұражай', mall: 'Сауда орталығы', viewpoint: 'Шолу алаңы',
+      playground: 'Балалар алаңы', unknown: 'Орын'
+    },
+    en: {
+      cafe: 'Café', restaurant: 'Restaurant', fast_food: 'Fast food',
+      park: 'Park', garden: 'Garden', attraction: 'Attraction',
+      monument: 'Monument', memorial: 'Memorial', artwork: 'Public art',
+      museum: 'Museum', mall: 'Shopping centre', viewpoint: 'Viewpoint',
+      playground: 'Playground', unknown: 'Place'
     }
   };
 
@@ -182,11 +212,11 @@
   let appMode = 'places'; // 'places' | 'itinerary'
   let isMockMode = false;
   let mockData = null;
-  let itineraryExampleData = null;
   let activeAbortController = null;
   let locationsList = [];
   let userGeoLocation = null;
   let lastRequestPayload = null;
+  const poiCatalog = new Map();
 
   // Map state
   let leafletMap = null;
@@ -211,6 +241,7 @@
   const modalBackdrop = document.getElementById('modalBackdrop');
   const telemetryModalBody = document.getElementById('telemetryModalBody');
   let cachedSystemMeta = null;
+  let systemStatusLoaded = false;
 
   // Mode Tabs
   const tabPlaces = document.getElementById('tabPlaces');
@@ -261,6 +292,7 @@
     checkMockMode();
     initMap();
     bindEvents();
+    loadAndRenderAllPoisOnMap();
     renderTimeSelector();
     await loadLocations();
     await loadSystemMeta();
@@ -280,42 +312,6 @@
           }
         }
       }, 300);
-    }
-    if (params.get('drawer')) {
-      const dKey = params.get('drawer');
-      setTimeout(() => {
-        if (dKey === 'aifc') {
-          openPoiDrawer({
-            poi_id: 'osm_way_aifc',
-            name: 'МФЦА / AIFC (Павильон C3.3)',
-            category: 'attraction',
-            lat: 51.0880703,
-            lon: 71.4168534,
-            opening_hours: '09:00 - 18:00 (Пн-Пт)',
-            phone: '+7 7172 613 779',
-            website: 'https://aifc.kz',
-            confirmed_features: { wifi: true, socket: true, wheelchair: true, quiet: true },
-            tags: { 'addr:street': 'пр. Мәңгілік Ел', 'addr:housenumber': '55/18' },
-            description: 'Международный финансовый центр «Астана» (AIFC). Ультрасовременный финансово-правовой хаб EXPO: Администрация МФЦА, Суд МФЦА, Международный арбитражный центр (IAC) и регулятор AFSA.',
-            photos: ['https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80']
-          });
-        } else {
-          openPoiDrawer({
-            poi_id: 'osm_way_454857501',
-            name: 'Alem.ai (Международный центр ИИ)',
-            category: 'attraction',
-            lat: 51.0892381,
-            lon: 71.4162196,
-            opening_hours: '09:00 - 21:00',
-            phone: '+7 7172 735 080',
-            website: 'https://alem.ai/kk/',
-            confirmed_features: { wifi: true, socket: true, wheelchair: true, quiet: false },
-            tags: { 'addr:street': 'пр. Мәңгілік Ел', 'addr:housenumber': 'В1' },
-            description: 'Международный центр искусственного интеллекта Alem.ai. Крупнейшее сферическое здание в мире (экс-сфера EXPO), национальный хаб AI-исследований и инноваций.',
-            photos: ['https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80']
-          });
-        }
-      }, 500);
     }
     if (params.get('mode') === 'itinerary') {
       setAppMode('itinerary');
@@ -339,7 +335,7 @@
     if (params.get('mock') === '1') {
       isMockMode = true;
       if (mockBanner) mockBanner.classList.remove('hidden');
-      console.warn('[TeleGIS] Включен тестовый режим (?mock=1).');
+      console.warn('[Telegis] Включен тестовый режим (?mock=1).');
     }
   }
 
@@ -369,18 +365,27 @@
         el.setAttribute('placeholder', dict[key]);
       }
     });
+    document.querySelectorAll('[data-poi-category]').forEach(el => {
+      el.textContent = `${el.dataset.categoryPrefix || ''}${categoryName(el.dataset.poiCategory)}`;
+    });
 
     // Update submit button text based on mode
     if (btnText) {
       btnText.textContent = appMode === 'itinerary' ? dict.btn_build_route : dict.btn_find;
     }
 
+    updateCategoryLabels();
     updateReachRadius();
     updateSystemStatusText();
   }
 
   function t(key) {
     return (I18N[currentLang] && I18N[currentLang][key]) || (I18N['ru'] && I18N['ru'][key]) || key;
+  }
+
+  function categoryName(value) {
+    const names = CATEGORY_NAMES[currentLang] || CATEGORY_NAMES.ru;
+    return Object.prototype.hasOwnProperty.call(names, value) ? names[value] : names.unknown;
   }
 
   // --- Time Selector Renderer ---
@@ -402,6 +407,7 @@
       if (mins === defaultVal) input.checked = true;
 
       input.addEventListener('change', () => {
+        invalidateSearch();
         updateReachRadius(mins);
       });
 
@@ -434,326 +440,154 @@
     }, 2800);
   }
 
-  // --- Building Footprints / Polygons (Mega, AITU, Alem.ai, Astana Hub) ---
-  let buildingFootprintsLayer = null;
-  function initBuildingFootprints() {
-    if (!leafletMap) return;
-    if (buildingFootprintsLayer) {
-      leafletMap.removeLayer(buildingFootprintsLayer);
-    }
-    buildingFootprintsLayer = L.layerGroup().addTo(leafletMap);
-
-    // 1. Mega Silk Way building polygon
-    const megaPoly = L.polygon([
-      [51.0903, 71.4045],
-      [51.0903, 71.4098],
-      [51.0878, 71.4098],
-      [51.0878, 71.4045]
-    ], {
-      color: '#0284c7',
-      weight: 1.5,
-      dashArray: '4, 4',
-      fillColor: '#0284c7',
-      fillOpacity: 0.08
-    }).addTo(buildingFootprintsLayer);
-    megaPoly.bindTooltip('🏛️ ТРЦ Mega Silk Way (контур здания)', { direction: 'top', sticky: true });
-    megaPoly.on('click', () => {
-      openPoiDrawer({
-        poi_id: 'osm_way_499328514',
-        name: 'Mega Silk Way',
-        category: 'mall',
-        lat: 51.0890897,
-        lon: 71.4073303,
-        opening_hours: '10:00 - 22:00',
-        confirmed_features: { wifi: true, socket: true, wheelchair: true, quiet: false },
-        tags: { 'addr:street': 'пр. Кабанбай Батыра', 'addr:housenumber': '62' },
-        description: 'Крупнейший торгово-развлекательный центр столицы. Бутики, рестораны, кинотеатр Chaplin Cinemas и кофейни.',
-        photos: ['https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80']
-      });
-    });
-
-    // 2. Astana IT University (AITU, корпус C1)
-    const aituPoly = L.polygon([
-      [51.0914, 71.4170],
-      [51.0914, 71.4195],
-      [51.0901, 71.4195],
-      [51.0901, 71.4170]
-    ], {
-      color: '#10b981',
-      weight: 1.5,
-      dashArray: '4, 4',
-      fillColor: '#10b981',
-      fillOpacity: 0.10
-    }).addTo(buildingFootprintsLayer);
-    aituPoly.bindTooltip('🎓 Astana IT University (Корпус EXPO C1.1)', { direction: 'top', sticky: true });
-    aituPoly.on('click', () => {
-      openPoiDrawer({
-        poi_id: 'osm_way_aitu_c1',
-        name: 'Astana IT University (AITU)',
-        category: 'attraction',
-        lat: 51.0906792,
-        lon: 71.4181709,
-        opening_hours: '08:00 - 20:00',
-        phone: '+7 7172 645 710',
-        website: 'https://astanait.edu.kz',
-        confirmed_features: { wifi: true, socket: true, wheelchair: true, quiet: true },
-        tags: { 'addr:street': 'пр. Мәңгілік Ел', 'addr:housenumber': '55/11' },
-        description: 'Ведущий технологический университет Казахстана. Корпус EXPO C1.1, лаборатории искусственного интеллекта и робототехники.',
-        photos: ['https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80']
-      });
-    });
-
-    // 3. Astana Hub (Павильон C4.6)
-    const hubPoly = L.polygon([
-      [51.0888, 71.4135],
-      [51.0888, 71.4155],
-      [51.0874, 71.4155],
-      [51.0874, 71.4135]
-    ], {
-      color: '#8b5cf6',
-      weight: 1.5,
-      dashArray: '4, 4',
-      fillColor: '#8b5cf6',
-      fillOpacity: 0.10
-    }).addTo(buildingFootprintsLayer);
-    hubPoly.bindTooltip('🚀 Astana Hub (Технопарк, блок C4.6)', { direction: 'top', sticky: true });
-    hubPoly.on('click', () => {
-      openPoiDrawer({
-        poi_id: 'osm_way_astana_hub',
-        name: 'Astana Hub (Технопарк)',
-        category: 'attraction',
-        lat: 51.0883541,
-        lon: 71.4145878,
-        opening_hours: '09:00 - 21:00',
-        phone: '+7 7172 735 080',
-        website: 'https://astanahub.com',
-        confirmed_features: { wifi: true, socket: true, wheelchair: true, quiet: false },
-        tags: { 'addr:street': 'пр. Мәңгілік Ел', 'addr:housenumber': '55/8' },
-        description: 'Крупнейший международный технопарк IT-стартапов в Центральной Азии. Павильон EXPO C4.6.',
-        photos: ['https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80']
-      });
-    });
-
-    // 4. МФЦА / AIFC (Павильон C3.3, здание 55/18)
-    const aifcPoly = L.polygon([
-      [51.0888, 71.4158],
-      [51.0888, 71.4180],
-      [51.0874, 71.4180],
-      [51.0874, 71.4158]
-    ], {
-      color: '#0284c7',
-      weight: 1.5,
-      dashArray: '4, 4',
-      fillColor: '#0284c7',
-      fillOpacity: 0.12
-    }).addTo(buildingFootprintsLayer);
-    aifcPoly.bindTooltip('🏛️ МФЦА / AIFC (Павильон C3.3, Мәңгілік Ел 55/18)', { direction: 'top', sticky: true });
-    aifcPoly.on('click', () => {
-      openPoiDrawer({
-        poi_id: 'osm_way_aifc',
-        name: 'МФЦА / AIFC (Павильон C3.3)',
-        category: 'attraction',
-        lat: 51.0880703,
-        lon: 71.4168534,
-        opening_hours: '09:00 - 18:00 (Пн-Пт)',
-        phone: '+7 7172 613 779',
-        website: 'https://aifc.kz',
-        confirmed_features: { wifi: true, socket: true, wheelchair: true, quiet: true },
-        tags: { 'addr:street': 'пр. Мәңгілік Ел', 'addr:housenumber': '55/18' },
-        description: 'Международный финансовый центр «Астана» (AIFC). Ультрасовременный финансово-правовой хаб EXPO: Администрация МФЦА, Суд МФЦА, Международный арбитражный центр (IAC) и регулятор AFSA.',
-        photos: ['https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80']
-      });
-    });
-
-    // 5. Сфера Alem.ai (Центр ИИ — точные координаты павильона В1)
-    const alemCircle = L.circle([51.0892381, 71.4162196], {
-      radius: 48,
-      color: '#f59e0b',
-      weight: 2,
-      fillColor: '#f59e0b',
-      fillOpacity: 0.16
-    }).addTo(buildingFootprintsLayer);
-    alemCircle.bindTooltip('🤖 Alem.ai (Международный центр ИИ, Павильон В1)', { direction: 'top', sticky: true });
-    alemCircle.on('click', () => {
-      openPoiDrawer({
-        poi_id: 'osm_way_454857501',
-        name: 'Alem.ai (Международный центр ИИ)',
-        category: 'attraction',
-        lat: 51.0892381,
-        lon: 71.4162196,
-        opening_hours: '09:00 - 21:00',
-        phone: '+7 7172 735 080',
-        website: 'https://alem.ai/kk/',
-        confirmed_features: { wifi: true, socket: true, wheelchair: true, quiet: false },
-        tags: { 'addr:street': 'пр. Мәңгілік Ел', 'addr:housenumber': 'В1' },
-        description: 'Международный центр искусственного интеллекта Alem.ai. Крупнейшее сферическое здание в мире (экс-сфера EXPO), национальный хаб AI-исследований и инноваций.',
-        photos: ['https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80']
-      });
-    });
-
-    // 6. Аллея мира и согласия (парковая зона)
-    const alleyPoly = L.polygon([
-      [51.0945, 71.4160],
-      [51.0945, 71.4180],
-      [51.0930, 71.4180],
-      [51.0930, 71.4160]
-    ], {
-      color: '#10b981',
-      weight: 1,
-      dashArray: '3, 3',
-      fillColor: '#10b981',
-      fillOpacity: 0.08
-    }).addTo(buildingFootprintsLayer);
-    alleyPoly.bindTooltip('🌿 Аллея мира и согласия', { direction: 'top', sticky: true });
-  }
-
   // --- Right-Side POI Drawer Logic ---
   let currentDrawerPoi = null;
+  let drawerAbortController = null;
+  let cachedHealth = null;
 
   function openPoiDrawer(poi) {
-    const poiDrawer = document.getElementById('poiDrawer');
-    if (!poiDrawer || !poi) return;
+    const drawer = document.getElementById('poiDrawer');
+    if (!drawer || !poi) return;
+    // Recommendations add request-specific timing, while the catalogue owns
+    // source amenities/address. Keep both when opening the same canonical POI.
+    poi = { ...(poiCatalog.get(poi.poi_id) || {}), ...poi };
+    if (drawerAbortController) drawerAbortController.abort();
+    const controller = new AbortController();
+    drawerAbortController = controller;
     currentDrawerPoi = poi;
-
-    const drawerCategoryBadge = document.getElementById('drawerCategoryBadge');
-    const drawerDistBadge = document.getElementById('drawerDistBadge');
-    const drawerHeroImg = document.getElementById('drawerHeroImg');
-    const drawerGalleryTag = document.getElementById('drawerGalleryTag');
-    const drawerTitle = document.getElementById('drawerTitle');
-    const drawerAddress = document.getElementById('drawerAddress');
-    const drawerAiSummary = document.getElementById('drawerAiSummary');
-    const drawerAiTip = document.getElementById('drawerAiTip');
-    const drawerAiTipBox = document.getElementById('drawerAiTipBox');
-    const drawerAiVibe = document.getElementById('drawerAiVibe');
-    const drawerFeaturesGrid = document.getElementById('drawerFeaturesGrid');
-    const drawerFactsSection = document.getElementById('drawerFactsSection');
-    const drawerFactsList = document.getElementById('drawerFactsList');
-    const drawerOsmLink = document.getElementById('drawerOsmLink');
-
-    const catIcons = {
-      'cafe': '☕ Кофейня',
-      'restaurant': '🍽️ Ресторан',
-      'fast_food': '🍔 Быстрое питание',
-      'park': '🌿 Парк / Сквер',
-      'garden': '🌸 Сад',
-      'attraction': '🏛️ Достопримечательность',
-      'monument': '🗿 Памятник',
-      'museum': '🖼️ Музей / Центр',
-      'mall': '🛍️ Торговый центр'
+    const field = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
     };
-
-    if (drawerCategoryBadge) {
-      drawerCategoryBadge.textContent = catIcons[poi.category] || `📍 ${poi.category || 'Локация'}`;
+    field('drawerCategoryBadge', `📍 ${categoryName(poi.category)}`);
+    const categoryBadge = document.getElementById('drawerCategoryBadge');
+    if (categoryBadge) {
+      categoryBadge.dataset.poiCategory = poi.category || '';
+      categoryBadge.dataset.categoryPrefix = '📍 ';
     }
+    field('drawerDistBadge', Number.isFinite(poi.distance_m) ? `${poi.distance_m} м по прямой` : 'Расстояние не рассчитано');
+    field('drawerTitle', poi.name || 'Объект Telegis');
+    const street = poi.tags?.['addr:street'];
+    field('drawerAddress', street ? `📍 ${street} ${poi.tags['addr:housenumber'] || ''}` : 'Адрес в данных не указан');
 
-    if (drawerDistBadge) {
-      drawerDistBadge.textContent = poi.distance_m ? `~${poi.distance_m} м от старта` : 'EXPO Район';
+    // A stock illustration must never be presented as a photograph of this POI.
+    const img = document.getElementById('drawerHeroImg');
+    if (img) {
+      img.removeAttribute('src');
+      img.alt = 'Фотография объекта не подтверждена';
+      img.style.visibility = 'hidden';
     }
-
-    if (drawerTitle) drawerTitle.textContent = poi.name || 'Объект TeleGIS';
-    if (drawerAddress) {
-      const street = poi.tags ? (poi.tags['addr:street'] || poi.tags['street'] || '') : '';
-      const house = poi.tags ? (poi.tags['addr:housenumber'] || poi.tags['housenumber'] || '') : '';
-      drawerAddress.textContent = street ? `📍 ${street} ${house}` : '📍 г. Астана, район EXPO / Mega Silk Way';
-    }
-
-    // Photo
-    const photos = poi.photos || [];
-    const defaultPhoto = 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80';
-    if (drawerHeroImg) {
-      drawerHeroImg.src = photos[0] || defaultPhoto;
-      drawerHeroImg.alt = poi.name;
-    }
-    if (drawerGalleryTag) {
-      drawerGalleryTag.textContent = poi.category === 'cafe' ? '☕ Кафе & Кофе' : (poi.category === 'mall' ? '🛍️ Шопинг & Отдых' : 'Астана • EXPO');
-    }
-
-    // Features
-    if (drawerFeaturesGrid) {
-      drawerFeaturesGrid.innerHTML = '';
-      const feats = poi.confirmed_features || {};
-      const items = [
-        { icon: '🕒', label: poi.opening_hours || 'Часы: 09:00 - 22:00' },
-        { icon: '📶', label: feats.wifi === true ? 'Wi-Fi подтверждён' : 'Wi-Fi: уточняется' },
-        { icon: '⚡', label: feats.socket === true ? 'Розетки доступны' : 'Розетки: у столиков' },
-        { icon: '♿', label: feats.wheelchair === true ? 'Пандус / Доступно' : 'Доступная среда' },
-        { icon: '🌿', label: feats.quiet === true ? 'Тихая атмосфера' : 'Оживленное место' },
-        { icon: '📞', label: poi.phone || poi.tags?.['contact:phone'] || '+7 7172' }
-      ];
-      items.forEach(it => {
-        const div = document.createElement('div');
-        div.className = 'drawer-feat-item';
-        div.innerHTML = `<span>${it.icon}</span><span>${escapeHtml(it.label)}</span>`;
-        drawerFeaturesGrid.appendChild(div);
+    field('drawerGalleryTag', '📍 Фотография объекта пока не подтверждена');
+    const features = document.getElementById('drawerFeaturesGrid');
+    if (features) {
+      features.replaceChildren();
+      const f = poi.confirmed_features || {};
+      const feature = (key, label) => `${label}: ${f[key] === true ? 'указано в OSM' : f[key] === false ? 'не отмечено как доступное' : 'нет подтверждённых данных'}`;
+      [
+        poi.opening_hours ? `🕒 По данным источника: ${poi.opening_hours}. Проверьте перед визитом.` : '🕒 Часы не подтверждены',
+        feature('wifi', '📶 Wi-Fi'), feature('socket', '⚡ Розетки'),
+        feature('wheelchair', '♿ Доступность'), feature('quiet', '🌿 Тишина'),
+        poi.phone ? `📞 ${poi.phone}` : '📞 Телефон не указан'
+      ].forEach(text => {
+        const item = document.createElement('div');
+        item.className = 'drawer-feat-item';
+        item.textContent = text;
+        features.appendChild(item);
       });
     }
-
-    // Facts
-    if (drawerFactsSection && drawerFactsList) {
-      const facts = poi.evidence || [];
-      if (facts.length > 0) {
-        drawerFactsList.innerHTML = '';
-        facts.forEach(f => {
-          const li = document.createElement('li');
-          li.className = 'drawer-fact-item';
-          li.textContent = f.text || f;
-          drawerFactsList.appendChild(li);
-        });
-        drawerFactsSection.classList.remove('hidden');
-      } else {
-        drawerFactsSection.classList.add('hidden');
-      }
-    }
-
-    // AI Summary
-    if (drawerAiSummary) drawerAiSummary.textContent = 'Нейросеть TeleGIS генерирует обзор локации...';
-    if (drawerAiTipBox) drawerAiTipBox.style.display = 'none';
-    if (drawerAiVibe) drawerAiVibe.textContent = '';
-
-    fetch('/api/poi_ai_info', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        poi_id: poi.poi_id,
-        name: poi.name,
-        category: poi.category
-      })
-    })
-      .then(res => res.json())
-      .then(aiData => {
-        if (drawerAiSummary) drawerAiSummary.textContent = aiData.summary || poi.description || 'Современное пространство в районе EXPO.';
-        if (drawerAiTip && aiData.tip) {
-          drawerAiTip.textContent = aiData.tip;
-          if (drawerAiTipBox) drawerAiTipBox.style.display = 'flex';
-        }
-        if (drawerAiVibe && aiData.vibe) {
-          drawerAiVibe.textContent = `✨ ${aiData.vibe}`;
-        }
-      })
-      .catch(() => {
-        if (drawerAiSummary) drawerAiSummary.textContent = poi.description || 'Популярный объект столичного кластера EXPO.';
+    const factsList = document.getElementById('drawerFactsList');
+    const factsSection = document.getElementById('drawerFactsSection');
+    const showFacts = (facts, warnings) => {
+      if (!factsList || !factsSection) return;
+      factsList.replaceChildren();
+      (facts || []).forEach(fact => {
+        const item = document.createElement('li');
+        item.className = 'drawer-fact-item';
+        item.textContent = fact.text;
+        appendSource(item, fact.source_url, `Источник · ${formatDate(fact.collected_at)}`);
+        factsList.appendChild(item);
       });
-
-    // OSM Link
-    if (drawerOsmLink) {
-      drawerOsmLink.href = poi.source_url || `https://www.openstreetmap.org/search?query=${encodeURIComponent(poi.name)}`;
+      (warnings || []).forEach(warning => {
+        const item = document.createElement('li');
+        item.className = 'drawer-fact-item';
+        item.textContent = `⚠️ ${warning}`;
+        factsList.appendChild(item);
+      });
+      factsSection.classList.toggle('hidden', factsList.children.length === 0);
+    };
+    showFacts(poi.evidence, poi.warnings);
+    field('drawerAiSummary', poi.description || 'Описание в данных отсутствует.');
+    field('drawerAiVibe', isMockMode ? 'Тестовый пример · live API отключён' : 'Сведения из сохранённых источников');
+    const tipBox = document.getElementById('drawerAiTipBox');
+    if (tipBox) tipBox.style.display = poi.activity ? 'flex' : 'none';
+    field('drawerAiTip', poi.activity ? `Идея занятия: ${poi.activity}` : '');
+    const osmLink = document.getElementById('drawerOsmLink');
+    if (osmLink) {
+      const url = safeHttpUrl(poi.source_url);
+      if (url) osmLink.href = url;
+      else osmLink.removeAttribute('href');
+      osmLink.hidden = !url;
     }
-
-    // Open
-    poiDrawer.classList.add('open');
-    poiDrawer.setAttribute('aria-hidden', 'false');
+    const routeBtn = document.getElementById('drawerRouteBtn');
+    if (routeBtn) routeBtn.disabled = poi.recommendable === false;
+    if (!isMockMode && poi.poi_id) {
+      fetch('/api/poi_ai_info', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ poi_id: poi.poi_id }), signal: controller.signal,
+        cache: 'no-store'
+      }).then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      }).then(data => {
+        if (drawerAbortController !== controller || controller.signal.aborted) return;
+        field('drawerAiSummary', data.summary || poi.description || 'Описание отсутствует.');
+        field('drawerAiTip', data.tip ? `Идея занятия: ${data.tip}` : '');
+        if (tipBox) tipBox.style.display = data.tip ? 'flex' : 'none';
+        showFacts(data.evidence || poi.evidence, data.warnings || poi.warnings);
+      }).catch(error => {
+        if (drawerAbortController !== controller || error.name === 'AbortError') return;
+        field('drawerAiVibe', 'Дополнительные сведения недоступны; показаны данные карточки.');
+      });
+    }
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
   }
 
   function closePoiDrawer() {
-    const poiDrawer = document.getElementById('poiDrawer');
-    if (!poiDrawer) return;
-    poiDrawer.classList.remove('open');
-    poiDrawer.setAttribute('aria-hidden', 'true');
+    if (drawerAbortController) drawerAbortController.abort();
+    drawerAbortController = null;
+    const drawer = document.getElementById('poiDrawer');
+    if (drawer) {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function safeHttpUrl(value) {
+    if (!value) return null;
+    try {
+      const url = new URL(value);
+      return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password ? url.href : null;
+    } catch (_) { return null; }
+  }
+
+  function appendSource(container, value, label = 'Источник ↗') {
+    const url = safeHttpUrl(value);
+    if (!url) return;
+    const link = document.createElement('a');
+    link.className = 'card-source-link';
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = ` ${label}`;
+    link.addEventListener('click', event => event.stopPropagation());
+    container.appendChild(link);
   }
 
   // --- Interactive Map Click Handler ---
-  function handleMapClick(lat, lon) {
+  function handleMapClick(lat, lon, label) {
     if (!locationSelect) return;
+    invalidateSearch();
 
     let clickOpt = locationSelect.querySelector('option[value="map_click"]');
     if (!clickOpt) {
@@ -761,12 +595,12 @@
       clickOpt.value = 'map_click';
       locationSelect.insertBefore(clickOpt, locationSelect.firstChild);
     }
-    clickOpt.textContent = `📍 Точка на карте (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+    clickOpt.textContent = label || `📍 Точка на карте (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
     clickOpt.dataset.lat = lat;
     clickOpt.dataset.lon = lon;
     clickOpt.selected = true;
 
-    updateStartMarker(lat, lon, `Выбранная точка: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+    updateStartMarker(lat, lon, clickOpt.textContent);
     updateReachRadius();
     showMapToast(`📍 Стартовая точка: ${lat.toFixed(4)}, ${lon.toFixed(4)} (нажмите «Найти»)`);
   }
@@ -774,12 +608,19 @@
   // --- Render All Verified OSM POIs as Interactive Badges ---
   let allPoisLayer = null;
   async function loadAndRenderAllPoisOnMap() {
-    if (!leafletMap) return;
     try {
-      const resp = await fetch('/api/pois');
-      if (!resp.ok) return;
-      const data = await resp.json();
+      let data;
+      if (isMockMode) {
+        await ensureMockData();
+        data = { pois: mockData.pois || [] };
+      } else {
+        const resp = await fetch('/api/pois', { cache: 'no-store' });
+        if (!resp.ok) return;
+        data = await resp.json();
+      }
       const pois = data.pois || [];
+      pois.forEach(poi => poiCatalog.set(poi.poi_id, poi));
+      if (!leafletMap) return;
 
       if (!allPoisLayer) {
         allPoisLayer = L.layerGroup().addTo(leafletMap);
@@ -800,7 +641,7 @@
       };
 
       pois.forEach(p => {
-        if (!p.lat || !p.lon) return;
+        if (!Number.isFinite(p.lat) || !Number.isFinite(p.lon)) return;
         const iconEmoji = categoryIcons[p.category] || '📍';
         const markerIcon = L.divIcon({
           className: 'subtle-map-poi-marker',
@@ -810,7 +651,7 @@
         });
 
         const m = L.marker([p.lat, p.lon], { icon: markerIcon }).addTo(allPoisLayer);
-        m.bindTooltip(p.name, { direction: 'top', offset: [0, -12] });
+        m.bindTooltip(escapeHtml(p.name), { direction: 'top', offset: [0, -12] });
         m.on('click', () => {
           openPoiDrawer(p);
         });
@@ -821,7 +662,7 @@
   // --- Fullscreen Leaflet Map Initialization ---
   function initMap() {
     if (typeof window.L === 'undefined') {
-      console.warn('[TeleGIS] Leaflet library not detected.');
+      console.warn('[Telegis] Leaflet library not detected.');
       return;
     }
 
@@ -831,21 +672,31 @@
         center: defaultCenter,
         zoom: 15,
         zoomControl: false,
-        attributionControl: false
+        attributionControl: true
       });
 
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      leafletMap.attributionControl.setPrefix(false);
+      leafletMap.attributionControl.addAttribution(
+        '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors · ODbL</a>'
+      );
+      const backgroundTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(leafletMap);
+        referrerPolicy: 'strict-origin-when-cross-origin'
+      });
+      let backgroundUnavailable = false;
+      backgroundTiles.on('tileerror', event => {
+        if (event.tile) event.tile.style.visibility = 'hidden';
+        if (backgroundUnavailable) return;
+        backgroundUnavailable = true;
+        // Remove the failing raster layer once, without retry loops or requests
+        // to a second provider. Local POIs and computed paths remain usable.
+        setTimeout(() => leafletMap.removeLayer(backgroundTiles), 0);
+        showMapBackgroundStatus('Фон карты недоступен. Точки и рассчитанные маршруты работают; улицы на фоне не показаны.');
+        if (!isMockMode) loadWalkingBackground();
+      });
+      backgroundTiles.addTo(leafletMap);
 
       poiMarkersLayer = L.layerGroup().addTo(leafletMap);
-
-      // Render accurate building footprints
-      initBuildingFootprints();
-
-      // Render all OSM POIs on the map
-      loadAndRenderAllPoisOnMap();
 
       // Enable interactive map clicking
       leafletMap.on('click', (e) => {
@@ -855,7 +706,49 @@
       updateStartMarker(defaultCenter[0], defaultCenter[1], 'Mega Silk Way');
       updateReachRadius(60);
     } catch (err) {
-      console.error('[TeleGIS] Map init error:', err);
+      console.error('[Telegis] Map init error:', err);
+    }
+  }
+
+  function showMapBackgroundStatus(text) {
+    let notice = document.getElementById('mapBackgroundStatus');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'mapBackgroundStatus';
+      notice.className = 'map-background-status';
+      notice.setAttribute('role', 'status');
+      document.body.appendChild(notice);
+    }
+    notice.textContent = text;
+  }
+
+  async function loadWalkingBackground() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch('/api/walking-map.geojson', {
+        cache: 'no-store', signal: controller.signal
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const geometry = await response.json();
+      if (geometry.type !== 'FeatureCollection' || !geometry.features?.length) {
+        throw new Error('Walking geometry unavailable');
+      }
+      const pane = leafletMap.createPane('walkingBackground');
+      pane.style.zIndex = 250;
+      pane.style.pointerEvents = 'none';
+      L.geoJSON(geometry, {
+        pane: 'walkingBackground',
+        renderer: L.canvas({ pane: 'walkingBackground' }),
+        interactive: false,
+        style: { color: '#94a3b8', weight: 1.4, opacity: 0.75 }
+      }).addTo(leafletMap);
+      showMapBackgroundStatus('Локальная схема дорожек OSM. Фоновая карта недоступна; показан сохранённый граф, точки и маршруты.');
+    } catch (_) {
+      // Keep the explicit plain-background notice. A missing graph is never
+      // replaced by imaginary streets or an unlabelled external provider.
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -946,7 +839,7 @@
       const poiIcon = L.divIcon({
         className: 'custom-poi-marker',
         html: `
-          <div class="svg-pin-wrapper" id="pin_${poi.poi_id}">
+          <div class="svg-pin-wrapper" id="pin_${escapeHtml(poi.poi_id)}">
             <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path class="pin-base" d="M17 0C7.61 0 0 7.61 0 17C0 29.75 17 44 17 44C17 44 34 29.75 34 17C34 7.61 26.39 0 17 0Z" fill="#0d9488"/>
               <circle cx="17" cy="16" r="9" fill="white"/>
@@ -965,7 +858,7 @@
       const popupHtml = `
         <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 2px;">
           <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">#${number} ${escapeHtml(poi.name)}</div>
-          <div style="color: #64748b; font-size: 12px; margin-bottom: 6px;">${categoryEmoji} ${escapeHtml(poi.category || 'POI')} • ~${poi.distance_m || 0} м</div>
+          <div style="color: #64748b; font-size: 12px; margin-bottom: 6px;">${categoryEmoji} ${escapeHtml(categoryName(poi.category))} • ~${poi.distance_m ?? 0} м по прямой</div>
           <div style="background: #f0fdf4; color: #166534; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">
             ${t('total_budget')} ~${totalTime} мин
           </div>
@@ -984,11 +877,7 @@
     });
 
     try {
-      leafletMap.fitBounds(bounds, {
-        padding: [60, 60],
-        maxZoom: 16,
-        animate: true
-      });
+      leafletMap.fitBounds(bounds, mapViewPadding());
     } catch (_) {}
   }
 
@@ -1036,7 +925,7 @@
       const stopIcon = L.divIcon({
         className: 'custom-poi-marker',
         html: `
-          <div class="svg-pin-wrapper itinerary-pin-wrapper" id="pin_${stop.poi_id}">
+          <div class="svg-pin-wrapper itinerary-pin-wrapper" id="pin_${escapeHtml(stop.poi_id)}">
             <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path class="pin-base" d="M17 0C7.61 0 0 7.61 0 17C0 29.75 17 44 17 44C17 44 34 29.75 34 17C34 7.61 26.39 0 17 0Z" fill="#0284c7"/>
               <circle cx="17" cy="16" r="9" fill="white"/>
@@ -1054,11 +943,12 @@
       const popupHtml = `
         <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 2px;">
           <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">Остановка #${order}: ${escapeHtml(stop.name)}</div>
-          <div style="color: #0369a1; font-weight: 600; font-size: 11px; margin-bottom: 4px;">Прибытие: ${stop.arrival_minutes_estimate} мин • На месте: ${stop.visit_minutes_estimate} мин</div>
+          <div style="color: #0369a1; font-weight: 600; font-size: 11px; margin-bottom: 4px;">От старта: +${stop.arrival_minutes_estimate} мин • На месте: ${stop.visit_minutes_estimate} мин</div>
           <div style="color: #64748b; font-size: 12px;">${escapeHtml(stop.activity || '')}</div>
         </div>
       `;
       marker.bindPopup(popupHtml);
+      marker.on('click', () => openPoiDrawer(stop));
       currentMarkers.set(stop.poi_id, marker);
       bounds.extend([stop.lat, stop.lon]);
     });
@@ -1068,12 +958,28 @@
     }
 
     try {
-      leafletMap.fitBounds(bounds, {
-        padding: [60, 60],
-        maxZoom: 16,
-        animate: true
-      });
+      leafletMap.fitBounds(bounds, mapViewPadding());
     } catch (_) {}
+  }
+
+  function mapViewPadding() {
+    const size = leafletMap?.getSize?.() || { x: window.innerWidth || 1024, y: window.innerHeight || 768 };
+    const rect = gisSidebar?.getBoundingClientRect();
+    const collapsed = gisSidebar?.classList.contains('collapsed');
+    if (window.matchMedia?.('(max-width: 768px)').matches) {
+      const panelHeight = collapsed ? 64 : rect?.height || size.y * 0.6;
+      return {
+        paddingTopLeft: [20, 80],
+        paddingBottomRight: [40, Math.min(panelHeight + 20, Math.max(20, size.y - 120))],
+        maxZoom: 16, animate: true
+      };
+    }
+    const left = collapsed ? 20 : (rect?.width || 440) + 32;
+    return {
+      paddingTopLeft: [Math.min(left, Math.max(20, size.x - 180)), 70],
+      paddingBottomRight: [60, 30],
+      maxZoom: 16, animate: true
+    };
   }
 
   function clearRoutePolyline() {
@@ -1146,6 +1052,9 @@
       });
     }
 
+    document.querySelectorAll('input[name="category"]').forEach(input => input.addEventListener('change', invalidateSearch));
+    if (queryInput) queryInput.addEventListener('input', invalidateSearch);
+
     // Form submit
     if (recommendForm) {
       recommendForm.addEventListener('submit', handleFormSubmit);
@@ -1159,6 +1068,7 @@
     // Sidebar collapse / expand
     if (toggleSidebarBtn) {
       toggleSidebarBtn.addEventListener('click', () => {
+        if (window.matchMedia?.('(max-width: 768px)').matches) gisSidebar.scrollTop = 0;
         gisSidebar.classList.add('collapsed');
         if (openSidebarBtn) openSidebarBtn.classList.remove('hidden');
         setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 350);
@@ -1175,6 +1085,7 @@
 
     if (sheetHandle) {
       sheetHandle.addEventListener('click', () => {
+        gisSidebar.scrollTop = 0;
         gisSidebar.classList.toggle('collapsed');
       });
     }
@@ -1194,6 +1105,7 @@
     // Location select change
     if (locationSelect) {
       locationSelect.addEventListener('change', () => {
+        invalidateSearch();
         const opt = locationSelect.selectedOptions[0];
         if (opt && opt.dataset.lat && opt.dataset.lon) {
           const lat = parseFloat(opt.dataset.lat);
@@ -1214,6 +1126,7 @@
     // Tag chips
     tagChips.forEach((chip) => {
       chip.addEventListener('click', () => {
+        invalidateSearch();
         const fillText = chip.getAttribute('data-fill');
         if (queryInput) {
           queryInput.value = fillText;
@@ -1225,6 +1138,7 @@
     // Preset buttons
     presetButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
+        setAppMode('places');
         const cat = btn.getAttribute('data-category');
         const min = btn.getAttribute('data-minutes');
         const q = btn.getAttribute('data-query');
@@ -1255,7 +1169,7 @@
     if (drawerSetStartBtn) {
       drawerSetStartBtn.addEventListener('click', () => {
         if (currentDrawerPoi) {
-          updateStartMarker(currentDrawerPoi.lat, currentDrawerPoi.lon, currentDrawerPoi.name);
+          handleMapClick(currentDrawerPoi.lat, currentDrawerPoi.lon, currentDrawerPoi.name);
           showMapToast(`📍 Стартовая точка: ${currentDrawerPoi.name}`);
           closePoiDrawer();
         }
@@ -1266,7 +1180,11 @@
     if (drawerRouteBtn) {
       drawerRouteBtn.addEventListener('click', () => {
         if (currentDrawerPoi) {
-          showMapToast(`🚶 Маршрут до «${currentDrawerPoi.name}»...`);
+          showMapToast(`📍 Ищем рекомендации по запросу «${currentDrawerPoi.name}»`);
+          setAppMode('places');
+          const category = currentDrawerPoi.category === 'cafe' ? 'cafe' : 'walk';
+          const radio = document.querySelector(`input[name="category"][value="${category}"]`);
+          if (radio) radio.checked = true;
           closePoiDrawer();
           if (queryInput) {
             queryInput.value = currentDrawerPoi.name;
@@ -1278,6 +1196,7 @@
   }
 
   function setAppMode(mode) {
+    invalidateSearch();
     appMode = mode;
     tabPlaces.classList.toggle('active', mode === 'places');
     tabItinerary.classList.toggle('active', mode === 'itinerary');
@@ -1287,9 +1206,11 @@
     }
 
     renderTimeSelector();
+    updateCategoryLabels();
     setUIState('initial');
     clearRoutePolyline();
     if (poiMarkersLayer) poiMarkersLayer.clearLayers();
+    if (window.matchMedia?.('(max-width: 768px)').matches && gisSidebar) gisSidebar.scrollTop = 0;
   }
 
   function getSelectedMinutes() {
@@ -1323,7 +1244,7 @@
       errOpt.value = '';
       errOpt.disabled = true;
       errOpt.selected = true;
-      errOpt.textContent = t('loading_locations');
+      errOpt.textContent = 'Локации недоступны — проверьте сервер или выберите точку на карте';
       locationSelect.appendChild(errOpt);
     }
   }
@@ -1357,118 +1278,77 @@
 
   // --- API: Load System Meta & Telemetry ---
   async function loadSystemMeta() {
-    try {
-      const response = await fetch('/api/meta', {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        cache: 'no-store'
-      });
-      if (response.ok) {
-        cachedSystemMeta = await response.json();
-      }
-    } catch (e) {
-      console.warn('[TeleGIS] /api/meta fallback used:', e);
-      cachedSystemMeta = {
-        poi_count: 49,
-        walking_network: { node_count: 30829, directed_edge_count: 73816 },
-        data_quality: {
-          attributed_fact_count: 72,
-          official_fact_count: 48,
-          confirmed_features: { wifi: 18, socket: 12, quiet: 9, wheelchair: 15 }
-        }
-      };
+    if (isMockMode) {
+      cachedSystemMeta = null;
+      cachedHealth = null;
+      systemStatusLoaded = true;
+      updateSystemStatusText();
+      return;
     }
+    const responses = await Promise.allSettled(['/api/meta', '/api/health'].map(async path => {
+      const response = await fetch(path, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    }));
+    cachedSystemMeta = responses[0].status === 'fulfilled' ? responses[0].value : null;
+    cachedHealth = responses[1].status === 'fulfilled' ? responses[1].value : null;
+    systemStatusLoaded = true;
     updateSystemStatusText();
+  }
+
+  function modelStatus() {
+    if (isMockMode) return 'Тестовый режим';
+    if (!systemStatusLoaded) return 'Проверяем состояние API…';
+    if (!cachedHealth) return 'Статус API недоступен';
+    if (!cachedHealth.llm_configured) return 'Локальный подбор · LLM не настроена';
+    if (cachedHealth.llm_last_status === 'ok') return 'Последний вызов LLM: успешно';
+    if (cachedHealth.llm_last_status === 'not_checked') return 'LLM настроена, вызов ещё не проверен';
+    return `LLM: ${cachedHealth.llm_last_status || 'статус неизвестен'} · доступен локальный подбор`;
   }
 
   function updateSystemStatusText() {
     if (!statusSummaryText) return;
-    const nodes = (cachedSystemMeta?.walking_network?.node_count || 30829).toLocaleString();
-    const pois = cachedSystemMeta?.poi_count || 49;
-    if (currentLang === 'kz') {
-      statusSummaryText.textContent = `Желі: ${nodes} OSM түйіні • ${pois} POI • ЖИ Онлайн`;
-    } else if (currentLang === 'en') {
-      statusSummaryText.textContent = `Network: ${nodes} OSM nodes • ${pois} POIs • RAG Online`;
-    } else {
-      statusSummaryText.textContent = `Сеть: ${nodes} узлов OSM • ${pois} POI • RAG Онлайн`;
-    }
+    const m = cachedSystemMeta;
+    statusSummaryText.textContent = m
+      ? `Сеть: ${m.walking_network?.node_count?.toLocaleString() ?? '—'} узлов OSM • ${m.poi_count ?? '—'} POI • ${modelStatus()}`
+      : modelStatus();
   }
 
   function openTelemetryModal() {
     if (!telemetryModal || !telemetryModalBody) return;
-    const m = cachedSystemMeta || {
-      poi_count: 49,
-      coverage: 'EXPO / Mega Silk Way',
-      walking_network: { node_count: 30829, directed_edge_count: 73816 },
-      data_quality: {
-        attributed_fact_count: 72,
-        official_fact_count: 48,
-        confirmed_features: { wifi: 18, socket: 12, quiet: 9, wheelchair: 15 }
-      }
-    };
-
+    const m = cachedSystemMeta || {};
+    const number = value => Number.isFinite(value) ? value.toLocaleString() : '—';
     telemetryModalBody.innerHTML = `
       <div>
-        <div class="telemetry-section-title">🗺️ Пешеходная сеть OpenStreetMap (Dijkstra)</div>
+        <div class="telemetry-section-title">🗺️ Пешеходная сеть OpenStreetMap</div>
         <div class="telemetry-grid">
-          <div class="telemetry-card">
-            <span class="telemetry-val">${(m.walking_network?.node_count || 30829).toLocaleString()}</span>
-            <span class="telemetry-lbl">Вершин графа</span>
-          </div>
-          <div class="telemetry-card">
-            <span class="telemetry-val">${(m.walking_network?.directed_edge_count || 73816).toLocaleString()}</span>
-            <span class="telemetry-lbl">Направленных рёбер</span>
-          </div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.walking_network?.node_count)}</span><span class="telemetry-lbl">Вершин графа</span></div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.walking_network?.directed_edge_count)}</span><span class="telemetry-lbl">Направленных рёбер</span></div>
         </div>
       </div>
-
       <div>
-        <div class="telemetry-section-title">📍 Верифицированная база POI и фактов</div>
+        <div class="telemetry-section-title">📍 Данные сохранённого снимка</div>
         <div class="telemetry-grid">
-          <div class="telemetry-card">
-            <span class="telemetry-val">${m.poi_count || 49}</span>
-            <span class="telemetry-lbl">Объектов Астаны</span>
-          </div>
-          <div class="telemetry-card">
-            <span class="telemetry-val">${m.data_quality?.attributed_fact_count || 72}</span>
-            <span class="telemetry-lbl">Фактов (${m.data_quality?.official_fact_count || 48} офиц.)</span>
-          </div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.poi_count)}</span><span class="telemetry-lbl">Объектов</span></div>
+          <div class="telemetry-card"><span class="telemetry-val">${number(m.data_quality?.attributed_fact_count)}</span><span class="telemetry-lbl">Сведений (${number(m.data_quality?.official_fact_count)} официальных)</span></div>
         </div>
       </div>
-
       <div>
-        <div class="telemetry-section-title">⚡ Подтвержденные теги инфраструктуры OSM</div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <span class="feature-pill active">🔌 Розетки: ${m.data_quality?.confirmed_features?.socket || 12}</span>
-          <span class="feature-pill active">📶 Wi-Fi: ${m.data_quality?.confirmed_features?.wifi || 18}</span>
-          <span class="feature-pill active">♿ Доступность: ${m.data_quality?.confirmed_features?.wheelchair || 15}</span>
-          <span class="feature-pill active">🌿 Тихие зоны: ${m.data_quality?.confirmed_features?.quiet || 9}</span>
+        <div class="telemetry-section-title">⚡ Теги удобств в OSM</div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <span class="feature-pill">🔌 Розетки: ${number(m.data_quality?.confirmed_features?.socket)}</span>
+          <span class="feature-pill">📶 Wi-Fi: ${number(m.data_quality?.confirmed_features?.wifi)}</span>
+          <span class="feature-pill">♿ Доступность: ${number(m.data_quality?.confirmed_features?.wheelchair)}</span>
+          <span class="feature-pill">🌿 Тишина: ${number(m.data_quality?.confirmed_features?.quiet)}</span>
         </div>
       </div>
-
       <div>
-        <div class="telemetry-section-title">🔒 Архитектура, RAG и Приватность</div>
-        <div style="display: flex; flex-direction: column; gap: 0.45rem;">
-          <div class="telemetry-info-row">
-            <span class="telemetry-info-key">Модуль генерации (LLM)</span>
-            <span class="telemetry-info-val">OpenRouter • gpt-4o-mini</span>
-          </div>
-          <div class="telemetry-info-row">
-            <span class="telemetry-info-key">Алгоритм поиска (Retrieval)</span>
-            <span class="telemetry-info-val">BM25 + Haversine Radius Filter</span>
-          </div>
-          <div class="telemetry-info-row">
-            <span class="telemetry-info-key">Приватность координат</span>
-            <span class="telemetry-info-val" style="color: #059669;">100% Zero-Log / No GPS Storage</span>
-          </div>
-          <div class="telemetry-info-row">
-            <span class="telemetry-info-key">Лицензия картографии</span>
-            <span class="telemetry-info-val">OpenStreetMap ODbL 1.0</span>
-          </div>
-        </div>
-      </div>
-    `;
-
+        <div class="telemetry-section-title">🔒 Подбор и приватность</div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">Состояние LLM</span><span class="telemetry-info-val">${escapeHtml(modelStatus())}</span></div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">Источники</span><span class="telemetry-info-val">OpenStreetMap и официальные страницы; актуальность не гарантируется</span></div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">Координаты</span><span class="telemetry-info-val">Бэкенд не сохраняет GPS; тайлы OSM загружаются браузером с внешнего сервера</span></div>
+        <div class="telemetry-info-row"><span class="telemetry-info-key">Лицензия</span><span class="telemetry-info-val">© OpenStreetMap contributors · ODbL 1.0</span></div>
+      </div>`;
     telemetryModal.classList.remove('hidden');
   }
 
@@ -1489,6 +1369,7 @@
     navigator.geolocation.getCurrentPosition(
       (position) => {
         geoBtn.disabled = false;
+        invalidateSearch();
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
@@ -1528,141 +1409,130 @@
   // --- Form Submit Handler ---
   function handleFormSubmit(e) {
     e.preventDefault();
-
-    const selectedOption = locationSelect.selectedOptions[0];
-    if (!selectedOption || !selectedOption.dataset.lat || !selectedOption.dataset.lon) {
-      alert('Пожалуйста, выберите стартовую точку из списка.');
-      locationSelect.focus();
+    const option = locationSelect.selectedOptions[0];
+    if (!option?.dataset.lat || !option?.dataset.lon) {
+      handleSearchError('Выберите стартовую точку из списка, на карте или через GPS.');
       return;
     }
-
-    const lat = parseFloat(selectedOption.dataset.lat);
-    const lon = parseFloat(selectedOption.dataset.lon);
-
-    const categoryInput = document.querySelector('input[name="category"]:checked');
-    const category = categoryInput ? categoryInput.value : 'walk';
-
-    const available_minutes = getSelectedMinutes();
-    const query = (queryInput ? queryInput.value : '').trim();
-
-    const payload = {
-      query: query || (category === 'cafe' ? 'Кофе' : 'Прогулка'),
-      lat: lat,
-      lon: lon,
-      available_minutes: available_minutes,
-      category: category,
-      include_coffee: category === 'cafe'
+    const category = document.querySelector('input[name="category"]:checked')?.value || 'walk';
+    const common = {
+      query: queryInput.value.trim() || (appMode === 'itinerary' ? 'Хочу погулять' : category === 'cafe' ? 'Кофе' : 'Прогулка'),
+      lat: Number(option.dataset.lat),
+      lon: Number(option.dataset.lon),
+      available_minutes: getSelectedMinutes()
     };
-
+    const payload = appMode === 'itinerary'
+      ? { ...common, include_coffee: category === 'cafe' }
+      : { ...common, category };
     lastRequestPayload = payload;
     executeSearch(payload);
   }
 
-  // --- Execute Search with AbortController ---
-  async function executeSearch(payload) {
-    if (activeAbortController) {
-      activeAbortController.abort();
-    }
-    activeAbortController = new AbortController();
+  function invalidateSearch() {
+    if (activeAbortController) activeAbortController.abort();
+    activeAbortController = null;
+    lastRequestPayload = null;
+    setSubmitLoading(false);
+    clearRoutePolyline();
+    if (poiMarkersLayer) poiMarkersLayer.clearLayers();
+    if (fallbackNotice) fallbackNotice.classList.add('hidden');
+    if (usedContextTag) usedContextTag.classList.add('hidden');
+    if (resultsCountBadge) resultsCountBadge.classList.add('hidden');
+    const advice = document.getElementById('emptyAdviceContainer');
+    if (advice) advice.replaceChildren();
+    setUIState('initial');
+  }
 
+  function updateCategoryLabels() {
+    const walk = document.querySelector('[data-i18n="cat_walk"]');
+    const cafe = document.querySelector('[data-i18n="cat_cafe"]');
+    if (walk) walk.textContent = appMode === 'itinerary' ? 'Без кофе' : t('cat_walk');
+    if (cafe) cafe.textContent = appMode === 'itinerary' ? 'С остановкой на кофе' : t('cat_cafe');
+  }
+
+  function selectMinutes(value) {
+    let radio = document.querySelector(`input[name="availableMinutes"][value="${value}"]`);
+    if (!radio) {
+      const label = document.createElement('label');
+      label.className = 'time-chip';
+      radio = document.createElement('input');
+      radio.type = 'radio'; radio.name = 'availableMinutes'; radio.value = value;
+      radio.addEventListener('change', () => { invalidateSearch(); updateReachRadius(value); });
+      const text = document.createElement('span');
+      text.className = 'time-chip-btn'; text.textContent = `${value} мин`;
+      label.append(radio, text);
+      timeSelector.appendChild(label);
+    }
+    radio.checked = true;
+    updateReachRadius(value);
+  }
+
+  async function mockResponse(payload, mode) {
+    await ensureMockData();
+    const matches = (mockData.scenarios || []).find(item =>
+      item.mode === mode && Object.entries(item.request).every(([key, value]) => payload[key] === value));
+    if (matches) return structuredClone(matches.response);
+    const used_context = { ...payload, effective_minutes: payload.available_minutes, required_features: [] };
+    const message = 'Тестовый режим: для этих параметров нет записанного примера. Отключите ?mock=1 для настоящего расчёта. Записанные ответы не пересчитываются и не выдают выдуманные маршруты.';
+    return mode === 'itinerary'
+      ? { status: 'no_match', mode: 'mock', message, used_context, stops: [], legs: [] }
+      : { mode: 'mock', message, used_context, recommendations: [] };
+  }
+
+  async function executeSearch(payload) {
+    if (activeAbortController) activeAbortController.abort();
+    const controller = new AbortController();
+    const mode = appMode;
+    activeAbortController = controller;
+    if (fallbackNotice) fallbackNotice.classList.add('hidden');
+    if (resultsCountBadge) resultsCountBadge.classList.add('hidden');
+    if (usedContextTag) usedContextTag.classList.add('hidden');
+    const advice = document.getElementById('emptyAdviceContainer');
+    if (advice) advice.replaceChildren();
+    clearRoutePolyline();
+    if (poiMarkersLayer) poiMarkersLayer.clearLayers();
     setUIState('loading');
     setSubmitLoading(true);
-
     try {
       let data;
-
-      if (appMode === 'itinerary') {
-        // --- ITINERARY MODE ---
-        if (isMockMode) {
-          await ensureItineraryData();
-          await new Promise((resolve) => setTimeout(resolve, 350));
-          data = JSON.parse(JSON.stringify(itineraryExampleData));
-
-          // Simulate honest refusal if time too short (<90m)
-          if (payload.available_minutes < 90) {
-            data = {
-              status: "no_match",
-              message: "В пределах выбранного времени (60 мин) невозможно составить безопасный кольцевой маршрут из 3 разных точек. Рекомендуемый бюджет: не менее 90 минут.",
-              suggested_minimum_minutes: 90
-            };
-          }
-        } else {
-          const response = await fetch('/api/itinerary', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify(payload),
-            signal: activeAbortController.signal,
-            cache: 'no-store'
-          });
-
-          if (!response.ok) {
-            let errorDetail = `Ошибка HTTP ${response.status}`;
-            try {
-              const errData = await response.json();
-              if (errData && errData.detail) {
-                errorDetail = Array.isArray(errData.detail) ? errData.detail.map(d => d.msg).join('; ') : errData.detail;
-              }
-            } catch (_) {}
-            throw new Error(errorDetail);
-          }
-          data = await response.json();
-        }
-
-        handleItinerarySuccess(data);
-
+      if (isMockMode) {
+        data = await mockResponse(payload, mode);
       } else {
-        // --- PLACES MODE ---
-        if (isMockMode) {
-          await ensureMockData();
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          const scenarioKey = `${payload.category}_${payload.available_minutes}`;
-          data = (mockData.scenarios && mockData.scenarios[scenarioKey]) || mockData.scenarios['walk_60'];
-          data = JSON.parse(JSON.stringify(data));
-          data.used_context = {
-            lat: payload.lat,
-            lon: payload.lon,
-            available_minutes: payload.available_minutes,
-            category: payload.category
-          };
-        } else {
-          const response = await fetch('/api/recommend', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify(payload),
-            signal: activeAbortController.signal,
-            cache: 'no-store'
-          });
-
-          if (!response.ok) {
-            let errorDetail = `Ошибка HTTP ${response.status}`;
-            try {
-              const errData = await response.json();
-              if (errData && errData.detail) {
-                errorDetail = Array.isArray(errData.detail) ? errData.detail.map(d => d.msg).join('; ') : errData.detail;
-              }
-            } catch (_) {}
-            throw new Error(errorDetail);
-          }
-          data = await response.json();
+        const response = await fetch(mode === 'itinerary' ? '/api/itinerary' : '/api/recommend', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload), signal: controller.signal, cache: 'no-store'
+        });
+        if (!response.ok) {
+          let message = `Ошибка API: HTTP ${response.status}`;
+          try {
+            const error = await response.json();
+            if (error.detail) message = Array.isArray(error.detail) ? error.detail.map(item => item.msg).join('; ') : String(error.detail);
+          } catch (_) {}
+          throw new Error(message);
         }
-
-        handleSearchSuccess(data);
+        data = await response.json();
       }
-
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('[TeleGIS] Запрос отменен пользователем.');
-        return;
-      }
-      handleSearchError(err.message || 'Не удалось связаться с сервером TeleGIS.');
+      if (controller.signal.aborted || activeAbortController !== controller || appMode !== mode) return;
+      if (mode === 'itinerary') handleItinerarySuccess(data);
+      else handleSearchSuccess(data);
+      if (!isMockMode) loadSystemMeta();
+    } catch (error) {
+      if (controller.signal.aborted || activeAbortController !== controller || error.name === 'AbortError') return;
+      const networkFailure = error instanceof TypeError ||
+        /failed to fetch|networkerror|network request failed|load failed/i.test(error.message || '');
+      handleSearchError(networkFailure ? t('connection_error') : error.message || t('connection_error'));
     } finally {
-      setSubmitLoading(false);
-      activeAbortController = null;
+      if (activeAbortController === controller) {
+        activeAbortController = null;
+        setSubmitLoading(false);
+      }
     }
   }
 
   // --- Itinerary Mode Response Handler ---
   function handleItinerarySuccess(data) {
+    renderUsedContext(data.used_context);
+    if (fallbackNotice) fallbackNotice.classList.add('hidden');
     if (data.status === 'no_match' || data.status === 'network_unavailable' || !data.stops || data.stops.length === 0) {
       if (emptyReason) {
         emptyReason.textContent = data.message || t('empty_text');
@@ -1677,10 +1547,15 @@
         sugBtn.style.marginTop = '0.5rem';
         sugBtn.textContent = `⏱️ Выбрать ${data.suggested_minimum_minutes} мин и построить маршрут`;
         sugBtn.addEventListener('click', () => {
-          const radio = document.querySelector(`input[name="availableMinutes"][value="${data.suggested_minimum_minutes}"]`);
-          if (radio) {
-            radio.checked = true;
-            updateReachRadius(data.suggested_minimum_minutes);
+          selectMinutes(data.suggested_minimum_minutes);
+          if (data.used_context?.effective_minutes < data.used_context?.available_minutes ||
+              /\d+\s*(?:мин|min|час|hour|ч\b)/i.test(queryInput.value)) {
+            const note = document.createElement('p');
+            note.className = 'warning-item';
+            note.textContent = 'Время изменено в переключателе. В тексте запроса остаётся более короткий лимит — измените его вручную и нажмите «Построить маршрут». Текстовые ограничения сохранены.';
+            emptyAdviceContainer.appendChild(note);
+            queryInput.focus();
+            return;
           }
           if (recommendForm) recommendForm.dispatchEvent(new Event('submit', { cancelable: true }));
         });
@@ -1713,7 +1588,7 @@
     title.textContent = `🚶 ${t('route_ready_title')}`;
     const badge = document.createElement('span');
     badge.className = 'itin-badge-graph';
-    badge.textContent = 'Dijkstra OSM Graph';
+    badge.textContent = isMockMode ? 'Записанный тестовый пример' : 'Локальный граф OSM';
     headRow.appendChild(title);
     headRow.appendChild(badge);
     summaryCard.appendChild(headRow);
@@ -1748,6 +1623,11 @@
       </div>
     `;
     summaryCard.appendChild(statsGrid);
+    const contextLine = document.createElement('p');
+    contextLine.className = 'itin-why';
+    contextLine.textContent = `Бюджет: ${data.used_context?.effective_minutes ?? data.used_context?.available_minutes ?? '—'} мин. Остаток: ${data.remaining_minutes ?? '—'} мин. Запас уже включён в итог. Все времена ниже — от момента старта.`;
+    summaryCard.appendChild(contextLine);
+    appendWarnings(summaryCard, data.warnings);
     itineraryView.appendChild(summaryCard);
 
     // Timeline of stops
@@ -1772,19 +1652,38 @@
       const stTime = document.createElement('div');
       stTime.className = 'itin-stop-time';
       const depTime = stop.departure_minutes_estimate || (stop.arrival_minutes_estimate + (stop.visit_minutes_estimate || 20));
-      stTime.textContent = `${stop.arrival_minutes_estimate}–${depTime} мин`;
+      stTime.textContent = `+${stop.arrival_minutes_estimate}–${depTime} мин от старта`;
 
       stHead.appendChild(stName);
       stHead.appendChild(stTime);
       stopCard.appendChild(stHead);
 
+      if (stop.why) {
+        const why = document.createElement('p');
+        why.className = 'card-why-text';
+        why.textContent = `${t('why_label')} ${stop.why}`;
+        stopCard.appendChild(why);
+      }
       if (stop.activity) {
         const actP = document.createElement('div');
         actP.className = 'itin-stop-activity';
-        actP.textContent = `💡 ${stop.activity}`;
+        actP.textContent = `💡 Идея занятия: ${stop.activity}`;
         stopCard.appendChild(actP);
       }
 
+      (stop.evidence || []).forEach(fact => {
+        const line = document.createElement('p');
+        line.className = 'card-evidence-box';
+        line.textContent = `${fact.kind === 'official' ? 'Официальный источник' : 'OSM'}: ${fact.text}`;
+        appendSource(line, fact.source_url, `Источник · ${formatDate(fact.collected_at)}`);
+        stopCard.appendChild(line);
+      });
+      const hours = document.createElement('p');
+      hours.className = 'hours-badge';
+      hours.textContent = stop.opening_hours ? `Часы по источнику: ${stop.opening_hours}` : t('unconfirmed_hours');
+      stopCard.appendChild(hours);
+      appendWarnings(stopCard, stop.warnings);
+      appendSource(stopCard, stop.source_url, `POI в OSM · ${formatDate(stop.collected_at)}`);
       timeline.appendChild(stopCard);
     });
 
@@ -1795,13 +1694,22 @@
     finishCard.innerHTML = `
       <div class="itin-stop-header">
         <div class="itin-stop-name" style="color: #059669;">🏁 ${t('finish_point')}</div>
-        <div class="itin-stop-time">${data.total_minutes_estimate || ''} мин</div>
+        <div class="itin-stop-time">~${data.walking_minutes_estimate + data.visit_minutes_estimate} мин + ${data.reserve_minutes} мин запаса</div>
       </div>
-      <div class="itin-stop-activity">Возвращение в исходную точку отправления. Маршрут успешно завершён.</div>
+      <div class="itin-stop-activity">План возвращения в исходную точку. Время приблизительное; проверьте доступность проходов на месте.</div>
     `;
     timeline.appendChild(finishCard);
 
     itineraryView.appendChild(timeline);
+  }
+
+  function appendWarnings(container, warnings) {
+    (warnings || []).forEach(text => {
+      const item = document.createElement('div');
+      item.className = 'warning-item';
+      item.textContent = `⚠️ ${text}`;
+      container.appendChild(item);
+    });
   }
 
   // --- Search Results & UI Rendering (Places Mode) ---
@@ -1816,13 +1724,13 @@
     }
 
     if (fallbackNotice) {
-      if (data.mode === 'rag') {
-        fallbackNotice.className = 'ai-active-banner';
-        fallbackNotice.innerHTML = '<span class="banner-icon">✨</span><div class="banner-text"><strong>Live AI-анализ:</strong> персонализировано нейросетью OpenRouter (GPT-4o-mini).</div>';
-        fallbackNotice.classList.remove('hidden');
-      } else {
-        fallbackNotice.classList.add('hidden');
-      }
+      fallbackNotice.className = 'ai-active-banner';
+      fallbackNotice.textContent = isMockMode
+        ? 'Тестовый пример. Live API отключён.'
+        : data.mode === 'rag'
+          ? '✨ RAG: модель выбрала варианты из найденных POI; факты и время проверены правилами бэкенда.'
+          : 'Локальный подбор: рекомендации рассчитаны по сохранённым POI без ответа модели.';
+      fallbackNotice.classList.remove('hidden');
     }
 
     if (recommendations.length === 0) {
@@ -1855,8 +1763,8 @@
     }
 
     const catName = context.category === 'cafe' ? (currentLang === 'kz' ? '☕ Кофе' : (currentLang === 'en' ? '☕ Coffee' : '☕ Кофе')) : (currentLang === 'kz' ? '🚶 Серуен' : (currentLang === 'en' ? '🚶 Walk' : '🚶 Прогулка'));
-    const minutes = context.effective_minutes || context.available_minutes || 60;
-    const coords = `${context.lat.toFixed(4)}, ${context.lon.toFixed(4)}`;
+    const minutes = context.effective_minutes ?? context.available_minutes;
+    const coords = Number.isFinite(context.lat) && Number.isFinite(context.lon) ? `${context.lat.toFixed(4)}, ${context.lon.toFixed(4)}` : 'старт не указан';
 
     let tagStr = `${catName} • ${minutes}м • ${coords}`;
     if (context.required_features && context.required_features.length > 0) {
@@ -1911,7 +1819,8 @@
 
       const categoryBadge = document.createElement('span');
       categoryBadge.className = 'card-category-badge';
-      categoryBadge.textContent = poi.category || 'POI';
+      categoryBadge.textContent = categoryName(poi.category);
+      categoryBadge.dataset.poiCategory = poi.category || '';
 
       nameWrapper.appendChild(nameEl);
       nameWrapper.appendChild(categoryBadge);
@@ -1930,10 +1839,10 @@
       mDistance.className = 'metric-item';
       const mDistanceLabel = document.createElement('span');
       mDistanceLabel.className = 'metric-label';
-      mDistanceLabel.textContent = t('straight_dist');
+      mDistanceLabel.textContent = poi.travel_basis === 'osm_walking_graph' && Number.isFinite(poi.route_distance_m) ? 'По графу OSM:' : t('straight_dist');
       const mDistanceVal = document.createElement('span');
       mDistanceVal.className = 'metric-value';
-      const displayDist = poi.route_distance_m || poi.distance_m || 0;
+      const displayDist = poi.route_distance_m ?? poi.distance_m ?? 0;
       mDistanceVal.textContent = `${displayDist} м`;
       mDistance.appendChild(mDistanceLabel);
       mDistance.appendChild(mDistanceVal);
@@ -1942,7 +1851,7 @@
         const basisBadge = document.createElement('span');
         basisBadge.className = 'basis-badge';
         basisBadge.textContent = t('basis_graph');
-        basisBadge.title = 'Расчет по реальным пешеходным тротуарам OpenStreetMap (Dijkstra)';
+        basisBadge.title = 'Маршрут по сохранённому графу OSM с приблизительными подходами к точкам; доступность проходов не проверена в реальном времени';
         mDistance.appendChild(basisBadge);
       }
 
@@ -1954,7 +1863,7 @@
       mWalkLabel.textContent = t('one_way');
       const mWalkVal = document.createElement('span');
       mWalkVal.className = 'metric-value';
-      mWalkVal.textContent = `~${poi.walk_minutes_estimate || 1} мин`;
+      mWalkVal.textContent = `~${poi.walk_minutes_estimate ?? 0} мин`;
       mWalk.appendChild(mWalkLabel);
       mWalk.appendChild(mWalkVal);
 
@@ -1975,6 +1884,10 @@
       metrics.appendChild(mWalk);
       metrics.appendChild(mTotal);
       card.appendChild(metrics);
+      const duration = document.createElement('p');
+      duration.className = 'card-why-text';
+      duration.textContent = `На месте: ${poi.visit_minutes_estimate} мин. Возврат включён в итог. Свободно в бюджете: ${poi.time_margin_minutes ?? '—'} мин.`;
+      card.appendChild(duration);
 
       // --- Confirmed Infrastructure Tags (WiFi, Socket, Wheelchair) ---
       if (poi.confirmed_features) {
@@ -2058,7 +1971,7 @@
           evIcon.textContent = ev.kind === 'official' ? '🏛️' : '📋';
           const evTitle = document.createElement('span');
           evTitle.className = 'evidence-title';
-          evTitle.textContent = ev.kind === 'official' ? t('verified_fact') : 'OSM Verified';
+          evTitle.textContent = ev.kind === 'official' ? t('verified_fact') : 'По данным OpenStreetMap';
           evHead.appendChild(evIcon);
           evHead.appendChild(evTitle);
           evBox.appendChild(evHead);
@@ -2072,10 +1985,10 @@
           evMeta.className = 'evidence-meta';
           const evBadge = document.createElement('span');
           evBadge.className = 'evidence-badge';
-          evBadge.textContent = t('evidence_sha');
+          evBadge.textContent = `${t('evidence_sha')} · ${formatDate(ev.collected_at)}${ev.published_at ? ` · публикация: ${formatDate(ev.published_at)}` : ''}`;
           evMeta.appendChild(evBadge);
 
-          if (ev.source_url) {
+          if (safeHttpUrl(ev.source_url)) {
             const evLink = document.createElement('a');
             evLink.className = 'evidence-link';
             evLink.href = ev.source_url;
@@ -2097,7 +2010,7 @@
       const hoursBadge = document.createElement('div');
       hoursBadge.className = 'hours-badge';
       if (poi.opening_hours) {
-        hoursBadge.textContent = `🕒 ${poi.opening_hours}`;
+        hoursBadge.textContent = `🕒 По источнику: ${poi.opening_hours} · уточните перед визитом`;
       } else {
         hoursBadge.classList.add('hours-unconfirmed');
         hoursBadge.textContent = t('unconfirmed_hours');
@@ -2213,6 +2126,16 @@
         if (itineraryView) itineraryView.classList.remove('hidden');
         break;
     }
+    if (state !== 'initial' && window.matchMedia?.('(max-width: 768px)').matches && gisSidebar) {
+      const content = document.getElementById('sidebarContent');
+      if (content) {
+        gisSidebar.classList.remove('collapsed');
+        gisSidebar.scrollTo({
+          top: Math.max(0, content.offsetTop - (sheetHandle?.offsetHeight || 0)),
+          behavior: 'smooth'
+        });
+      }
+    }
   }
 
   function setSubmitLoading(isLoading) {
@@ -2235,14 +2158,6 @@
     const res = await fetch('/static/mock.json');
     if (!res.ok) throw new Error('Не удалось загрузить mock.json');
     mockData = await res.json();
-  }
-
-  async function ensureItineraryData() {
-    if (itineraryExampleData) return;
-    try {
-      const res = await fetch('/static/itinerary_example.json');
-      if (res.ok) itineraryExampleData = await res.json();
-    } catch (_) {}
   }
 
   document.addEventListener('DOMContentLoaded', init);

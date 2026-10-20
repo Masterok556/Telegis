@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TeleGIS — Умная интерактивная карта прогулок по Астане</title>
-  <meta name="description" content="TeleGIS: интерактивная карта OpenStreetMap в стиле 2GIS и Flightradar24. Рекомендации прогулок, кофе и кольцевых маршрутов в Астане с честным расчётом времени.">
+  <title>Telegis — Умная интерактивная карта прогулок по Астане</title>
+  <meta name="description" content="Telegis: интерактивная карта OpenStreetMap в стиле 2GIS и Flightradar24. Рекомендации прогулок, кофе и кольцевых маршрутов в Астане с честным расчётом времени.">
   <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,7 +35,7 @@
           </div>
           <div class="brand-text-group">
             <div class="brand-title-wrap">
-              <h1 class="brand-title">TeleGIS</h1>
+              <h1 class="brand-title">Telegis</h1>
               <span class="brand-city-tag" data-i18n="city_tag">Астана • EXPO</span>
             </div>
             <p class="brand-subtitle" data-i18n="subtitle">ИИ-советчик для пеших прогулок</p>
@@ -61,7 +61,7 @@
       <div class="status-bar-row">
         <button type="button" class="system-status-pill" id="systemStatusBtn" title="Нажмите для просмотра системного аудита">
           <span class="status-pulse-dot"></span>
-          <span class="status-text" id="statusSummaryText">Сеть: 30 829 узлов OSM • 49 POI • RAG Онлайн</span>
+          <span class="status-text" id="statusSummaryText">Проверяем состояние API…</span>
         </button>
       </div>
     </div>
@@ -80,7 +80,7 @@
       <button type="button" class="mode-tab-btn" id="tabItinerary" data-mode="itinerary">
         <span class="tab-icon">🚶</span>
         <span data-i18n="mode_itinerary">Маршрут</span>
-        <span class="tab-badge-new">Dijkstra</span>
+        <span class="tab-badge-new" data-i18n="route_return">С возвратом</span>
       </button>
     </div>
 
@@ -148,7 +148,7 @@
             <span class="search-field-icon" aria-hidden="true">🔍</span>
             <input 
               type="text" 
-              id="queryInput" 
+              id="queryInput" maxlength="1000"
               class="form-input-gis" 
               placeholder="Пожелание: сквер, панорама, круассан..." 
               data-i18n-placeholder="query_placeholder"
@@ -200,7 +200,7 @@
         <div id="initialState" class="state-card initial-view">
           <div class="state-glow-icon">🧭</div>
           <h3 class="state-head" data-i18n="init_head">Интеллектуальный радар прогулок</h3>
-          <p class="state-text" data-i18n="init_text">Выберите время и категорию — TeleGIS просканирует пешеходный граф OpenStreetMap и подберёт 1–3 идеальных места в районе EXPO.</p>
+          <p class="state-text" data-i18n="init_text">Выберите время и категорию — Telegis подберёт до 3 мест по сохранённым данным OSM и покажет ограничения.</p>
           <div class="preset-scenarios">
             <span class="preset-label" data-i18n="preset_label">Быстрые сценарии:</span>
             <div class="preset-buttons">
@@ -214,7 +214,7 @@
         <!-- 2. Загрузка -->
         <div id="loadingState" class="state-card loading-view hidden" role="status" aria-live="polite">
           <div class="gis-spinner"></div>
-          <h3 class="state-head" data-i18n="loading_head">TeleGIS анализирует местность...</h3>
+          <h3 class="state-head" data-i18n="loading_head">Telegis анализирует местность...</h3>
           <p class="state-text" data-i18n="loading_text">Вычисляем пешеходные расстояния по графу дорог и ранжируем локации.</p>
         </div>
 
@@ -244,7 +244,7 @@
       <!-- Футер сайдбара -->
       <footer class="sidebar-footer">
         <div class="footer-privacy-row">
-          <span>🔒 Zero-Tracking (координаты не сохраняются)</span>
+          <span>🔒 Бэкенд не сохраняет координаты; карта загружает тайлы OSM</span>
           <span>© OpenStreetMap (ODbL 1.0) • Smart City Astana</span>
         </div>
       </footer>
@@ -254,13 +254,13 @@
   <!-- ПЛАВАЮЩИЙ ВИДЖЕТ РАДИУСА И СТАТУСА НА КАРТЕ -->
   <div class="floating-map-badge" id="radiusBadge">
     <span class="badge-radar-dot"></span>
-    <span id="radiusIndicator">Радиус пешей зоны: ~1.5 км</span>
+    <span id="radiusIndicator">Ориентир по прямой (не изохрона): ~1.5 км</span>
   </div>
 
   <!-- ПЛАВАЮЩАЯ КНОПКА ОТКРЫТИЯ САЙДБАРА -->
-  <button type="button" id="openSidebarBtn" class="floating-open-sidebar-btn hidden" title="Развернуть панель TeleGIS">
+  <button type="button" id="openSidebarBtn" class="floating-open-sidebar-btn hidden" title="Развернуть панель Telegis">
     <span class="open-icon">🧭</span>
-    <span class="open-text">Панель TeleGIS</span>
+    <span class="open-text">Панель Telegis</span>
   </button>
 
   <!-- ПЛАВАЮЩИЕ КНОПКИ УПРАВЛЕНИЯ КАРТОЙ (2GIS STYLE) -->
@@ -300,14 +300,14 @@
       <div class="drawer-ai-card">
         <div class="drawer-ai-badge">
           <span class="ai-sparkle">✨</span>
-          <span class="ai-label">AI-экскурсовод TeleGIS</span>
+          <span class="ai-label">Сведения об объекте · Telegis</span>
         </div>
         <div id="drawerAiSummary" class="drawer-ai-text">
-          Загрузка интеллектуального обзора...
+          Загрузка сведений из источников...
         </div>
         <div class="drawer-ai-tip" id="drawerAiTipBox">
           <span class="tip-icon">💡</span>
-          <span id="drawerAiTip" class="tip-text">Совет от AI...</span>
+          <span id="drawerAiTip" class="tip-text">Идея занятия...</span>
         </div>
         <div id="drawerAiVibe" class="drawer-ai-vibe">
           <!-- Теги атмосферы -->
@@ -324,14 +324,14 @@
 
       <!-- Официальные проверенные факты (если есть) -->
       <div class="drawer-facts-section hidden" id="drawerFactsSection">
-        <h3 class="drawer-section-heading">🏛️ Проверенные факты</h3>
+        <h3 class="drawer-section-heading">🏛️ Источники и ограничения</h3>
         <ul id="drawerFactsList" class="drawer-facts-list"></ul>
       </div>
 
       <!-- Кнопки действий -->
       <div class="drawer-actions">
         <button type="button" id="drawerRouteBtn" class="drawer-action-btn primary">
-          <span>🚶 Построить пеший маршрут</span>
+          <span>📍 Найти по этому запросу</span>
         </button>
         <button type="button" id="drawerSetStartBtn" class="drawer-action-btn secondary">
           <span>📍 Начать прогулку отсюда</span>
@@ -351,7 +351,7 @@
         <div class="modal-head-title">
           <span class="modal-badge-icon">🛰️</span>
           <div>
-            <h2 id="modalTitle" class="modal-h2" data-i18n="modal_audit_title">Системный аудит & Телеметрия TeleGIS</h2>
+            <h2 id="modalTitle" class="modal-h2" data-i18n="modal_audit_title">Системный аудит & Телеметрия Telegis</h2>
             <p class="modal-sub" data-i18n="modal_audit_sub">Архитектура сервиса, граф OpenStreetMap и верификация данных</p>
           </div>
         </div>

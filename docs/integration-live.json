@@ -1,0 +1,104 @@
+{
+  "mode": "server",
+  "live_llm_allowed": true,
+  "passed": 24,
+  "total": 24,
+  "results": [
+    {
+      "test": "Health and dataset identity",
+      "pass": true
+    },
+    {
+      "test": "Sources, graph and privacy metadata",
+      "pass": true
+    },
+    {
+      "test": "Starting locations",
+      "pass": true
+    },
+    {
+      "test": "Catalog matches manifest",
+      "pass": true
+    },
+    {
+      "test": "Sourced POI details and unknown ID",
+      "pass": true
+    },
+    {
+      "test": "Private files cannot be downloaded",
+      "pass": true
+    },
+    {
+      "test": "Recommend rejects route-only field",
+      "pass": true
+    },
+    {
+      "test": "Itinerary rejects recommendation-only field",
+      "pass": true
+    },
+    {
+      "test": "Empty query rejected",
+      "pass": true
+    },
+    {
+      "test": "Invalid coordinate rejected privately",
+      "pass": true
+    },
+    {
+      "test": "Boolean time rejected",
+      "pass": true
+    },
+    {
+      "test": "Missing itinerary start rejected",
+      "pass": true
+    },
+    {
+      "test": "Non-boolean coffee rejected",
+      "pass": true
+    },
+    {
+      "test": "Unverified sockets are not invented",
+      "pass": true
+    },
+    {
+      "test": "Opening-now condition is not invented",
+      "pass": true
+    },
+    {
+      "test": "Outside coverage returns explanation",
+      "pass": true
+    },
+    {
+      "test": "120-minute route, graph and return",
+      "pass": true
+    },
+    {
+      "test": "90-minute route stays within budget",
+      "pass": true
+    },
+    {
+      "test": "Short route refuses and suggests feasible time",
+      "pass": true
+    },
+    {
+      "test": "Contradictory coffee setting refuses",
+      "pass": true
+    },
+    {
+      "test": "Accessibility is not invented",
+      "pass": true
+    },
+    {
+      "test": "Text time limit is respected",
+      "pass": true
+    },
+    {
+      "test": "Grounded walking recommendations",
+      "pass": true
+    },
+    {
+      "test": "Grounded coffee recommendations",
+      "pass": true
+    }
+  ]
+}

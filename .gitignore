@@ -12,3 +12,4 @@ data/snapshots/.tmp-*/
 .DS_Store
 *.png
 !static/images/*.png
+!docs/screenshots/itinerary-live.png

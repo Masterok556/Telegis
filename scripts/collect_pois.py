@@ -199,7 +199,8 @@ def fetch_overpass(endpoint: str, query: str, timeout: float = 45) -> dict:
 
 
 def write_json(path: Path, value: object) -> None:
-    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # Hash the same UTF-8/LF bytes on Windows, Linux and subsequent Git checkouts.
+    path.write_bytes((json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
 
 def publish(raw: dict, output: Path, endpoint: str, query: str, collected_at: str) -> dict:
@@ -219,6 +220,8 @@ def publish(raw: dict, output: Path, endpoint: str, query: str, collected_at: st
         "license_url": "https://www.openstreetmap.org/copyright",
         "coverage": {"name": "EXPO / Mega Silk Way, Астана", "lat": CENTER[0], "lon": CENTER[1], "radius_m": RADIUS_M},
         "query": query, "raw_sha256": raw_hash, "raw_elements": len(raw["elements"]),
+        "pois_sha256": hashlib.sha256((snapshot / "pois.json").read_bytes()).hexdigest(),
+        "locations_sha256": hashlib.sha256((snapshot / "locations.json").read_bytes()).hexdigest(),
         "poi_count": len(pois), "categories": dict(Counter(p["category"] for p in pois)),
         "skipped": skipped, "locations_count": len(locations),
     }

@@ -1,0 +1,7 @@
+# Generated JSON uses deterministic UTF-8/LF on every platform.
+data/**/*.json text eol=lf
+# Snapshot hashes cover the exact collected bytes. Git must not rewrite their
+# newlines on Windows checkouts (even when core.autocrlf=true).
+data/**/raw.json -text
+data/**/records.json -text
+data/**/graph.json -text

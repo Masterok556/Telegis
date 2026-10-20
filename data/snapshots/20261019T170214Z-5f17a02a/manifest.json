@@ -34,5 +34,7 @@
     "missing_name_category_or_coordinates": 106,
     "duplicate_name_nearby": 1
   },
-  "locations_count": 2
+  "locations_count": 2,
+  "pois_sha256": "3f0b45558e8778ab071020800ef853acebac0b0bb4e111df40d1a62234d23066",
+  "locations_sha256": "2fce6fc5d10df5ca13dd0b00a02dc1e9fbc363feab54a69f18279bdbd2d62f56"
 }

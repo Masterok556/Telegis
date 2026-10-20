@@ -29,7 +29,7 @@ def load_snapshot(folder: Path) -> Dataset:
         raise ValueError("Manifest must be an object")
     required = {"schema_version", "snapshot_id", "poi_count", "locations_count", "categories",
                 "collected_at", "source_data_timestamp", "coverage", "attribution", "license",
-                "license_url", "raw_sha256", "raw_elements"}
+                "license_url", "raw_sha256", "raw_elements", "pois_sha256", "locations_sha256"}
     if not required.issubset(manifest):
         raise ValueError("Incomplete manifest")
     if manifest["schema_version"] != 1 or manifest["snapshot_id"] != folder.name:
@@ -60,8 +60,14 @@ def load_snapshot(folder: Path) -> Dataset:
     if type(manifest["raw_elements"]) is not int or manifest["raw_elements"] != len(raw["elements"]):
         raise ValueError("Source response count mismatch")
     raw_ids = {f"osm_{e.get('type')}_{e.get('id')}" for e in raw["elements"] if isinstance(e, dict)}
-    poi_values = json.loads((folder / "pois.json").read_text(encoding="utf-8"))
-    location_values = json.loads((folder / "locations.json").read_text(encoding="utf-8"))
+    processed = {}
+    for name in ("pois", "locations"):
+        content = (folder / f"{name}.json").read_bytes()
+        if hashlib.sha256(content).hexdigest() != manifest[f"{name}_sha256"]:
+            raise ValueError(f"Processed {name} checksum mismatch")
+        processed[name] = json.loads(content)
+    poi_values = processed["pois"]
+    location_values = processed["locations"]
     if not isinstance(poi_values, list) or not isinstance(location_values, list):
         raise ValueError("POIs and locations must be arrays")
     pois = tuple(POI.model_validate(p) for p in poi_values)
@@ -95,6 +101,7 @@ class DataStore:
         self.root = root.resolve()
         self._snapshot: str | None = None
         self._dataset: Dataset | None = None
+        self._files_stamp: tuple | None = None
         self._lock = RLock()
 
     def get(self) -> Dataset:
@@ -104,13 +111,17 @@ class DataStore:
                 snapshot = pointer["snapshot"]
                 if not re.fullmatch(r"snapshots/[A-Za-z0-9_-]+", snapshot):
                     raise ValueError("Invalid snapshot path")
-                if snapshot == self._snapshot and self._dataset is not None:
-                    return self._dataset
                 folder = (self.root / snapshot).resolve()
                 if not folder.is_relative_to(self.root):
                     raise ValueError("Snapshot outside data directory")
+                stamps = tuple((s.st_mtime_ns, s.st_size)
+                               for name in ("manifest.json", "pois.json", "locations.json", "raw.json")
+                               for s in [(folder / name).stat()])
+                if (snapshot == self._snapshot and self._dataset is not None
+                        and stamps == self._files_stamp):
+                    return self._dataset
                 dataset = load_snapshot(folder)
-                self._dataset, self._snapshot = dataset, snapshot
+                self._dataset, self._snapshot, self._files_stamp = dataset, snapshot, stamps
                 return dataset
         except (OSError, ValueError, KeyError, TypeError) as exc:
             raise DatasetUnavailable("Датасет недоступен. Запустите python scripts/collect_pois.py.") from exc

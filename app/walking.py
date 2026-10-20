@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass
+from functools import lru_cache
 import hashlib
 import heapq
 import json
@@ -121,6 +122,38 @@ class WalkingNetwork:
             if d < nearest_m:
                 nearest_id, nearest_m = node_id, d
         return (nearest_id, nearest_m) if nearest_id is not None and nearest_m <= MAX_SNAP_M else None
+
+    @lru_cache(maxsize=2)
+    def map_geojson(self) -> dict:
+        """Public local street schematic, never downloaded raster tiles.
+
+        Every displayed segment is an actual edge of the validated OSM graph.
+        Direction is omitted for drawing only; routing still uses directed edges.
+        """
+        seen = set()
+        lines = []
+        for source, neighbors in self._adj.items():
+            for target, _length in neighbors:
+                pair = tuple(sorted((source, target)))
+                if pair in seen:
+                    continue
+                seen.add(pair)
+                lines.append([[self.nodes[n][1], self.nodes[n][0]] for n in pair])
+        return {
+            "type": "FeatureCollection",
+            "snapshot_id": self.metadata.get("snapshot_id"),
+            "collected_at": self.metadata.get("collected_at"),
+            "attribution": "© OpenStreetMap contributors",
+            "license": "ODbL 1.0",
+            "features": [{
+                "type": "Feature",
+                "properties": {
+                    "source": "OpenStreetMap walking graph",
+                    "description": "Локальная схема дорожек; здания, входы и текущее состояние не показаны.",
+                },
+                "geometry": {"type": "MultiLineString", "coordinates": lines},
+            }],
+        }
 
     def _tree(self, start: int) -> tuple[dict[int, float], dict[int, int]]:
         with self._tree_lock:

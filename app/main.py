@@ -19,6 +19,7 @@ from app.retrieval import retrieve
 from app.facts import facts_for, warnings_for, excluded_from_routes
 from app.itinerary import ItineraryRequest, ItineraryResponse, build_itinerary
 from app.walking import WalkingNetwork
+from app.catalog import CatalogResponse, PlaceInfoRequest, PlaceInfoResponse, place_card, place_info
 
 
 @lru_cache(maxsize=2)
@@ -50,7 +51,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
     config = settings or Settings.from_env()
     store = DataStore(config.data_dir)
     generator = generator or Generator(config)
-    api = FastAPI(title="Telegis", version="1.2.0", description="AI-гид по Астане: факты с источниками и мини-маршруты с возвращением и запасом времени.")
+    api = FastAPI(title="Telegis", version="1.3.0", description="AI-гид по Астане: факты с источниками и мини-маршруты с возвращением и запасом времени.")
     api.state.store = store
     api.state.settings = config
     api.state.generator = generator
@@ -68,7 +69,12 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "no-referrer"
+        # OSM browser tiles require a Referer. Send only the page origin to
+        # external resources; API responses still disclose no referrer.
+        response.headers["Referrer-Policy"] = (
+            "no-referrer" if request.url.path.startswith("/api/")
+            else "strict-origin-when-cross-origin"
+        )
         return response
 
     @api.exception_handler(RequestValidationError)
@@ -96,6 +102,28 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
     async def locations():
         return LocationsResponse(locations=list(store.get().locations))
 
+    @api.get("/api/pois", response_model=CatalogResponse)
+    def pois():
+        dataset = store.get()
+        return CatalogResponse(pois=[place_card(p) for p in dataset.pois],
+                               snapshot_id=dataset.manifest["snapshot_id"])
+
+    @api.post("/api/poi_ai_info", response_model=PlaceInfoResponse)
+    def poi_info(payload: PlaceInfoRequest):
+        # The legacy UI path is retained, but cards use sourced facts, not
+        # unbounded model output. Client-supplied names/facts are never accepted.
+        poi = next((p for p in store.get().pois if p.poi_id == payload.poi_id), None)
+        if poi is None:
+            raise HTTPException(status_code=404, detail="Точка отсутствует в проверенном датасете.")
+        return place_info(poi)
+
+    @api.get("/api/walking-map.geojson")
+    def walking_map():
+        network = walking_network(config.walking_dir or config.data_dir / "walking")
+        if network is None:
+            raise HTTPException(status_code=503, detail="Локальная схема дорожек недоступна.")
+        return network.map_geojson()
+
     @api.get("/api/meta")
     async def meta():
         dataset = store.get()
@@ -106,6 +134,8 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                                                "coverage", "attribution", "license", "license_url", "snapshot_id")} | {
             "retrieval": "geographic filters + lexical BM25",
             "llm_configured": config.llm_configured,
+            "llm_last_status": generator.last_status,
+            "llm_model": config.llm_model if config.llm_configured else None,
             "service": "Telegis",
             "data_quality": {
                 "with_opening_hours": sum(bool(p.opening_hours) for p in dataset.pois),
@@ -190,6 +220,8 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
         return JSONResponse({"service": "Telegis", "message": "Бэкенд Telegis готов. Добавьте static/index.html от участника 2.", "api_docs": "/docs"})
 
     api.mount("/static", OptionalStaticFiles(directory=str(config.static_dir), check_dir=False), name="static")
+    api.mount("/presentation", OptionalStaticFiles(directory=str(config.static_dir.parent / "presentation"),
+                                                   check_dir=False), name="presentation")
     return api
 
 

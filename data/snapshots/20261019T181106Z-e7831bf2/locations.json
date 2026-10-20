@@ -1,50 +1,18 @@
 [
   {
-    "id": "loc_mega_silk_way",
-    "name": "Mega Silk Way (главный вход)",
+    "id": "osm_way_499328514",
+    "name": "Mega Silk Way",
     "lat": 51.0890897,
     "lon": 71.4073303,
     "source_url": "https://www.openstreetmap.org/way/499328514",
-    "coordinate_kind": "entrance_north"
+    "coordinate_kind": "bounding_box_center"
   },
   {
-    "id": "loc_alem_ai",
-    "name": "Alem.ai (Международный центр ИИ, павильон B1)",
-    "lat": 51.0892381,
-    "lon": 71.4162196,
-    "source_url": "https://www.openstreetmap.org/way/454857501",
-    "coordinate_kind": "building_entrance"
-  },
-  {
-    "id": "loc_aitu",
-    "name": "Astana IT University (AITU, корпус C1.1)",
-    "lat": 51.0906792,
-    "lon": 71.4181709,
-    "source_url": "https://astanait.edu.kz",
-    "coordinate_kind": "entrance_c1"
-  },
-  {
-    "id": "loc_aifc",
-    "name": "МФЦА / AIFC (Павильон C3.3, Мәңгілік Ел 55/18)",
-    "lat": 51.0880703,
-    "lon": 71.4168534,
-    "source_url": "https://aifc.kz",
-    "coordinate_kind": "entrance_c3"
-  },
-  {
-    "id": "loc_astana_hub",
-    "name": "Astana Hub (Технопарк, блок C4.6)",
-    "lat": 51.0883541,
-    "lon": 71.4145878,
-    "source_url": "https://astanahub.com",
-    "coordinate_kind": "entrance_c4"
-  },
-  {
-    "id": "loc_botanical",
-    "name": "Ботанический сад Астаны (входная аллея)",
-    "lat": 51.1061652,
-    "lon": 71.4165705,
-    "source_url": "https://www.openstreetmap.org",
-    "coordinate_kind": "park_entrance"
+    "name": "25-ти летие Независимости",
+    "lat": 51.0934524,
+    "lon": 71.4175645,
+    "source_url": "https://www.openstreetmap.org/way/1460763574",
+    "coordinate_kind": "bounding_box_center",
+    "id": "osm_way_1460763574"
   }
 ]

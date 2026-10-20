@@ -3,7 +3,7 @@
   "info": {
     "title": "Telegis",
     "description": "AI-гид по Астане: факты с источниками и мини-маршруты с возвращением и запасом времени.",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "paths": {
     "/api/health": {
@@ -34,6 +34,78 @@
                 "schema": {
                   "$ref": "#/components/schemas/LocationsResponse"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pois": {
+      "get": {
+        "summary": "Pois",
+        "operationId": "pois_api_pois_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/poi_ai_info": {
+      "post": {
+        "summary": "Poi Info",
+        "operationId": "poi_info_api_poi_ai_info_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaceInfoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceInfoResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/walking-map.geojson": {
+      "get": {
+        "summary": "Walking Map",
+        "operationId": "walking_map_api_walking_map_geojson_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -135,6 +207,27 @@
   },
   "components": {
     "schemas": {
+      "CatalogResponse": {
+        "properties": {
+          "pois": {
+            "items": {
+              "$ref": "#/components/schemas/PlaceCard"
+            },
+            "type": "array",
+            "title": "Pois"
+          },
+          "snapshot_id": {
+            "type": "string",
+            "title": "Snapshot Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pois",
+          "snapshot_id"
+        ],
+        "title": "CatalogResponse"
+      },
       "Evidence": {
         "properties": {
           "id": {
@@ -707,6 +800,243 @@
           "locations"
         ],
         "title": "LocationsResponse"
+      },
+      "PlaceCard": {
+        "properties": {
+          "poi_id": {
+            "type": "string",
+            "title": "Poi Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Tags"
+          },
+          "opening_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Hours"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "collected_at": {
+            "type": "string",
+            "title": "Collected At"
+          },
+          "coordinate_kind": {
+            "type": "string",
+            "title": "Coordinate Kind"
+          },
+          "confirmed_features": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Confirmed Features"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "fact_source": {
+            "type": "string",
+            "enum": [
+              "OpenStreetMap",
+              "OpenStreetMap + official sources"
+            ],
+            "title": "Fact Source"
+          },
+          "activity_source": {
+            "type": "string",
+            "const": "suggested_idea",
+            "title": "Activity Source",
+            "default": "suggested_idea"
+          },
+          "recommendable": {
+            "type": "boolean",
+            "title": "Recommendable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "poi_id",
+          "name",
+          "lat",
+          "lon",
+          "category",
+          "description",
+          "tags",
+          "opening_hours",
+          "source_url",
+          "collected_at",
+          "coordinate_kind",
+          "confirmed_features",
+          "evidence",
+          "warnings",
+          "fact_source",
+          "recommendable"
+        ],
+        "title": "PlaceCard"
+      },
+      "PlaceInfoRequest": {
+        "properties": {
+          "poi_id": {
+            "type": "string",
+            "maxLength": 100,
+            "pattern": "^osm_(node|way|relation)_[1-9][0-9]*$",
+            "title": "Poi Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "poi_id"
+        ],
+        "title": "PlaceInfoRequest"
+      },
+      "PlaceInfoResponse": {
+        "properties": {
+          "poi_id": {
+            "type": "string",
+            "title": "Poi Id"
+          },
+          "mode": {
+            "type": "string",
+            "const": "sourced",
+            "title": "Mode",
+            "default": "sourced"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "tip": {
+            "type": "string",
+            "title": "Tip"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "fact_source": {
+            "type": "string",
+            "enum": [
+              "OpenStreetMap",
+              "OpenStreetMap + official sources"
+            ],
+            "title": "Fact Source"
+          },
+          "activity_source": {
+            "type": "string",
+            "const": "suggested_idea",
+            "title": "Activity Source",
+            "default": "suggested_idea"
+          },
+          "recommendable": {
+            "type": "boolean",
+            "title": "Recommendable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "poi_id",
+          "summary",
+          "tip",
+          "source_url",
+          "evidence",
+          "warnings",
+          "fact_source",
+          "recommendable"
+        ],
+        "title": "PlaceInfoResponse"
       },
       "RecommendRequest": {
         "properties": {

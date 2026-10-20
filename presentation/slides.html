@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TeleGIS — Презентация проекта (НИЦ Smart City Астана)</title>
+  <title>Telegis — Презентация проекта</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -235,6 +235,7 @@
       font-size: 0.8rem;
       color: #cbd5e1;
       line-height: 1.6;
+      white-space: pre-line;
     }
 
     /* Footer hints */
@@ -247,6 +248,7 @@
 
     /* Print / PDF Export Styles */
     @media print {
+      @page { size: A4 landscape; margin: 10mm; }
       body {
         background: #ffffff;
         color: #0f172a;
@@ -255,19 +257,32 @@
         display: none;
       }
       .deck-viewport {
+        display: block;
         padding: 0;
         max-width: 100%;
+        margin: 0;
       }
       .slide {
         display: block !important;
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
         page-break-after: always;
         break-after: page;
         background: #ffffff;
         border: 1px solid #cbd5e1;
         box-shadow: none;
         color: #0f172a;
-        margin-bottom: 2rem;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        padding: 8mm;
+        min-height: 183mm;
+        break-inside: avoid;
       }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .slide p, .slide li, .stat-label, .slide p strong { color: #334155 !important; }
+      .slide-tag, .deck-title { color: #0369a1; }
       .slide-header { border-color: #cbd5e1; }
       .slide-title { color: #0f172a; }
       .slide-subtitle { color: #475569; }
@@ -278,6 +293,7 @@
       .feature-box h4 { color: #1e40af; }
       .feature-box p, .feature-box li { color: #334155; }
       .stat-number { color: #047857; }
+      .pill-highlight { color: #0369a1; border-color: #7dd3fc; }
       .code-box {
         background: #f1f5f9;
         border-color: #cbd5e1;
@@ -292,7 +308,7 @@
   <header class="deck-nav">
     <div class="deck-title">
       <span>📍</span>
-      <strong>TeleGIS</strong> • Презентация для жюри (5–7 мин)
+      <strong>Telegis</strong> • Презентация для жюри (5–7 мин)
     </div>
     <div class="deck-controls">
       <button type="button" class="deck-btn" id="prevBtn" title="Стрелка влево">← Назад</button>
@@ -310,25 +326,25 @@
       <div class="slide-header">
         <span class="slide-tag">Слайд 1 из 6 • Проблема</span>
         <h2 class="slide-title">«Куда сходить прямо сейчас?»</h2>
-        <p class="slide-subtitle">Почему стандартные карты и поисковики не решают задачу пешехода в Астане</p>
+        <p class="slide-subtitle">Прогулка по району EXPO с ограниченным запасом времени</p>
       </div>
       <div class="grid-3">
         <div class="feature-box">
           <h4>🗺️ Перегрузка точками</h4>
-          <p>В радиусе 1 км открываются сотни отметок на карте, но нет ответа: <em>«Что из этого подходит именно мне на ближайшие 40 минут?»</em></p>
+          <p>Список мест требует отдельного выбора: <em>«Что подходит моему запросу и сколько времени займёт посещение?»</em></p>
         </div>
         <div class="feature-box">
-          <h4>⏱️ Ложный расчёт времени</h4>
-          <p>Навигаторы показывают дорогу в одну сторону. Пользователь опаздывает, потому что никто не считает <strong>дорогу обратно и время на месте</strong>.</p>
+          <h4>⏱️ Полный бюджет</h4>
+          <p>Для короткой прогулки нужны <strong>переходы, время на месте и возвращение к старту</strong>. Оценки только дороги недостаточно.</p>
         </div>
         <div class="feature-box">
           <h4>🤖 Галлюцинации LLM</h4>
-          <p>Обычные чат-боты выдумывают несуществующие выставки, заявляют «открыто сейчас» без данных и не привязаны к реальной геометрии дорог.</p>
+          <p>Свободная генерация может добавить неподтверждённую выставку или часы работы. Пользователю нужны источники и понятные ограничения.</p>
         </div>
       </div>
       <div class="feature-box" style="margin-top: 1.5rem; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.3);">
         <p style="font-size: 0.95rem; color: #e2e8f0;">
-          <strong>Фокусная локация прототипа:</strong> Район <strong>EXPO / Mega Silk Way</strong> (Астана). Место с высокой концентрацией туристов, горожан и деловых гостей с ограниченным свободным окном (20–60 мин).
+          <strong>Покрытие прототипа:</strong> район <strong>EXPO / Mega Silk Way</strong>, Астана. Сбор данных в круге 3,5 км. Рекомендации ищут места до 2,5 км по прямой от пользователя.
         </p>
       </div>
     </section>
@@ -337,41 +353,41 @@
     <section class="slide" data-slide="2">
       <div class="slide-header">
         <span class="slide-tag">Слайд 2 из 6 • Продукт</span>
-        <h2 class="slide-title">TeleGIS: Честный городской советчик</h2>
-        <p class="slide-subtitle">Сочетание точного гео-графа OpenStreetMap и контролируемой RAG-генерации</p>
+        <h2 class="slide-title">Telegis: рекомендации с объяснениями</h2>
+        <p class="slide-subtitle">Места из OpenStreetMap, факты из источников и контролируемая генерация</p>
       </div>
       <div class="grid-2">
         <div class="feature-box">
           <h4>🚶 Сценарий 1: Прогулка на 30–60 минут</h4>
           <p><strong>Пользователь:</strong> «Освободился после встречи в EXPO, есть 40 минут до такси, хочу размяться на воздухе».</p>
           <ul>
-            <li>Подбор безопасных пешеходных зон (парки, аллеи, инсталляции).</li>
+            <li>Подбор парков, аллей и арт-объектов из датасета.</li>
             <li>Честный бюджет: <code>Время = Дорога туда + На месте + Возврат</code>.</li>
-            <li>Конкретная идея занятия («Обойти сферу по часовой стрелке»).</li>
+            <li>Конкретное занятие и ссылки на факты о месте.</li>
           </ul>
         </div>
         <div class="feature-box">
-          <h4>☕ Сценарий 2: Кофе неподалёку (20–30 мин)</h4>
-          <p><strong>Пользователь:</strong> «Нужно быстро взять specialty-кофе или передохнуть в тихом месте рядом».</p>
+          <h4>☕ Сценарий 2: Кофе неподалёку</h4>
+          <p><strong>Пользователь:</strong> «Хочу кофе рядом, есть 30 минут».</p>
           <ul>
-            <li>Точный радиус пешей доступности (100–350 м).</li>
-            <li>Учёт типа заведения (навынос vs. посадка).</li>
-            <li>Проверка графика: если расписание не подтверждено — честная плашка.</li>
+            <li>Отбор кафе с учётом дороги туда и обратно.</li>
+            <li>Кухня, Wi-Fi и другие свойства только по данным источника.</li>
+            <li>Неизвестные часы и розетки остаются неизвестными.</li>
           </ul>
         </div>
       </div>
       <div class="grid-3" style="margin-top: 1.5rem;">
         <div class="feature-box">
           <div class="stat-number">49</div>
-          <div class="stat-label">Проверенных POI в районе EXPO (9 категорий)</div>
+          <div class="stat-label">POI из снимка OSM, 9 категорий</div>
         </div>
         <div class="feature-box">
           <div class="stat-number">30 829</div>
           <div class="stat-label">Узлов пешеходного графа OSM (Dijkstra)</div>
         </div>
         <div class="feature-box">
-          <div class="stat-number">0 байт</div>
-          <div class="stat-label">Сохранённых GPS-координат (Zero Tracking)</div>
+          <div class="stat-number">72</div>
+          <div class="stat-label">Факта с источниками для 35 мест</div>
         </div>
       </div>
     </section>
@@ -380,41 +396,41 @@
     <section class="slide" data-slide="3">
       <div class="slide-header">
         <span class="slide-tag">Слайд 3 из 6 • Живая демонстрация</span>
-        <h2 class="slide-title">Динамическая адаптация рекомендаций</h2>
-        <p class="slide-subtitle">Как меняется поведение системы при смене входных параметров</p>
+        <h2 class="slide-title">Мини-маршрут с возвращением</h2>
+        <p class="slide-subtitle">Пример на сохранённых данных от старта Mega Silk Way</p>
       </div>
       <div class="grid-3">
         <div class="feature-box">
-          <h4>1. 60 минут (Прогулка)</h4>
-          <p><span class="pill-highlight">Mega Silk Way → 60 мин</span></p>
+          <h4>1. Прогулка с кофе</h4>
+          <p><span class="pill-highlight">Бюджет 120 минут</span></p>
           <ul style="margin-top: 0.75rem;">
-            <li>Выдача: Павильон Нұр Әлем, Сквер Энергии, Тематический бульвар.</li>
-            <li>Общий бюджет: ~32–36 мин (с запасом на возврат).</li>
-            <li>Идея: осмотр уличных скульптур.</li>
+            <li>Аллея мира и согласия, 25-ти летие Независимости, Drinkit.</li>
+            <li>Возвращение к Mega входит в расчёт.</li>
+            <li>Остановки и переходы видны на карте.</li>
           </ul>
         </div>
         <div class="feature-box">
-          <h4>2. Смена на 20 минут</h4>
-          <p><span class="pill-highlight">Время сжато в 3 раза</span></p>
+          <h4>2. Разбор времени</h4>
+          <p><span class="pill-highlight">Оценка 107 минут</span></p>
           <ul style="margin-top: 0.75rem;">
-            <li>Дальние скверы мгновенно отсекаются гео-фильтром.</li>
-            <li>Выдача: Арт-инсталляция в 85 метрах от входа.</li>
-            <li>Бюджет: 14 минут (2 мин туда + 10 мин + 2 мин обратно).</li>
+            <li>45 минут на все переходы, включая возврат.</li>
+            <li>50 минут на остановки, 12 минут запаса.</li>
+            <li>13 минут свободного остатка до лимита.</li>
           </ul>
         </div>
         <div class="feature-box">
-          <h4>3. Переключение на «Кофе»</h4>
-          <p><span class="pill-highlight">Смена категории</span></p>
+          <h4>3. Сокращение бюджета</h4>
+          <p><span class="pill-highlight">Бюджет 60 минут</span></p>
           <ul style="margin-top: 0.75rem;">
-            <li>BM25 + фильтр тегов выдают Delish Cafe и Zebra Coffee.</li>
-            <li>Оценка времени на заказ и кофепитие: 15 минут.</li>
-            <li>Отображение расписания или предупреждения.</li>
+            <li>Система сообщает, что план с кофе не помещается.</li>
+            <li>Предлагает проверенный минимальный бюджет.</li>
+            <li>Пользователь сам решает изменить условия.</li>
           </ul>
         </div>
       </div>
       <div class="feature-box" style="margin-top: 1.5rem;">
         <p style="font-size: 0.85rem; color: var(--accent-amber);">
-          ⚠️ <strong>Стресс-кейс (Честность):</strong> Если задать 10 минут на музей — система вернёт понятный пустой экран: <em>«В заданном бюджете невозможно успеть осмотреть экспозицию и вернуться»</em> с советом увеличить время.
+          ⚠️ <strong>Предел точности:</strong> граф OSM содержит приблизительные подходы к точкам. Входы, очереди, погода и временные перекрытия не проверены. Оценка времени не гарантирует прибытие к сроку.
         </p>
       </div>
     </section>
@@ -427,21 +443,21 @@
         <p class="slide-subtitle">Как система сочетает точные факты с естественным языком рекомендаций</p>
       </div>
       <div class="code-box">
-1. Автосбор (Overpass API) → 49 POI + Пешеходный граф (30k узлов) → Неизменяемый снэпшот (SHA-256)
-2. Запрос пользователя → Фильтрация по радиусу (Haversine ≤ 2.5 км) и бюджету (2 * walk + visit)
-3. Retrieval: BM25 с русскими/английскими синонимами + Re-ranking (65% relevance + 35% proximity)
-4. Fact Injection: Добавление фактов из тегов OSM (кухня, Wi-Fi, архитектура) с доказательствами
-5. Generation: LLM выбирает ТОЛЬКО из валидированных facts/reasons (никакого свободного бреда)
-6. Graceful Fallback: При сбое LLM (таймаут, квота) мгновенно включается шаблонный RAG
+1. Автосбор OSM и официальных страниц. Снимки с датами, источниками и SHA-256.
+2. Фильтрация по покрытию, категории, подтверждённым свойствам и времени.
+3. BM25 по описаниям и фактам. Ранг: 65% релевантность, 35% близость.
+4. Dijkstra по сохранённому графу. Мини-маршрут учитывает возврат и запас.
+5. LLM выбирает ID разрешённых мест, причин и занятий. Сервер проверяет ответ.
+6. При ошибке модели работает явно обозначенная шаблонная выдача.
       </div>
       <div class="grid-2" style="margin-top: 1.25rem;">
         <div class="feature-box">
           <h4>🛡️ Защита от галлюцинаций</h4>
-          <p>LLM не придумывает факты «из головы». Модели передаётся закрытый список подтверждённых ID причин и занятий. Ответ верифицируется Pydantic-схемой.</p>
+          <p>Произвольные утверждения модели не отображаются. Факты берутся из сохранённых источников. Занятие отдельно помечается как предложенная идея.</p>
         </div>
         <div class="feature-box">
-          <h4>⚡ Безотказный Fallback</h4>
-          <p>Если API провайдера недоступно, пользователь получает полноценные карточки мест с алгоритмическим описанием. Система никогда не «падает».</p>
+          <h4>⚡ Работа без модели</h4>
+          <p>При ошибке API выдача использует локальные шаблоны. Мини-маршрут работает без LLM. Повреждённый датасет вызывает явную ошибку сервиса.</p>
         </div>
       </div>
     </section>
@@ -451,14 +467,14 @@
       <div class="slide-header">
         <span class="slide-tag">Слайд 5 из 6 • Безопасность и Этика</span>
         <h2 class="slide-title">Приватность, факты и прозрачность данных</h2>
-        <p class="slide-subtitle">Критерий №6 хакатона: эталонная защита пользователя</p>
+        <p class="slide-subtitle">Пользователь видит основание рекомендации и границы достоверности</p>
       </div>
       <div class="grid-3">
         <div class="feature-box">
           <h4>🔒 Приватность локации</h4>
           <ul>
             <li>GPS запрашивается только по клику.</li>
-            <li>Координаты <strong>не пишутся</strong> в localStorage, БД или cookie.</li>
+            <li>Сервер не сохраняет GPS и исходные запросы.</li>
             <li>Координаты <strong>не передаются в LLM</strong> (туда идут только кандидаты).</li>
           </ul>
         </div>
@@ -466,15 +482,15 @@
           <h4>🔍 Прозрачность данных</h4>
           <ul>
             <li>Каждая карточка содержит прямую ссылку на OpenStreetMap.</li>
-            <li>Честная метка: <em>«Данные собраны: 19.10.2026»</em>.</li>
+            <li>Карточка показывает дату сбора данных источника.</li>
             <li>Если график неизвестен — <em>«Часы не подтверждены»</em>.</li>
           </ul>
         </div>
         <div class="feature-box">
           <h4>🧪 Автотестирование</h4>
           <ul>
-            <li><strong>13 автотестов</strong> (pytest): проверка контрактов, точности времени, фильтрации строек.</li>
-            <li>Тест <code>test_transparency.py</code> гарантирует отсутствие утечек ключей и данных.</li>
+            <li>Pytest проверяет контракты, ограничения, происхождение данных и сбои модели.</li>
+            <li>Интеграционные проверки сверяют бюджет маршрута, возврат и закрытые файлы.</li>
           </ul>
         </div>
       </div>
@@ -490,7 +506,7 @@
       <div class="slide-header">
         <span class="slide-tag">Слайд 6 из 6 • Итоги и Будущее</span>
         <h2 class="slide-title">Что готово и куда развиваемся</h2>
-        <p class="slide-subtitle">Готовый рабочий прототип для внедрения в городскую инфраструктуру Астаны</p>
+        <p class="slide-subtitle">Прототип для района EXPO. Расширение покрытия требует новых данных и проверок.</p>
       </div>
       <div class="grid-2">
         <div class="feature-box">
@@ -498,16 +514,16 @@
           <ul>
             <li>Автоматический пайплайн сбора данных (Overpass + Dijkstra-граф).</li>
             <li>RAG-пайплайн с BM25 и верифицируемой генерацией.</li>
-            <li>Интерактивная карта OpenStreetMap с динамическим радиусом пешей доступности.</li>
+            <li>Карта OpenStreetMap с местами и геометрией маршрута.</li>
             <li>Адаптивный веб-интерфейс без сборщиков (Vanilla JS/CSS).</li>
             <li>Поддержка эндпоинта пешеходных мини-маршрутов (<code>/api/itinerary</code>).</li>
-            <li>13 автоматических тестов качества и безопасности.</li>
+            <li>Проверки API и явные состояния ошибки и пустой выдачи.</li>
           </ul>
         </div>
         <div class="feature-box">
           <h4>🚀 План масштабирования (Roadmap)</h4>
           <ul>
-            <li><strong>Охват всего города:</strong> масштабирование на Правый берег, Ботанический сад, Набережную.</li>
+            <li><strong>Расширение покрытия:</strong> новые снимки и полевые проверки входов на правом берегу и набережной.</li>
             <li><strong>Интеграция погоды:</strong> автоматическая фильтрация крытых мест при дожде/буране (актуально для Астаны).</li>
             <li><strong>Городской Smart City API:</strong> интеграция с городскими афишами (Astana Hub, Expo-мероприятия).</li>
             <li><strong>Доступная среда:</strong> фильтры для маломобильных граждан (коляски, пандусы).</li>
@@ -519,7 +535,7 @@
           Спасибо за внимание! Готовы ответить на вопросы жюри.
         </p>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
-          Команда проекта «TeleGIS» • Репозиторий: github.com/Masterok556/Telegis
+          Команда проекта «Telegis» • Репозиторий: github.com/Masterok556/Telegis
         </p>
       </div>
     </section>
