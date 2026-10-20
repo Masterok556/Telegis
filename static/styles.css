@@ -128,7 +128,8 @@ html, body {
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
 
@@ -140,12 +141,15 @@ html, body {
 
 /* Шапка сайдбара */
 .sidebar-header {
-  padding: 0.9rem 1.15rem 0.75rem;
+  padding: 0.55rem 1rem 0.45rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.35rem;
   border-bottom: 1px solid var(--color-border);
   background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .sidebar-header-main {
@@ -359,12 +363,12 @@ html, body {
 
 /* Форма фильтров в сайдбаре */
 .sidebar-form-container {
-  padding: 0.85rem 1.15rem 0.75rem;
+  padding: 0.5rem 1rem 0.45rem;
   background: #ffffff;
   border-bottom: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.4rem;
 }
 
 .location-row {
@@ -695,8 +699,9 @@ html, body {
 
 /* 3. ПРОКРУЧИВАЕМЫЙ СПИСОК КАРТОЧЕК ИЛИ МАРШРУТА */
 .sidebar-scrollable-content {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1 0 auto;
+  min-height: 480px;
+  overflow-y: visible;
   padding: 0.85rem 1.15rem 1.25rem;
   background: #f8fafc;
 }
