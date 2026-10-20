@@ -2289,3 +2289,198 @@ html, body {
     max-width: calc(100vw - 20px);
   }
 }
+
+/* --- Hackathon Winning UI Enhancements: Quick Actions & Climate Shield --- */
+.jury-quick-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.jury-action-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.jury-action-pill:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.jury-action-pill.highlight {
+  background: rgba(14, 165, 233, 0.08);
+  border-color: rgba(14, 165, 233, 0.35);
+  color: #0284c7;
+}
+
+.jury-action-pill.highlight:hover {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: #0284c7;
+}
+
+.climate-shield-wrap {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.climate-shield-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0369a1;
+  cursor: pointer;
+  user-select: none;
+}
+
+.climate-shield-label input[type="checkbox"] {
+  accent-color: #0284c7;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+/* Scenario & Jury Modals Body Styling */
+.scenarios-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.scenario-card-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scenario-card-item:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+}
+
+.scenario-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scenario-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.scenario-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: #e0f2fe;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.scenario-query-text {
+  font-size: 12.5px;
+  font-style: italic;
+  color: #475569;
+}
+
+.scenario-note {
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.scenario-run-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.scenario-run-btn:hover {
+  background: #0369a1;
+}
+
+.jury-criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jury-criterion-card {
+  border-left: 4px solid #0d9488;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0 10px 10px 0;
+  padding: 10px 12px;
+}
+
+.jury-criterion-card.gold {
+  border-left-color: #0284c7;
+}
+
+.jury-crit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.jury-crit-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.jury-crit-score {
+  font-size: 11px;
+  font-weight: 700;
+  background: #ccfbf1;
+  color: #0f766e;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.jury-crit-desc {
+  font-size: 11.5px;
+  color: #475569;
+  line-height: 1.35;
+}
+

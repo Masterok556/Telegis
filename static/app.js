@@ -252,6 +252,19 @@
   let cachedSystemMeta = null;
   let systemStatusLoaded = false;
 
+  // Hackathon Quick Modals & Climate Shield
+  const openScenariosBtn = document.getElementById('openScenariosBtn');
+  const scenariosModal = document.getElementById('scenariosModal');
+  const scenariosModalCloseBtn = document.getElementById('scenariosModalCloseBtn');
+  const scenariosModalBackdrop = document.getElementById('scenariosModalBackdrop');
+
+  const openJuryBtn = document.getElementById('openJuryBtn');
+  const juryModal = document.getElementById('juryModal');
+  const juryModalCloseBtn = document.getElementById('juryModalCloseBtn');
+  const juryModalBackdrop = document.getElementById('juryModalBackdrop');
+
+  const climateShieldCheck = document.getElementById('climateShieldCheck');
+
   // Mode Tabs
   const tabPlaces = document.getElementById('tabPlaces');
   const tabItinerary = document.getElementById('tabItinerary');
@@ -1363,6 +1376,53 @@
       modalBackdrop.addEventListener('click', closeTelemetryModal);
     }
 
+    // 5 Scenarios Modal
+    if (openScenariosBtn) {
+      openScenariosBtn.addEventListener('click', openScenariosModal);
+    }
+    if (scenariosModalCloseBtn) {
+      scenariosModalCloseBtn.addEventListener('click', closeScenariosModal);
+    }
+    if (scenariosModalBackdrop) {
+      scenariosModalBackdrop.addEventListener('click', closeScenariosModal);
+    }
+
+    // Jury Criteria Modal
+    if (openJuryBtn) {
+      openJuryBtn.addEventListener('click', openJuryModal);
+    }
+    if (juryModalCloseBtn) {
+      juryModalCloseBtn.addEventListener('click', closeJuryModal);
+    }
+    if (juryModalBackdrop) {
+      juryModalBackdrop.addEventListener('click', closeJuryModal);
+    }
+
+    // 1-Click Scenario Runner Buttons
+    const scenarioRunButtons = document.querySelectorAll('.scenario-run-btn');
+    scenarioRunButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const num = parseInt(btn.getAttribute('data-run-scenario'), 10);
+        if (Number.isFinite(num)) runHackathonScenario(num);
+      });
+    });
+
+    // Climate Shield Checkbox
+    if (climateShieldCheck) {
+      climateShieldCheck.addEventListener('change', () => {
+        if (climateShieldCheck.checked) {
+          showMapBackgroundStatus('💨 Климатический щит: приоритет крытым хабам (Mega Silk Way, Сфера Нұр Әлем, коворкинги).');
+          if (locationSelect) {
+            const megaOpt = Array.from(locationSelect.options).find(o => o.value.includes('Mega') || o.text.includes('Mega'));
+            if (megaOpt) {
+              locationSelect.value = megaOpt.value;
+              locationSelect.dispatchEvent(new Event('change'));
+            }
+          }
+        }
+      });
+    }
+
     // Language switcher
     langButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -1484,6 +1544,8 @@
         if (e.key === 'Escape') {
           closePoiDrawer();
           closeTelemetryModal();
+          closeScenariosModal();
+          closeJuryModal();
         }
       });
     }
@@ -1724,6 +1786,73 @@
 
   function closeTelemetryModal() {
     if (telemetryModal) telemetryModal.classList.add('hidden');
+  }
+
+  function openScenariosModal() {
+    if (scenariosModal) scenariosModal.classList.remove('hidden');
+  }
+
+  function closeScenariosModal() {
+    if (scenariosModal) scenariosModal.classList.add('hidden');
+  }
+
+  function openJuryModal() {
+    if (juryModal) juryModal.classList.remove('hidden');
+  }
+
+  function closeJuryModal() {
+    if (juryModal) juryModal.classList.add('hidden');
+  }
+
+  function runHackathonScenario(num) {
+    closeScenariosModal();
+    setAppMode('places');
+
+    // 1. Ensure Mega Silk Way is selected
+    if (locationSelect) {
+      const megaOpt = Array.from(locationSelect.options).find(o => o.value.includes('Mega') || o.text.includes('Mega'));
+      if (megaOpt) {
+        locationSelect.value = megaOpt.value;
+        locationSelect.dispatchEvent(new Event('change'));
+      }
+    }
+
+    if (num === 1) {
+      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
+      if (radioWalk) radioWalk.checked = true;
+      selectMinutes(60);
+      if (queryInput) queryInput.value = 'Прогулка возле Mega Silk Way';
+    } else if (num === 2) {
+      const radioCafe = document.querySelector('input[name="category"][value="cafe"]');
+      if (radioCafe) radioCafe.checked = true;
+      selectMinutes(30);
+      if (queryInput) queryInput.value = 'Кофе и розетка';
+    } else if (num === 3) {
+      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
+      if (radioWalk) radioWalk.checked = true;
+      selectMinutes(60);
+      if (queryInput) queryInput.value = 'С ребёнком';
+    } else if (num === 4) {
+      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
+      if (radioWalk) radioWalk.checked = true;
+      selectMinutes(120);
+      if (queryInput) queryInput.value = 'Я турист';
+    } else if (num === 5) {
+      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
+      if (radioWalk) radioWalk.checked = true;
+      selectMinutes(60);
+      if (queryInput) queryInput.value = 'Ночью';
+    }
+
+    if (submitBtn) {
+      submitBtn.click();
+    } else if (recommendForm) {
+      if (typeof recommendForm.requestSubmit === 'function') {
+        recommendForm.requestSubmit();
+      } else {
+        recommendForm.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    }
   }
 
   // --- GPS Geolocation Handler ---
