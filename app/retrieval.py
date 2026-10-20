@@ -62,6 +62,7 @@ class Candidate:
     return_route_distance_m: int | None = None
     route_connector_m: int | None = None
     scenarios: tuple[str, ...] = ()
+    climate_shielded: bool = False
 
 
 @dataclass(frozen=True)
@@ -184,6 +185,9 @@ def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> Retri
     elif request.category == "walk" and re.search(r"\b(?:реб[её]н\w*|с\s+детьми|children|child)\b", q):
         # Accompanying a child does not override an explicit museum or cafe interest.
         allowed &= {"park", "garden", "playground"}
+    climate_active = bool(getattr(request, "climate_shield", False) or re.search(r"\b(?:холод\w*|ветер\w*|мороз\w*|буран\w*|укрыт\w*|крыт\w*|indoor)\b", q))
+    if climate_active and "playground" in allowed and not re.search(r"площадк|playground", q):
+        allowed -= {"playground"}
     allowed -= excluded
     eligible = [p for p in dataset.pois if p.category in allowed and not excluded_from_routes(p) and scenario_allows(p, q)
                 and all(p.confirmed_features.get(f) is True for f in required)]
@@ -218,10 +222,26 @@ def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> Retri
         score = 0.65 * (scores[poi.poi_id] / max_score) + 0.35 * (1 - meters / 2500)
         if "family" in scenario_flags(q) and poi.category == "playground":
             score += 0.4
+        is_shielded = (
+            poi.tags.get("indoor") == "yes"
+            or poi.tags.get("indoor_seating") == "yes"
+            or "mega" in poi.name.lower()
+            or "aitu" in poi.name.lower()
+            or "hub" in poi.name.lower()
+            or "alem" in poi.name.lower()
+            or poi.category in {"cafe", "museum", "gallery"}
+            or any("indoor" in str(v).lower() or "крыт" in str(v).lower() for v in poi.tags.values())
+        )
+        if climate_active:
+            if is_shielded:
+                score += 0.5
+            else:
+                score -= 0.3
         candidates.append(Candidate(poi, meters, walk, visit, total, score,
                                     routed.distance_m if routed else None,
                                     returned.distance_m if returned else None,
-                                    routed.connector_m + returned.connector_m if routed else None, scenario_flags(q)))
+                                    routed.connector_m + returned.connector_m if routed else None, scenario_flags(q),
+                                    climate_shielded=is_shielded))
     candidates.sort(key=lambda c: (-c.score, c.distance, c.poi.poi_id))
     if not candidates:
         return result((), "Подходящих мест с посещением и возвращением в указанные ограничения времени и расстояния не найдено. Попробуйте увеличить время или радиус." +

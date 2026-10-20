@@ -9,6 +9,7 @@ class RecommendRequest(BaseModel):
     lon: float = Field(ge=-180, le=180)
     available_minutes: int = Field(ge=10, le=180, strict=True)
     category: Literal["walk", "cafe"]
+    climate_shield: bool = False
 
 
 class UsedContext(BaseModel):
@@ -18,6 +19,7 @@ class UsedContext(BaseModel):
     category: Literal["walk", "cafe"]
     effective_minutes: int | None = None
     max_distance_m: float = 2500
+    climate_shield: bool = False
     required_features: list[str] = Field(default_factory=list)
     excluded_categories: list[str] = Field(default_factory=list)
 
@@ -119,6 +121,7 @@ class Recommendation(BaseModel):
     route_distance_m: int | None = None
     return_route_distance_m: int | None = None
     route_connector_m: int | None = None
+    climate_shielded: bool = False
 
 
 class RecommendResponse(BaseModel):

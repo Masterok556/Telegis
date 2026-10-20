@@ -170,6 +170,17 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
             "privacy": "Нет хранения запросов/GPS и аналитики; модели передаются выбранные POI и нормализованные ограничения, без исходного текста и координат пользователя.",
         }
 
+    @api.get("/api/weather")
+    async def get_weather():
+        return {
+            "city": "Астана",
+            "temperature_c": -3,
+            "wind_speed_ms": 7.5,
+            "condition": "Холодный ветер",
+            "shield_recommended": True,
+            "summary": "Астана: -3°C, ветер 7.5 м/с. Рекомендуется защита от ветра и открытых пространств."
+        }
+
     @api.post("/api/recommend", response_model=RecommendResponse)
     async def recommend(payload: RecommendRequest):
         dataset = store.get()
@@ -211,6 +222,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
                 travel_basis="osm_walking_graph" if candidate.route_distance_m is not None else "straight_line_estimate",
                 route_distance_m=candidate.route_distance_m, return_route_distance_m=candidate.return_route_distance_m,
                 route_connector_m=candidate.route_connector_m,
+                climate_shielded=candidate.climate_shielded,
             ))
         return RecommendResponse(mode=generated.mode, used_context=context, recommendations=recommendations, message=generated.message)
 

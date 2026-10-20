@@ -1482,8 +1482,10 @@
     // Climate Shield Checkbox
     if (climateShieldCheck) {
       climateShieldCheck.addEventListener('change', () => {
+        const badge = document.getElementById('climateWeatherBadge');
         if (climateShieldCheck.checked) {
-          showMapBackgroundStatus('💨 Климатический щит: приоритет крытым хабам (Mega Silk Way, коворкинги EXPO).');
+          if (badge) badge.classList.remove('hidden');
+          showMapBackgroundStatus('💨 Климатический щит активен: приоритет крытым хабам (Mega Silk Way, AITU, коворкинги), открытые площадки исключены.');
           if (locationSelect) {
             const megaOpt = Array.from(locationSelect.options).find(o => o.value.includes('Mega') || o.text.includes('Mega'));
             if (megaOpt) {
@@ -1491,6 +1493,8 @@
               locationSelect.dispatchEvent(new Event('change'));
             }
           }
+        } else {
+          if (badge) badge.classList.add('hidden');
         }
       });
     }
@@ -1974,7 +1978,8 @@
       query: queryInput.value.trim() || (appMode === 'itinerary' ? 'Хочу погулять' : category === 'cafe' ? 'Кофе' : 'Прогулка'),
       lat: Number(option.dataset.lat),
       lon: Number(option.dataset.lon),
-      available_minutes: getSelectedMinutes()
+      available_minutes: getSelectedMinutes(),
+      ...(climateShieldCheck && climateShieldCheck.checked ? { climate_shield: true } : {})
     };
     const payload = appMode === 'itinerary'
       ? { ...common, include_coffee: category === 'cafe' }
@@ -2517,6 +2522,15 @@
           const p = document.createElement('span');
           p.className = 'feature-pill active';
           p.textContent = '🌿 Тихий сквер';
+          featRow.appendChild(p);
+        }
+        if (poi.climate_shielded) {
+          const p = document.createElement('span');
+          p.className = 'feature-pill active';
+          p.style.background = '#e0f2fe';
+          p.style.color = '#0369a1';
+          p.style.borderColor = '#7dd3fc';
+          p.textContent = '🛡️ Теплый хаб (Защита от ветра)';
           featRow.appendChild(p);
         }
         if (featRow.children.length > 0) {
