@@ -655,7 +655,9 @@ html, body {
   display: flex;
   gap: 0.35rem;
   overflow-x: auto;
-  padding-bottom: 0.1rem;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .quick-tags-scroll::-webkit-scrollbar { display: none; }
@@ -673,6 +675,18 @@ html, body {
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.15s;
+}
+
+.card-timing-note {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid var(--color-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.35rem;
+  margin-bottom: 0.6rem;
+  line-height: 1.35;
 }
 
 .tag-chip:hover {

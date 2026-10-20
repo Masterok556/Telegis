@@ -328,6 +328,17 @@
     if (params.get('modal') === 'telemetry') {
       setTimeout(openTelemetryModal, 350);
     }
+    if (params.get('drawer')) {
+      const drawerKey = params.get('drawer');
+      setTimeout(() => {
+        const found = Array.from(poiCatalog.values()).find(p => p.poi_id === drawerKey || (p.name && p.name.includes(drawerKey)));
+        if (found) {
+          openPoiDrawer(found);
+        } else if (poiCatalog.size > 0) {
+          openPoiDrawer(Array.from(poiCatalog.values())[0]);
+        }
+      }, 600);
+    }
     if (params.get('auto') === '1') {
       setTimeout(() => {
         if (submitBtn) {
@@ -1636,7 +1647,6 @@
     contextLine.className = 'itin-why';
     contextLine.textContent = `Бюджет: ${data.used_context?.effective_minutes ?? data.used_context?.available_minutes ?? '—'} мин. Остаток: ${data.remaining_minutes ?? '—'} мин. Запас уже включён в итог. Все времена ниже — от момента старта.`;
     summaryCard.appendChild(contextLine);
-    appendWarnings(summaryCard, data.warnings);
     itineraryView.appendChild(summaryCard);
 
     // Timeline of stops
@@ -1710,6 +1720,14 @@
     timeline.appendChild(finishCard);
 
     itineraryView.appendChild(timeline);
+
+    if (data.warnings && data.warnings.length > 0) {
+      const warnBox = document.createElement('div');
+      warnBox.className = 'itin-warnings-container';
+      warnBox.style.marginTop = '0.75rem';
+      appendWarnings(warnBox, data.warnings);
+      itineraryView.appendChild(warnBox);
+    }
   }
 
   function appendWarnings(container, warnings) {
@@ -1894,7 +1912,7 @@
       metrics.appendChild(mTotal);
       card.appendChild(metrics);
       const duration = document.createElement('p');
-      duration.className = 'card-why-text';
+      duration.className = 'card-timing-note';
       duration.textContent = `На месте: ${poi.visit_minutes_estimate} мин. Возврат включён в итог. Свободно в бюджете: ${poi.time_margin_minutes ?? '—'} мин.`;
       card.appendChild(duration);
 
