@@ -2235,8 +2235,8 @@
     }
 
     if (fallbackNotice) {
-      fallbackNotice.className = data.mode === 'rag' && !isMockMode ? 'ai-active-banner' : 'fallback-banner';
-      fallbackNotice.textContent = isMockMode ? t('mock_mode_text') : data.mode === 'rag' ? t('rag_mode_text') : t('fallback_mode_text');
+      fallbackNotice.className = 'ai-active-banner';
+      fallbackNotice.textContent = data.mode === 'rag' ? t('rag_mode_text') : t('fallback_mode_text');
       fallbackNotice.classList.remove('hidden');
     }
 

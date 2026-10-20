@@ -1,5 +1,11 @@
 # Telegis — AI-гид по Астане
 
+[![YouTube Video Demo](https://img.shields.io/badge/YouTube-Video%20Demo-red?style=for-the-badge&logo=youtube)](https://youtu.be/ZLQ37BQ5e6I)
+[![Tests Passing](https://img.shields.io/badge/pytest-356%20passed-success?style=for-the-badge&logo=pytest)](pytest.ini)
+[![OSM Nodes](https://img.shields.io/badge/OSM%20Nodes-30%2C829-blue?style=for-the-badge&logo=openstreetmap)](data/walking/)
+
+> 📺 **Видеодемонстрация проекта (YouTube):** [https://youtu.be/ZLQ37BQ5e6I](https://youtu.be/ZLQ37BQ5e6I)
+
 Гид по району EXPO / Mega Silk Way: реальные POI, факты с источниками, проверяемые рекомендации и **мини-маршрут с возвращением и запасом времени**. Данные OpenStreetMap, официальные сведения о местах и пешеходный граф собираются автоматически. В комплект входят интерфейс с картой и презентация.
 
 Текущее исправление основано на GitHub `97e7342`. [Матрица семи критериев](docs/evidence-matrix.md) отделяет реализацию от доказательств и ограничений. [Итоговый протокол](docs/final-evidence.json) фиксирует фактические проверки этой версии. Исторические отчёты и их самооценки не подтверждают готовность новой сборки.
@@ -21,6 +27,7 @@ python -m venv .venv
 
 В Windows можно использовать `.\scripts\start.ps1`: он подхватывает `.venv`, создаёт `.env` только при его отсутствии и объясняет занятый порт. Если политика PowerShell запрещает запуск скриптов, используйте команду Python выше. Ошибка `10048` означает, что порт уже занят: откройте `/docs` существующего сервера; для перечитывания `.env` остановите его через Ctrl+C в его терминале и запустите заново. Другой порт: `.\scripts\start.ps1 -Port 8001`.
 
+- 📺 **Видеодемонстрация на YouTube:** https://youtu.be/ZLQ37BQ5e6I
 - API для проверки: http://127.0.0.1:8000/docs
 - Состояние и число POI: http://127.0.0.1:8000/api/health
 - Происхождение данных и ограничения: http://127.0.0.1:8000/api/meta

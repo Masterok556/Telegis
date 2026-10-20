@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "checked_at": "2026-10-20T17:52:43.337575+00:00",
+  "checked_at": "2026-10-20T18:38:38.729566+00:00",
   "syntheticWeatherTest": true,
   "weather_test_notice": "All weather states and values are synthetic integration test inputs, not actual Astana weather.",
   "real_dataset_snapshot": "20261020T112234Z-47247bf6",
