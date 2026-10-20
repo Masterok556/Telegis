@@ -5,7 +5,7 @@ from functools import lru_cache
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -87,6 +87,11 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
     @api.exception_handler(DatasetUnavailable)
     async def unavailable(request: Request, exc: DatasetUnavailable):
         return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+    @api.get("/favicon.ico", include_in_schema=False)
+    async def favicon():
+        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🧭</text></svg>'
+        return Response(content=svg, media_type="image/svg+xml")
 
     @api.get("/api/health")
     async def health():

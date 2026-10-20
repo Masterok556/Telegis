@@ -10,6 +10,9 @@ __pycache__/
 data/.collect.lock
 data/snapshots/.tmp-*/
 .DS_Store
+node_modules/
+test_browser_*.js
+test_interactive_ui.js
 *.png
 !static/images/*.png
 !docs/screenshots/itinerary-live.png

@@ -495,8 +495,17 @@
     if (img) {
       img.removeAttribute('src');
       img.alt = 'Фотография объекта не подтверждена';
+      img.classList.add('hidden');
       img.style.visibility = 'hidden';
     }
+    const catIcons = {
+      cafe: '☕', restaurant: '🍽️', fast_food: '🍔',
+      park: '🌿', garden: '🌸', attraction: '🏛️',
+      monument: '🗿', museum: '🖼️', mall: '🛍️', playground: '👶',
+      artwork: '🎨', memorial: '🕊️'
+    };
+    const heroIcon = document.getElementById('drawerHeroIcon');
+    if (heroIcon) heroIcon.textContent = catIcons[poi.category] || '🧭';
     field('drawerGalleryTag', '📍 Фотография объекта пока не подтверждена');
     const features = document.getElementById('drawerFeaturesGrid');
     if (features) {
@@ -720,6 +729,7 @@
 
       // Enable interactive map clicking
       leafletMap.on('click', (e) => {
+        closePoiDrawer();
         handleMapClick(e.latlng.lat, e.latlng.lng);
       });
 
@@ -1152,8 +1162,30 @@
           queryInput.value = fillText;
           queryInput.focus();
         }
+        // Auto-adapt minutes and category for common scenarios
+        if (['С ребёнком', 'Я турист', 'Ночью', 'панорамный вид', 'тихое место'].includes(fillText)) {
+          const radioWalk = document.querySelector('input[name="category"][value="walk"]');
+          if (radioWalk) radioWalk.checked = true;
+          const curMins = getSelectedMinutes();
+          if (curMins < 60) {
+            selectMinutes(60);
+          }
+        } else if (fillText === 'кофе навынос') {
+          const radioCafe = document.querySelector('input[name="category"][value="cafe"]');
+          if (radioCafe) radioCafe.checked = true;
+        }
       });
     });
+
+    // Keyboard shortcuts: Escape closes drawer and telemetry modal
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closePoiDrawer();
+          closeTelemetryModal();
+        }
+      });
+    }
 
     // Preset buttons
     presetButtons.forEach((btn) => {
@@ -1269,10 +1301,27 @@
     }
   }
 
+  const VERIFIED_EXPO_ANCHORS = [
+    { id: 'osm_way_499328514', name: 'Mega Silk Way', lat: 51.0890897, lon: 71.4073303 },
+    { id: 'loc_alem_ai', name: 'Alem.ai (Павильон B1)', lat: 51.0892381, lon: 71.4162196 },
+    { id: 'loc_astana_hub', name: 'Astana Hub (Павильон C4.6)', lat: 51.0883541, lon: 71.4145878 },
+    { id: 'loc_aifc', name: 'МФЦА / AIFC (Павильон C3.3)', lat: 51.0880703, lon: 71.4168534 },
+    { id: 'loc_aitu', name: 'Astana IT University (AITU)', lat: 51.0906792, lon: 71.4181709 },
+    { id: 'osm_way_1460763574', name: '25-ти летие Независимости', lat: 51.0934524, lon: 71.4175645 }
+  ];
+
   function populateLocationsSelect(locations) {
     locationSelect.innerHTML = '';
 
-    if (!locations || locations.length === 0) {
+    const list = Array.isArray(locations) ? [...locations] : [];
+    VERIFIED_EXPO_ANCHORS.forEach(anchor => {
+      const exists = list.some(l => l.id === anchor.id || (Math.abs(l.lat - anchor.lat) < 0.0005 && Math.abs(l.lon - anchor.lon) < 0.0005));
+      if (!exists) {
+        list.push(anchor);
+      }
+    });
+
+    if (list.length === 0) {
       const opt = document.createElement('option');
       opt.value = '';
       opt.disabled = true;
@@ -1282,7 +1331,7 @@
       return;
     }
 
-    locations.forEach((loc, index) => {
+    list.forEach((loc, index) => {
       const opt = document.createElement('option');
       opt.value = loc.id;
       opt.textContent = loc.name;
@@ -1455,6 +1504,8 @@
     setSubmitLoading(false);
     clearRoutePolyline();
     if (poiMarkersLayer) poiMarkersLayer.clearLayers();
+    if (cardsGrid) cardsGrid.innerHTML = '';
+    if (itineraryView) itineraryView.innerHTML = '';
     if (fallbackNotice) fallbackNotice.classList.add('hidden');
     if (usedContextTag) usedContextTag.classList.add('hidden');
     if (resultsCountBadge) resultsCountBadge.classList.add('hidden');
@@ -1751,19 +1802,40 @@
     }
 
     if (fallbackNotice) {
-      fallbackNotice.className = 'ai-active-banner';
-      fallbackNotice.textContent = isMockMode
-        ? 'Тестовый пример. Live API отключён.'
-        : data.mode === 'rag'
-          ? '✨ RAG: модель выбрала варианты из найденных POI; факты и время проверены правилами бэкенда.'
-          : 'Локальный подбор: рекомендации рассчитаны по сохранённым POI без ответа модели.';
+      if (isMockMode) {
+        fallbackNotice.className = 'fallback-banner';
+        fallbackNotice.innerHTML = '<span class="banner-icon">ℹ️</span><div class="banner-text"><strong>Тестовый режим:</strong> Live API отключён.</div>';
+      } else if (data.mode === 'rag') {
+        fallbackNotice.className = 'ai-active-banner';
+        fallbackNotice.innerHTML = '<span class="banner-icon">✨</span><div class="banner-text"><strong>RAG-генерация:</strong> модель подобрала места по базе POI с проверкой времени.</div>';
+      } else {
+        fallbackNotice.className = 'fallback-banner';
+        fallbackNotice.innerHTML = '<span class="banner-icon">⚡</span><div class="banner-text"><strong>Локальный расчёт:</strong> проверенная база POI и граф дорог OSM без вызова LLM.</div>';
+      }
       fallbackNotice.classList.remove('hidden');
     }
 
     if (recommendations.length === 0) {
+      if (cardsGrid) cardsGrid.innerHTML = '';
       if (emptyReason) emptyReason.textContent = data.message || t('empty_text');
       if (poiMarkersLayer) poiMarkersLayer.clearLayers();
       clearRoutePolyline();
+      const emptyAdviceContainer = document.getElementById('emptyAdviceContainer');
+      if (emptyAdviceContainer) {
+        emptyAdviceContainer.innerHTML = '';
+        const curMins = getSelectedMinutes();
+        if (curMins < 60) {
+          const sugBtn = document.createElement('button');
+          sugBtn.className = 'gis-btn-secondary retry-action-btn';
+          sugBtn.style.marginTop = '0.75rem';
+          sugBtn.textContent = '⏱️ Увеличить время до 60 мин и найти';
+          sugBtn.addEventListener('click', () => {
+            selectMinutes(60);
+            if (recommendForm) recommendForm.dispatchEvent(new Event('submit', { cancelable: true }));
+          });
+          emptyAdviceContainer.appendChild(sugBtn);
+        }
+      }
       setUIState('empty');
     } else {
       renderCards(recommendations);

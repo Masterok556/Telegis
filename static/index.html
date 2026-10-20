@@ -7,6 +7,7 @@
   <meta name="description" content="Telegis: интерактивная карта OpenStreetMap в стиле 2GIS и Flightradar24. Рекомендации прогулок, кофе и кольцевых маршрутов в Астане с честным расчётом времени.">
   <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -288,7 +289,10 @@
     <div class="drawer-scroll-body">
       <!-- Фотогалерея объекта -->
       <div class="drawer-gallery" id="drawerGallery">
-        <img id="drawerHeroImg" src="" alt="Фото объекта" class="drawer-hero-img" loading="lazy" />
+        <div class="drawer-hero-placeholder" id="drawerHeroPlaceholder">
+          <span class="drawer-hero-icon" id="drawerHeroIcon">🧭</span>
+        </div>
+        <img id="drawerHeroImg" src="" alt="Фото объекта" class="drawer-hero-img hidden" loading="lazy" />
         <div class="drawer-gallery-gradient"></div>
         <div class="drawer-gallery-tag" id="drawerGalleryTag">Астана • EXPO</div>
       </div>
