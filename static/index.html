@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TeleGIS — Умная интерактивная карта прогулок по Астане</title>
+  <meta name="description" content="TeleGIS: интерактивная карта OpenStreetMap в стиле 2GIS и Flightradar24. Рекомендации прогулок, кофе и кольцевых маршрутов в Астане с честным расчётом времени.">
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body class="gis-app-body">
+
+  <!-- Плашка тестового режима (активируется ТОЛЬКО при ?mock=1) -->
+  <div id="mockBanner" class="mock-banner hidden" role="status" aria-live="polite">
+    <div class="mock-banner-content">
+      <span class="mock-icon">⚠️</span>
+      <strong data-i18n="mock_title">ТЕСТОВЫЙ РЕЖИМ (MOCK)</strong> — <span data-i18n="mock_desc">запросы к живому API отключены. Для реального режима удалите ?mock=1.</span>
+    </div>
+  </div>
+
+  <!-- ПОЛНОЭКРАННАЯ КАРТА (FLIGHTRADAR / 2GIS STYLE) -->
+  <div id="osmMap" class="fullscreen-map" role="region" aria-label="Интерактивная карта OpenStreetMap"></div>
+
+  <!-- ПЛАВАЮЩИЙ САЙДБАР (2GIS / GOOGLE MAPS STYLE) -->
+  <aside class="gis-sidebar" id="gisSidebar" aria-label="Панель поиска и рекомендаций">
+    <!-- Шапка сайдбара: Логотип + Языковой переключатель (KZ / RU / EN) + Кнопка сворачивания -->
+    <div class="sidebar-header">
+      <div class="sidebar-header-main">
+        <div class="brand-row">
+          <div class="brand-logo-badge" aria-hidden="true">
+            <span class="brand-icon">🧭</span>
+          </div>
+          <div class="brand-text-group">
+            <div class="brand-title-wrap">
+              <h1 class="brand-title">TeleGIS</h1>
+              <span class="brand-city-tag" data-i18n="city_tag">Астана • EXPO</span>
+            </div>
+            <p class="brand-subtitle" data-i18n="subtitle">ИИ-советчик для пеших прогулок</p>
+          </div>
+        </div>
+
+        <div class="header-actions-row">
+          <!-- Переключатель языка (Стретч-цель №2: Мультиязычность) -->
+          <div class="lang-switch-group" role="group" aria-label="Язык интерфейса">
+            <button type="button" class="lang-btn active" data-lang="ru">RU</button>
+            <button type="button" class="lang-btn" data-lang="kz">KZ</button>
+            <button type="button" class="lang-btn" data-lang="en">EN</button>
+          </div>
+
+          <!-- Кнопка скрытия сайдбара -->
+          <button type="button" id="toggleSidebarBtn" class="sidebar-toggle-btn" title="Свернуть панель / Показать всю карту">
+            <span class="toggle-icon">◀</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Живой статус сети и телеметрия (/api/meta) -->
+      <div class="status-bar-row">
+        <button type="button" class="system-status-pill" id="systemStatusBtn" title="Нажмите для просмотра системного аудита">
+          <span class="status-pulse-dot"></span>
+          <span class="status-text" id="statusSummaryText">Сеть: 30 829 узлов OSM • 49 POI • RAG Онлайн</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Мобильная плашка (Bottom Sheet Handle) -->
+    <div class="bottom-sheet-handle" id="sheetHandle" aria-hidden="true">
+      <span class="handle-bar"></span>
+    </div>
+
+    <!-- Вкладки режимов: Места vs Кольцевой маршрут (Стретч-цель №1) -->
+    <div class="mode-tabs-container">
+      <button type="button" class="mode-tab-btn active" id="tabPlaces" data-mode="places">
+        <span class="tab-icon">📍</span>
+        <span data-i18n="mode_places">Отдельные места</span>
+      </button>
+      <button type="button" class="mode-tab-btn" id="tabItinerary" data-mode="itinerary">
+        <span class="tab-icon">🚶</span>
+        <span data-i18n="mode_itinerary">Маршрут</span>
+        <span class="tab-badge-new">Dijkstra</span>
+      </button>
+    </div>
+
+    <!-- Форма параметров -->
+    <div class="sidebar-form-container">
+      <form id="recommendForm" class="recommend-form" novalidate>
+        
+        <!-- Стартовая точка -->
+        <div class="form-row location-row">
+          <div class="input-icon-wrap">
+            <span class="field-icon" aria-hidden="true">📍</span>
+            <select id="locationSelect" class="form-select-gis" required aria-required="true" title="Стартовая точка">
+              <option value="" disabled selected data-i18n="loading_locations">Загрузка локаций...</option>
+            </select>
+          </div>
+          <button type="button" id="geoBtn" class="gis-action-btn geo-action-btn" title="Определить точные координаты через GPS">
+            <span class="geo-btn-icon" aria-hidden="true">🎯</span>
+          </button>
+        </div>
+        <div id="geoStatus" class="geo-status-text" role="status" aria-live="polite"></div>
+
+        <!-- Переключатель формата: Прогулка / Кофе -->
+        <div class="form-group-block">
+          <div class="segmented-control" role="radiogroup" aria-label="Формат отдыха">
+            <label class="seg-option">
+              <input type="radio" name="category" value="walk" checked>
+              <span class="seg-btn">
+                <span class="seg-icon">🚶</span>
+                <span data-i18n="cat_walk">Пешая прогулка</span>
+              </span>
+            </label>
+            <label class="seg-option">
+              <input type="radio" name="category" value="cafe">
+              <span class="seg-btn">
+                <span class="seg-icon">☕</span>
+                <span data-i18n="cat_cafe">Кофе и отдых</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Бюджет времени -->
+        <div class="time-control-row">
+          <span class="time-row-label">⏱️ <span data-i18n="time_budget_label">Бюджет времени:</span></span>
+          <div class="time-selector" id="timeSelector" role="radiogroup" aria-label="Доступное время">
+            <!-- Динамически рендерится под режим (20/30/60 для мест, 60/90/120 для маршрута) -->
+            <label class="time-chip">
+              <input type="radio" name="availableMinutes" value="20">
+              <span class="time-chip-btn">20 мин</span>
+            </label>
+            <label class="time-chip">
+              <input type="radio" name="availableMinutes" value="30">
+              <span class="time-chip-btn">30 мин</span>
+            </label>
+            <label class="time-chip">
+              <input type="radio" name="availableMinutes" value="60" checked>
+              <span class="time-chip-btn">60 мин</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Поисковая строка и кнопка Найти -->
+        <div class="search-action-row">
+          <div class="search-input-wrap">
+            <span class="search-field-icon" aria-hidden="true">🔍</span>
+            <input 
+              type="text" 
+              id="queryInput" 
+              class="form-input-gis" 
+              placeholder="Пожелание: сквер, панорама, круассан..." 
+              data-i18n-placeholder="query_placeholder"
+              maxlength="200"
+              autocomplete="off"
+            >
+          </div>
+          <button type="submit" id="submitBtn" class="search-submit-btn" title="Найти">
+            <span class="btn-text" data-i18n="btn_find">Найти</span>
+            <span class="btn-spinner hidden" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <!-- Подпись честного бюджета -->
+        <div class="budget-info-row">
+          <span class="info-badge" data-i18n="budget_badge">⏱️ Честный бюджет:</span>
+          <span class="budget-desc" data-i18n="budget_desc">дорога туда + посещение + возврат к старту</span>
+        </div>
+
+        <!-- Быстрые чипы фильтров -->
+        <div class="quick-tags-scroll">
+          <button type="button" class="tag-chip" data-fill="панорамный вид" data-i18n="tag_view">📸 Вид на сферу</button>
+          <button type="button" class="tag-chip" data-fill="тихое место" data-i18n="tag_quiet">🌿 Тихий сквер</button>
+          <button type="button" class="tag-chip" data-fill="кофе навынос" data-i18n="tag_togo">☕ Навынос</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Прокручиваемый список карточек и состояний -->
+    <div class="sidebar-scrollable-content" id="sidebarContent">
+      
+      <!-- Статус контекста -->
+      <div class="results-meta-bar">
+        <span id="resultsCountBadge" class="count-badge hidden">0 вариантов</span>
+        <div id="usedContextTag" class="used-context-chip hidden" aria-live="polite"></div>
+      </div>
+
+      <!-- Плашка fallback-режима -->
+      <div id="fallbackNotice" class="fallback-banner hidden" role="note">
+        <span class="banner-icon">ℹ️</span>
+        <div class="banner-text">
+          <strong data-i18n="fallback_title">Шаблонный режим:</strong> <span data-i18n="fallback_desc">рекомендации подобраны по проверенной базе POI без вызова LLM.</span>
+        </div>
+      </div>
+
+      <!-- Состояния -->
+      <div id="stateContainer">
+        <!-- 1. Начальный экран -->
+        <div id="initialState" class="state-card initial-view">
+          <div class="state-glow-icon">🧭</div>
+          <h3 class="state-head" data-i18n="init_head">Интеллектуальный радар прогулок</h3>
+          <p class="state-text" data-i18n="init_text">Выберите время и категорию — TeleGIS просканирует пешеходный граф OpenStreetMap и подберёт 1–3 идеальных места в районе EXPO.</p>
+          <div class="preset-scenarios">
+            <span class="preset-label" data-i18n="preset_label">Быстрые сценарии:</span>
+            <div class="preset-buttons">
+              <button type="button" class="preset-btn" data-category="walk" data-minutes="60" data-query="Хочу погулять" data-i18n="preset_1">🚶 60 мин вокруг EXPO</button>
+              <button type="button" class="preset-btn" data-category="cafe" data-minutes="30" data-query="Кофе и круассан" data-i18n="preset_2">☕ Кофе на 30 мин</button>
+              <button type="button" class="preset-btn" data-category="walk" data-minutes="20" data-query="Быстрая прогулка" data-i18n="preset_3">⚡ 20 мин размяться</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Загрузка -->
+        <div id="loadingState" class="state-card loading-view hidden" role="status" aria-live="polite">
+          <div class="gis-spinner"></div>
+          <h3 class="state-head" data-i18n="loading_head">TeleGIS анализирует местность...</h3>
+          <p class="state-text" data-i18n="loading_text">Вычисляем пешеходные расстояния по графу дорог и ранжируем локации.</p>
+        </div>
+
+        <!-- 3. Пустой результат -->
+        <div id="emptyState" class="state-card empty-view hidden" role="status">
+          <div class="state-glow-icon">🔍</div>
+          <h3 class="state-head" data-i18n="empty_head">Точки не найдены</h3>
+          <p id="emptyReason" class="state-text" data-i18n="empty_text">В заданном радиусе и бюджете времени нет доступных мест.</p>
+          <div class="empty-advice" id="emptyAdviceContainer">
+            <span data-i18n="empty_advice">Совет: увеличьте время до 60 минут или выберите другой формат.</span>
+          </div>
+        </div>
+
+        <!-- 4. Ошибка -->
+        <div id="errorState" class="state-card error-view hidden" role="alert">
+          <div class="state-glow-icon">⚠️</div>
+          <h3 class="state-head" data-i18n="error_head">Ошибка соединения</h3>
+          <p id="errorMessage" class="state-text">Не удалось получить данные с сервера.</p>
+          <button type="button" id="retryBtn" class="gis-btn-secondary retry-action-btn" data-i18n="btn_retry">Повторить попытку</button>
+        </div>
+
+        <!-- 5. Результаты: Сетка карточек или Таймлайн Маршрута -->
+        <div id="cardsGrid" class="cards-stream hidden" role="list"></div>
+        <div id="itineraryView" class="itinerary-stream hidden" role="region" aria-label="Пешеходный кольцевой маршрут"></div>
+      </div>
+
+      <!-- Футер сайдбара -->
+      <footer class="sidebar-footer">
+        <div class="footer-privacy-row">
+          <span>🔒 Zero-Tracking (координаты не сохраняются)</span>
+          <span>© OpenStreetMap (ODbL 1.0) • Smart City Astana</span>
+        </div>
+      </footer>
+    </div>
+  </aside>
+
+  <!-- ПЛАВАЮЩИЙ ВИДЖЕТ РАДИУСА И СТАТУСА НА КАРТЕ -->
+  <div class="floating-map-badge" id="radiusBadge">
+    <span class="badge-radar-dot"></span>
+    <span id="radiusIndicator">Радиус пешей зоны: ~1.5 км</span>
+  </div>
+
+  <!-- ПЛАВАЮЩАЯ КНОПКА ОТКРЫТИЯ САЙДБАРА -->
+  <button type="button" id="openSidebarBtn" class="floating-open-sidebar-btn hidden" title="Развернуть панель TeleGIS">
+    <span class="open-icon">🧭</span>
+    <span class="open-text">Панель TeleGIS</span>
+  </button>
+
+  <!-- ПЛАВАЮЩИЕ КНОПКИ УПРАВЛЕНИЯ КАРТОЙ (2GIS STYLE) -->
+  <div class="floating-map-controls">
+    <button type="button" id="mapCenterBtn" class="map-ctrl-btn" title="Вернуться к стартовой точке">🎯</button>
+    <div class="map-ctrl-divider"></div>
+    <button type="button" id="zoomInBtn" class="map-ctrl-btn" title="Приблизить">+</button>
+    <div class="map-ctrl-divider"></div>
+    <button type="button" id="zoomOutBtn" class="map-ctrl-btn" title="Отдалить">−</button>
+  </div>
+
+  <!-- ПРАВОЕ БОКОВОЕ МЕНЮ ИНФОРМАЦИИ ОБ ОБЪЕКТЕ С ИИ И ФОТО (2GIS / GOOGLE MAPS STYLE) -->
+  <aside id="poiDrawer" class="poi-drawer" aria-label="Информация об объекте" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-header-left">
+        <span id="drawerCategoryBadge" class="drawer-cat-badge">🏛️ Объект</span>
+        <span id="drawerDistBadge" class="drawer-dist-badge">~0 м</span>
+      </div>
+      <button type="button" id="drawerCloseBtn" class="drawer-close-btn" title="Закрыть панель">✕</button>
+    </div>
+
+    <div class="drawer-scroll-body">
+      <!-- Фотогалерея объекта -->
+      <div class="drawer-gallery" id="drawerGallery">
+        <img id="drawerHeroImg" src="" alt="Фото объекта" class="drawer-hero-img" loading="lazy" />
+        <div class="drawer-gallery-gradient"></div>
+        <div class="drawer-gallery-tag" id="drawerGalleryTag">Астана • EXPO</div>
+      </div>
+
+      <!-- Основные названия и адрес -->
+      <div class="drawer-title-section">
+        <h2 id="drawerTitle" class="drawer-title">Название объекта</h2>
+        <div id="drawerAddress" class="drawer-address">📍 г. Астана, район EXPO</div>
+      </div>
+
+      <!-- Блок AI-инсайта и рекомендаций -->
+      <div class="drawer-ai-card">
+        <div class="drawer-ai-badge">
+          <span class="ai-sparkle">✨</span>
+          <span class="ai-label">AI-экскурсовод TeleGIS</span>
+        </div>
+        <div id="drawerAiSummary" class="drawer-ai-text">
+          Загрузка интеллектуального обзора...
+        </div>
+        <div class="drawer-ai-tip" id="drawerAiTipBox">
+          <span class="tip-icon">💡</span>
+          <span id="drawerAiTip" class="tip-text">Совет от AI...</span>
+        </div>
+        <div id="drawerAiVibe" class="drawer-ai-vibe">
+          <!-- Теги атмосферы -->
+        </div>
+      </div>
+
+      <!-- Характеристики и удобства объекта -->
+      <div class="drawer-features-section">
+        <h3 class="drawer-section-heading">Удобства & Параметры</h3>
+        <div class="drawer-features-grid" id="drawerFeaturesGrid">
+          <!-- Wi-Fi, Розетки, Часы, Доступность -->
+        </div>
+      </div>
+
+      <!-- Официальные проверенные факты (если есть) -->
+      <div class="drawer-facts-section hidden" id="drawerFactsSection">
+        <h3 class="drawer-section-heading">🏛️ Проверенные факты</h3>
+        <ul id="drawerFactsList" class="drawer-facts-list"></ul>
+      </div>
+
+      <!-- Кнопки действий -->
+      <div class="drawer-actions">
+        <button type="button" id="drawerRouteBtn" class="drawer-action-btn primary">
+          <span>🚶 Построить пеший маршрут</span>
+        </button>
+        <button type="button" id="drawerSetStartBtn" class="drawer-action-btn secondary">
+          <span>📍 Начать прогулку отсюда</span>
+        </button>
+        <a id="drawerOsmLink" href="#" target="_blank" rel="noopener noreferrer" class="drawer-osm-link">
+          ↗ Открыть карточку в OpenStreetMap
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- МОДАЛЬНОЕ ОКНО ТЕЛЕМЕТРИИ И АРХИТЕКТУРЫ СИСТЕМЫ (/api/meta) -->
+  <div id="telemetryModal" class="telemetry-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-window glass-card">
+      <div class="modal-head">
+        <div class="modal-head-title">
+          <span class="modal-badge-icon">🛰️</span>
+          <div>
+            <h2 id="modalTitle" class="modal-h2" data-i18n="modal_audit_title">Системный аудит & Телеметрия TeleGIS</h2>
+            <p class="modal-sub" data-i18n="modal_audit_sub">Архитектура сервиса, граф OpenStreetMap и верификация данных</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" id="modalCloseBtn" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body" id="telemetryModalBody">
+        <!-- Заполняется динамически из /api/meta -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Скрипты: Локальный Leaflet + Модуль логики -->
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

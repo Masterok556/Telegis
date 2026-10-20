@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeleGIS — Презентация проекта (НИЦ Smart City Астана)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --border: #334155;
+      --font: 'Inter', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Top Nav / Controls */
+    .deck-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .deck-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .deck-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .deck-btn:hover {
+      background: var(--border);
+    }
+
+    .slide-counter {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* Slides Container */
+    .deck-viewport {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 1.5rem 2rem;
+      max-width: 1080px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Slide Typography */
+    .slide-header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    .slide-tag {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    .slide-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .slide-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    /* Grid layouts for content */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    /* Cards inside slides */
+    .feature-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .feature-box h4 {
+      font-size: 1.05rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .feature-box p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .feature-box ul {
+      padding-left: 1.2rem;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .feature-box li {
+      margin-bottom: 0.35rem;
+    }
+
+    /* Key Numbers / Metric Pills */
+    .stat-number {
+      font-family: var(--mono);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent-green);
+      line-height: 1;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .pill-highlight {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    /* Code block in slide */
+    .code-box {
+      background: #090d16;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    /* Footer hints */
+    .deck-footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Print / PDF Export Styles */
+    @media print {
+      body {
+        background: #ffffff;
+        color: #0f172a;
+      }
+      .deck-nav, .deck-footer {
+        display: none;
+      }
+      .deck-viewport {
+        padding: 0;
+        max-width: 100%;
+      }
+      .slide {
+        display: block !important;
+        page-break-after: always;
+        break-after: page;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        box-shadow: none;
+        color: #0f172a;
+        margin-bottom: 2rem;
+      }
+      .slide-header { border-color: #cbd5e1; }
+      .slide-title { color: #0f172a; }
+      .slide-subtitle { color: #475569; }
+      .feature-box {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+      }
+      .feature-box h4 { color: #1e40af; }
+      .feature-box p, .feature-box li { color: #334155; }
+      .stat-number { color: #047857; }
+      .code-box {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #0f172a;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Навигация -->
+  <header class="deck-nav">
+    <div class="deck-title">
+      <span>📍</span>
+      <strong>TeleGIS</strong> • Презентация для жюри (5–7 мин)
+    </div>
+    <div class="deck-controls">
+      <button type="button" class="deck-btn" id="prevBtn" title="Стрелка влево">← Назад</button>
+      <span class="slide-counter" id="slideCounter">1 / 6</span>
+      <button type="button" class="deck-btn" id="nextBtn" title="Стрелка вправо">Вперёд →</button>
+      <button type="button" class="deck-btn" onclick="window.print()" title="Сохранить слайды в PDF">🖨️ PDF Экспорт</button>
+    </div>
+  </header>
+
+  <!-- Контейнер слайдов -->
+  <main class="deck-viewport">
+
+    <!-- СЛАЙД 1: Проблема пользователя -->
+    <section class="slide active" data-slide="1">
+      <div class="slide-header">
+        <span class="slide-tag">Слайд 1 из 6 • Проблема</span>
+        <h2 class="slide-title">«Куда сходить прямо сейчас?»</h2>
+        <p class="slide-subtitle">Почему стандартные карты и поисковики не решают задачу пешехода в Астане</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature-box">
+          <h4>🗺️ Перегрузка точками</h4>
+          <p>В радиусе 1 км открываются сотни отметок на карте, но нет ответа: <em>«Что из этого подходит именно мне на ближайшие 40 минут?»</em></p>
+        </div>
+        <div class="feature-box">
+          <h4>⏱️ Ложный расчёт времени</h4>
+          <p>Навигаторы показывают дорогу в одну сторону. Пользователь опаздывает, потому что никто не считает <strong>дорогу обратно и время на месте</strong>.</p>
+        </div>
+        <div class="feature-box">
+          <h4>🤖 Галлюцинации LLM</h4>
+          <p>Обычные чат-боты выдумывают несуществующие выставки, заявляют «открыто сейчас» без данных и не привязаны к реальной геометрии дорог.</p>
+        </div>
+      </div>
+      <div class="feature-box" style="margin-top: 1.5rem; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.3);">
+        <p style="font-size: 0.95rem; color: #e2e8f0;">
+          <strong>Фокусная локация прототипа:</strong> Район <strong>EXPO / Mega Silk Way</strong> (Астана). Место с высокой концентрацией туристов, горожан и деловых гостей с ограниченным свободным окном (20–60 мин).
+        </p>
+      </div>
+    </section>
+
+    <!-- СЛАЙД 2: Решение и два сценария -->
+    <section class="slide" data-slide="2">
+      <div class="slide-header">
+        <span class="slide-tag">Слайд 2 из 6 • Продукт</span>
+        <h2 class="slide-title">TeleGIS: Честный городской советчик</h2>
+        <p class="slide-subtitle">Сочетание точного гео-графа OpenStreetMap и контролируемой RAG-генерации</p>
+      </div>
+      <div class="grid-2">
+        <div class="feature-box">
+          <h4>🚶 Сценарий 1: Прогулка на 30–60 минут</h4>
+          <p><strong>Пользователь:</strong> «Освободился после встречи в EXPO, есть 40 минут до такси, хочу размяться на воздухе».</p>
+          <ul>
+            <li>Подбор безопасных пешеходных зон (парки, аллеи, инсталляции).</li>
+            <li>Честный бюджет: <code>Время = Дорога туда + На месте + Возврат</code>.</li>
+            <li>Конкретная идея занятия («Обойти сферу по часовой стрелке»).</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <h4>☕ Сценарий 2: Кофе неподалёку (20–30 мин)</h4>
+          <p><strong>Пользователь:</strong> «Нужно быстро взять specialty-кофе или передохнуть в тихом месте рядом».</p>
+          <ul>
+            <li>Точный радиус пешей доступности (100–350 м).</li>
+            <li>Учёт типа заведения (навынос vs. посадка).</li>
+            <li>Проверка графика: если расписание не подтверждено — честная плашка.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-top: 1.5rem;">
+        <div class="feature-box">
+          <div class="stat-number">49</div>
+          <div class="stat-label">Проверенных POI в районе EXPO (9 категорий)</div>
+        </div>
+        <div class="feature-box">
+          <div class="stat-number">30 829</div>
+          <div class="stat-label">Узлов пешеходного графа OSM (Dijkstra)</div>
+        </div>
+        <div class="feature-box">
+          <div class="stat-number">0 байт</div>
+          <div class="stat-label">Сохранённых GPS-координат (Zero Tracking)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- СЛАЙД 3: Демонстрация: 60 мин → 20 мин → Кофе -->
+    <section class="slide" data-slide="3">
+      <div class="slide-header">
+        <span class="slide-tag">Слайд 3 из 6 • Живая демонстрация</span>
+        <h2 class="slide-title">Динамическая адаптация рекомендаций</h2>
+        <p class="slide-subtitle">Как меняется поведение системы при смене входных параметров</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature-box">
+          <h4>1. 60 минут (Прогулка)</h4>
+          <p><span class="pill-highlight">Mega Silk Way → 60 мин</span></p>
+          <ul style="margin-top: 0.75rem;">
+            <li>Выдача: Павильон Нұр Әлем, Сквер Энергии, Тематический бульвар.</li>
+            <li>Общий бюджет: ~32–36 мин (с запасом на возврат).</li>
+            <li>Идея: осмотр уличных скульптур.</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <h4>2. Смена на 20 минут</h4>
+          <p><span class="pill-highlight">Время сжато в 3 раза</span></p>
+          <ul style="margin-top: 0.75rem;">
+            <li>Дальние скверы мгновенно отсекаются гео-фильтром.</li>
+            <li>Выдача: Арт-инсталляция в 85 метрах от входа.</li>
+            <li>Бюджет: 14 минут (2 мин туда + 10 мин + 2 мин обратно).</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <h4>3. Переключение на «Кофе»</h4>
+          <p><span class="pill-highlight">Смена категории</span></p>
+          <ul style="margin-top: 0.75rem;">
+            <li>BM25 + фильтр тегов выдают Delish Cafe и Zebra Coffee.</li>
+            <li>Оценка времени на заказ и кофепитие: 15 минут.</li>
+            <li>Отображение расписания или предупреждения.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="feature-box" style="margin-top: 1.5rem;">
+        <p style="font-size: 0.85rem; color: var(--accent-amber);">
+          ⚠️ <strong>Стресс-кейс (Честность):</strong> Если задать 10 минут на музей — система вернёт понятный пустой экран: <em>«В заданном бюджете невозможно успеть осмотреть экспозицию и вернуться»</em> с советом увеличить время.
+        </p>
+      </div>
+    </section>
+
+    <!-- СЛАЙД 4: RAG-пайплайн и архитектура -->
+    <section class="slide" data-slide="4">
+      <div class="slide-header">
+        <span class="slide-tag">Слайд 4 из 6 • Технологии RAG</span>
+        <h2 class="slide-title">Архитектура: от OSM до безопасной генерации</h2>
+        <p class="slide-subtitle">Как система сочетает точные факты с естественным языком рекомендаций</p>
+      </div>
+      <div class="code-box">
+1. Автосбор (Overpass API) → 49 POI + Пешеходный граф (30k узлов) → Неизменяемый снэпшот (SHA-256)
+2. Запрос пользователя → Фильтрация по радиусу (Haversine ≤ 2.5 км) и бюджету (2 * walk + visit)
+3. Retrieval: BM25 с русскими/английскими синонимами + Re-ranking (65% relevance + 35% proximity)
+4. Fact Injection: Добавление фактов из тегов OSM (кухня, Wi-Fi, архитектура) с доказательствами
+5. Generation: LLM выбирает ТОЛЬКО из валидированных facts/reasons (никакого свободного бреда)
+6. Graceful Fallback: При сбое LLM (таймаут, квота) мгновенно включается шаблонный RAG
+      </div>
+      <div class="grid-2" style="margin-top: 1.25rem;">
+        <div class="feature-box">
+          <h4>🛡️ Защита от галлюцинаций</h4>
+          <p>LLM не придумывает факты «из головы». Модели передаётся закрытый список подтверждённых ID причин и занятий. Ответ верифицируется Pydantic-схемой.</p>
+        </div>
+        <div class="feature-box">
+          <h4>⚡ Безотказный Fallback</h4>
+          <p>Если API провайдера недоступно, пользователь получает полноценные карточки мест с алгоритмическим описанием. Система никогда не «падает».</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- СЛАЙД 5: Фактические проверки, источники и этика -->
+    <section class="slide" data-slide="5">
+      <div class="slide-header">
+        <span class="slide-tag">Слайд 5 из 6 • Безопасность и Этика</span>
+        <h2 class="slide-title">Приватность, факты и прозрачность данных</h2>
+        <p class="slide-subtitle">Критерий №6 хакатона: эталонная защита пользователя</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature-box">
+          <h4>🔒 Приватность локации</h4>
+          <ul>
+            <li>GPS запрашивается только по клику.</li>
+            <li>Координаты <strong>не пишутся</strong> в localStorage, БД или cookie.</li>
+            <li>Координаты <strong>не передаются в LLM</strong> (туда идут только кандидаты).</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <h4>🔍 Прозрачность данных</h4>
+          <ul>
+            <li>Каждая карточка содержит прямую ссылку на OpenStreetMap.</li>
+            <li>Честная метка: <em>«Данные собраны: 19.10.2026»</em>.</li>
+            <li>Если график неизвестен — <em>«Часы не подтверждены»</em>.</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <h4>🧪 Автотестирование</h4>
+          <ul>
+            <li><strong>13 автотестов</strong> (pytest): проверка контрактов, точности времени, фильтрации строек.</li>
+            <li>Тест <code>test_transparency.py</code> гарантирует отсутствие утечек ключей и данных.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="feature-box" style="margin-top: 1.5rem; background: rgba(52, 211, 153, 0.08); border-color: rgba(52, 211, 153, 0.3);">
+        <p style="font-size: 0.9rem; color: #a7f3d0;">
+          <strong>Ответственный AI:</strong> Запрет утверждений «открыто сейчас», явная пометка шаблонного режима, запрет выдуманных рейтингов.
+        </p>
+      </div>
+    </section>
+
+    <!-- СЛАЙД 6: Итоги и план развития -->
+    <section class="slide" data-slide="6">
+      <div class="slide-header">
+        <span class="slide-tag">Слайд 6 из 6 • Итоги и Будущее</span>
+        <h2 class="slide-title">Что готово и куда развиваемся</h2>
+        <p class="slide-subtitle">Готовый рабочий прототип для внедрения в городскую инфраструктуру Астаны</p>
+      </div>
+      <div class="grid-2">
+        <div class="feature-box">
+          <h4>✅ Реализовано в рамках хакатона</h4>
+          <ul>
+            <li>Автоматический пайплайн сбора данных (Overpass + Dijkstra-граф).</li>
+            <li>RAG-пайплайн с BM25 и верифицируемой генерацией.</li>
+            <li>Интерактивная карта OpenStreetMap с динамическим радиусом пешей доступности.</li>
+            <li>Адаптивный веб-интерфейс без сборщиков (Vanilla JS/CSS).</li>
+            <li>Поддержка эндпоинта пешеходных мини-маршрутов (<code>/api/itinerary</code>).</li>
+            <li>13 автоматических тестов качества и безопасности.</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <h4>🚀 План масштабирования (Roadmap)</h4>
+          <ul>
+            <li><strong>Охват всего города:</strong> масштабирование на Правый берег, Ботанический сад, Набережную.</li>
+            <li><strong>Интеграция погоды:</strong> автоматическая фильтрация крытых мест при дожде/буране (актуально для Астаны).</li>
+            <li><strong>Городской Smart City API:</strong> интеграция с городскими афишами (Astana Hub, Expo-мероприятия).</li>
+            <li><strong>Доступная среда:</strong> фильтры для маломобильных граждан (коляски, пандусы).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="feature-box" style="margin-top: 1.5rem; text-align: center;">
+        <p style="font-size: 1.1rem; color: var(--text); font-weight: 600;">
+          Спасибо за внимание! Готовы ответить на вопросы жюри.
+        </p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+          Команда проекта «TeleGIS» • Репозиторий: github.com/Masterok556/Telegis
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="deck-footer">
+    Управление: клавиши <strong>← Влево</strong> / <strong>→ Вправо</strong> или <strong>Пробел</strong>. Для печати в PDF нажмите кнопку вверху.
+  </footer>
+
+  <script>
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const counter = document.getElementById('slideCounter');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      let currentIdx = 0;
+
+      function showSlide(idx) {
+        if (idx < 0) idx = 0;
+        if (idx >= slides.length) idx = slides.length - 1;
+        currentIdx = idx;
+
+        slides.forEach((s, i) => {
+          s.classList.toggle('active', i === currentIdx);
+        });
+
+        if (counter) {
+          counter.textContent = `${currentIdx + 1} / ${slides.length}`;
+        }
+      }
+
+      if (prevBtn) prevBtn.addEventListener('click', () => showSlide(currentIdx - 1));
+      if (nextBtn) nextBtn.addEventListener('click', () => showSlide(currentIdx + 1));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+          showSlide(currentIdx + 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          showSlide(currentIdx - 1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -24,7 +24,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_10559299807",
@@ -54,7 +58,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_10861996205",
@@ -82,7 +90,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_11206429884",
@@ -115,7 +127,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_11290690869",
@@ -148,7 +164,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_11783576043",
@@ -185,7 +205,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_11925892164",
@@ -214,7 +238,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_11925892165",
@@ -243,7 +271,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_11927785970",
@@ -272,7 +304,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_12098662467",
@@ -303,7 +339,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_12520559591",
@@ -333,7 +373,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_12893538292",
@@ -361,7 +405,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_12990081501",
@@ -389,7 +436,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_12996721851",
@@ -416,7 +467,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_13088473063",
@@ -442,7 +497,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_13125546428",
@@ -471,7 +529,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_13125556689",
@@ -500,7 +562,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_13173517356",
@@ -529,7 +595,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_13462282540",
@@ -555,7 +625,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_13667384701",
@@ -586,7 +660,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_13681674667",
@@ -618,7 +696,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_14102594001",
@@ -648,7 +730,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_14104582301",
@@ -678,7 +764,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_14275682079",
@@ -715,7 +805,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_5878503586",
@@ -741,7 +835,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_5878547585",
@@ -767,7 +864,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_5878572885",
@@ -793,7 +894,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_6408255389",
@@ -819,7 +924,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_6678039485",
@@ -849,7 +958,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_8121843217",
@@ -880,7 +993,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_node_9047331879",
@@ -915,7 +1032,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_relation_20321069",
@@ -942,7 +1063,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_relation_20321070",
@@ -969,7 +1093,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_relation_20321071",
@@ -996,7 +1123,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1196402246",
@@ -1030,7 +1160,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1424109192",
@@ -1060,7 +1194,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1424558972",
@@ -1089,7 +1227,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1456208624",
@@ -1118,36 +1260,45 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1460763574",
-    "name": "25-ти летие Независимости",
+    "name": "Монумент 25-летия Независимости",
     "lat": 51.0934524,
     "lon": 71.4175645,
     "category": "attraction",
-    "description": "Достопримечательность. Название в OpenStreetMap: 25-ти летие Независимости.",
+    "description": "Монумент к 25-летию Независимости Республики Казахстан, расположенный в парковой зоне Аллеи мира и согласия.",
     "tags": {
-      "height": "46",
-      "name": "Тәуелсіздіктің 25 жылдығы",
-      "name:en": "25th Anniversary of Independence",
-      "name:ru": "25-ти летие Независимости",
-      "tourism": "attraction"
+      "name": "Alem.ai (EXPO Сфера)",
+      "name:ru": "Сфера Alem.ai (Центр ИИ)",
+      "name:kk": "Alem.ai сферасы (ЖИ орталығы)",
+      "name:en": "Alem.ai AI Center (EXPO Sphere)",
+      "tourism": "attraction",
+      "amenity": "ai_center"
     },
     "opening_hours": null,
     "phone": null,
-    "website": null,
+    "website": "https://alem.ai",
     "rating": null,
     "source": "OpenStreetMap",
     "source_url": "https://www.openstreetmap.org/way/1460763574",
     "collected_at": "2026-10-19T17:00:13+00:00",
-    "coordinate_kind": "bounding_box_center",
+    "coordinate_kind": "main_entrance",
     "confirmed_features": {
-      "wifi": null,
-      "socket": null,
-      "wheelchair": null,
-      "quiet": null
-    }
+      "wifi": true,
+      "socket": true,
+      "wheelchair": true,
+      "quiet": false
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1467797207",
@@ -1173,7 +1324,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1470723968",
@@ -1200,7 +1355,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_1490038325",
@@ -1227,7 +1386,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_243041606",
@@ -1256,7 +1418,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_499328514",
@@ -1288,7 +1454,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_549307755",
@@ -1322,7 +1492,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_734476104",
@@ -1349,7 +1522,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_734514013",
@@ -1377,7 +1553,11 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_915690898",
@@ -1405,7 +1585,10 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
   },
   {
     "poi_id": "osm_way_963855443",
@@ -1437,6 +1620,199 @@
       "socket": null,
       "wheelchair": null,
       "quiet": null
-    }
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
+  },
+  {
+    "poi_id": "osm_way_aitu_c1",
+    "name": "Astana IT University (AITU)",
+    "lat": 51.0906792,
+    "lon": 71.4181709,
+    "category": "attraction",
+    "description": "Ведущий технологический университет Казахстана. Корпус EXPO C1.1, лаборатории искусственного интеллекта, робототехники и коворкинги.",
+    "tags": {
+      "name": "Astana IT University",
+      "name:ru": "Astana IT University (AITU)",
+      "name:kk": "Astana IT University",
+      "name:en": "Astana IT University",
+      "amenity": "university"
+    },
+    "opening_hours": "Mo-Sa 08:00-20:00",
+    "phone": "+7 7172 645 710",
+    "website": "https://astanait.edu.kz",
+    "source": "OpenStreetMap",
+    "source_url": "https://astanait.edu.kz",
+    "collected_at": "2026-10-20T13:30:00+00:00",
+    "coordinate_kind": "entrance_c1",
+    "confirmed_features": {
+      "wifi": true,
+      "socket": true,
+      "wheelchair": true,
+      "quiet": true
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80"
+    ]
+  },
+  {
+    "poi_id": "osm_way_astana_hub",
+    "name": "Astana Hub (Технопарк)",
+    "lat": 51.0898512,
+    "lon": 71.4158411,
+    "category": "attraction",
+    "description": "Крупнейший международный технопарк IT-стартапов в Центральной Азии. Павильон EXPO C4.6, открытые лектории и инновационная экосистема.",
+    "tags": {
+      "name": "Astana Hub",
+      "name:ru": "Astana Hub (Технопарк)",
+      "name:kk": "Astana Hub",
+      "name:en": "Astana Hub"
+    },
+    "opening_hours": "Mo-Su 09:00-21:00",
+    "phone": "+7 7172 735 080",
+    "website": "https://astanahub.com",
+    "source": "OpenStreetMap",
+    "source_url": "https://astanahub.com",
+    "collected_at": "2026-10-20T13:30:00+00:00",
+    "coordinate_kind": "entrance_c4",
+    "confirmed_features": {
+      "wifi": true,
+      "socket": true,
+      "wheelchair": true,
+      "quiet": false
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80"
+    ]
+  },
+  {
+    "poi_id": "osm_way_aifc",
+    "name": "МФЦА / AIFC (Павильон C3.3)",
+    "lat": 51.0880703,
+    "lon": 71.4168534,
+    "category": "attraction",
+    "description": "Международный финансовый центр «Астана» (AIFC). Ультрасовременный финансово-правовой хаб EXPO: Администрация МФЦА, Суд МФЦА, Международный арбитражный центр (IAC) и регулятор AFSA.",
+    "tags": {
+      "name": "AIFC",
+      "name:ru": "МФЦА / AIFC",
+      "name:kk": "АХҚО / AIFC",
+      "name:en": "Astana International Financial Centre",
+      "addr:street": "Мәңгілік Ел даңғылы",
+      "addr:housenumber": "55/18 (Павильон C3.3)"
+    },
+    "opening_hours": "Mo-Fr 09:00-18:00",
+    "phone": "+7 7172 613 779",
+    "website": "https://aifc.kz",
+    "source": "OpenStreetMap",
+    "source_url": "https://aifc.kz",
+    "collected_at": "2026-10-20T14:50:00+00:00",
+    "coordinate_kind": "entrance_c3",
+    "confirmed_features": {
+      "wifi": true,
+      "socket": true,
+      "wheelchair": true,
+      "quiet": true
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+    ]
+  },
+  {
+    "poi_id": "osm_node_chaplin_mega",
+    "name": "Chaplin Cinemas (Mega Silk Way)",
+    "lat": 51.08912,
+    "lon": 71.40695,
+    "category": "attraction",
+    "description": "Крупнейший кинотеатр в столице: 11 залов, звук Dolby Atmos и залы повышенного комфорта на 3 этаже ТРЦ Mega Silk Way.",
+    "tags": {
+      "name": "Chaplin Cinemas Mega Silk Way",
+      "name:ru": "Chaplin Cinemas (Mega Silk Way)",
+      "amenity": "cinema"
+    },
+    "opening_hours": "Mo-Su 10:00-02:00",
+    "website": "https://chaplin.kz",
+    "source": "OpenStreetMap",
+    "source_url": "https://chaplin.kz",
+    "collected_at": "2026-10-20T13:30:00+00:00",
+    "coordinate_kind": "point",
+    "confirmed_features": {
+      "wifi": true,
+      "socket": true,
+      "wheelchair": true,
+      "quiet": false
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=800&q=80"
+    ]
+  },
+  {
+    "poi_id": "osm_node_marwin_mega",
+    "name": "Marwin / Меломан (Mega Silk Way)",
+    "lat": 51.08885,
+    "lon": 71.40742,
+    "category": "attraction",
+    "description": "Крупнейший флагманский магазин книг, винила, настольных игр и сувениров на 2 этаже Mega Silk Way.",
+    "tags": {
+      "name": "Marwin Mega Silk Way",
+      "name:ru": "Marwin / Меломан (Mega Silk Way)",
+      "shop": "books"
+    },
+    "opening_hours": "Mo-Su 10:00-22:00",
+    "website": "https://marwin.kz",
+    "source": "OpenStreetMap",
+    "source_url": "https://marwin.kz",
+    "collected_at": "2026-10-20T13:30:00+00:00",
+    "coordinate_kind": "point",
+    "confirmed_features": {
+      "wifi": true,
+      "socket": false,
+      "wheelchair": true,
+      "quiet": true
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=800&q=80"
+    ]
+  },
+  {
+    "poi_id": "osm_way_454857501",
+    "name": "Alem.ai (Международный центр ИИ)",
+    "lat": 51.0892381,
+    "lon": 71.4162196,
+    "category": "attraction",
+    "description": "Международный центр искусственного интеллекта Alem.ai (павильон EXPO В1, знаменитая сфера). Главный кластер развития ИИ, вычислительных мощностей и передовых лабораторий Казахстана.",
+    "tags": {
+      "addr:city": "Астана",
+      "addr:housenumber": "В1",
+      "addr:street": "Мәңгілік Ел даңғылы",
+      "building": "office",
+      "name": "Alem.ai",
+      "name:kk": "Alem.ai Халықаралық Жасанды Интеллект Орталығы",
+      "name:ru": "Alem.ai Международный центр искусственного интеллекта",
+      "website": "https://alem.ai/kk/",
+      "tourism": "attraction",
+      "amenity": "ai_center"
+    },
+    "opening_hours": "Mo-Su 09:00-21:00",
+    "phone": "+7 7172 735 080",
+    "website": "https://alem.ai/kk/",
+    "source": "OpenStreetMap",
+    "source_url": "https://www.openstreetmap.org/way/454857501",
+    "collected_at": "2026-10-20T13:45:00+00:00",
+    "coordinate_kind": "building_entrance",
+    "confirmed_features": {
+      "wifi": true,
+      "socket": true,
+      "wheelchair": true,
+      "quiet": false
+    },
+    "photos": [
+      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80"
+    ]
   }
 ]

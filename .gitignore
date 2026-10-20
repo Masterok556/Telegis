@@ -9,3 +9,6 @@ __pycache__/
 *.log
 data/.collect.lock
 data/snapshots/.tmp-*/
+.DS_Store
+*.png
+!static/images/*.png

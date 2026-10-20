@@ -1,0 +1,40 @@
+{
+  "locations": [
+    {
+      "id": "loc_mega_silk_way",
+      "name": "Mega Silk Way (главный вход)",
+      "lat": 51.0890897,
+      "lon": 71.4073303
+    },
+    {
+      "id": "loc_alem_ai",
+      "name": "Alem.ai (Центр ИИ, павильон B1)",
+      "lat": 51.0892381,
+      "lon": 71.4162196
+    },
+    {
+      "id": "loc_aitu",
+      "name": "Astana IT University (AITU, корпус C1.1)",
+      "lat": 51.0906792,
+      "lon": 71.4181709
+    },
+    {
+      "id": "loc_aifc",
+      "name": "МФЦА / AIFC (Павильон C3.3, Мәңгілік Ел 55/18)",
+      "lat": 51.0880703,
+      "lon": 71.4168534
+    },
+    {
+      "id": "loc_astana_hub",
+      "name": "Astana Hub (Технопарк, блок C4.6)",
+      "lat": 51.0883541,
+      "lon": 71.4145878
+    },
+    {
+      "id": "loc_botanical",
+      "name": "Ботанический сад Астаны",
+      "lat": 51.1061652,
+      "lon": 71.4165705
+    }
+  ]
+}
