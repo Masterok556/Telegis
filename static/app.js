@@ -252,17 +252,6 @@
   let cachedSystemMeta = null;
   let systemStatusLoaded = false;
 
-  // Hackathon Quick Modals & Climate Shield
-  const openScenariosBtn = document.getElementById('openScenariosBtn');
-  const scenariosModal = document.getElementById('scenariosModal');
-  const scenariosModalCloseBtn = document.getElementById('scenariosModalCloseBtn');
-  const scenariosModalBackdrop = document.getElementById('scenariosModalBackdrop');
-
-  const openJuryBtn = document.getElementById('openJuryBtn');
-  const juryModal = document.getElementById('juryModal');
-  const juryModalCloseBtn = document.getElementById('juryModalCloseBtn');
-  const juryModalBackdrop = document.getElementById('juryModalBackdrop');
-
   const climateShieldCheck = document.getElementById('climateShieldCheck');
 
   // Mode Tabs
@@ -769,23 +758,34 @@
       id: 'bld_mega',
       poi_id: 'osm_way_499328514',
       name: 'Mega Silk Way',
-      subtitle: 'ТРЦ & Отель Hilton',
+      subtitle: 'ТРЦ & Кинотеатр',
       category: 'mall',
       icon: '🛍️',
       lat: 51.0890897,
       lon: 71.4073303,
-      description: 'Крупнейший торгово-развлекательный центр в районе EXPO с фудкортом, кинотеатром и прямым входом в отель Hilton Astana.'
+      description: 'Крупнейший торгово-развлекательный центр в районе EXPO с фудкортом, магазинами и кинотеатром.'
     },
     {
-      id: 'bld_alem',
-      poi_id: 'loc_alem_ai',
-      name: 'Alem.ai',
-      subtitle: 'Центр искусственного интеллекта',
+      id: 'bld_hilton',
+      poi_id: 'osm_node_5199672688',
+      name: 'Hilton Astana',
+      subtitle: 'Отель & Бизнес',
       category: 'attraction',
-      icon: '💡',
-      lat: 51.0892381,
-      lon: 71.4162196,
-      description: 'Казахстанский научно-образовательный центр искусственного интеллекта (Павильон B1 на территории EXPO).'
+      icon: '🏨',
+      lat: 51.0906596,
+      lon: 71.4106232,
+      description: 'Современный пятизвездочный отель и бизнес-комплекс на территории делового района EXPO.'
+    },
+    {
+      id: 'bld_congress',
+      poi_id: 'osm_node_5033100222',
+      name: 'Конгресс-центр EXPO',
+      subtitle: 'Международный конгресс-холл',
+      category: 'attraction',
+      icon: '🏛️',
+      lat: 51.0924049,
+      lon: 71.4113474,
+      description: 'Главная конгрессная и концертная арена EXPO для масштабных международных форумов и мероприятий.'
     },
     {
       id: 'bld_astana_hub',
@@ -797,6 +797,17 @@
       lat: 51.0883541,
       lon: 71.4145878,
       description: 'Крупнейший технологический хаб Центральной Азии (Павильон C4.6 на территории EXPO).'
+    },
+    {
+      id: 'bld_alem',
+      poi_id: 'loc_alem_ai',
+      name: 'Alem.ai',
+      subtitle: 'Центр искусственного интеллекта',
+      category: 'attraction',
+      icon: '💡',
+      lat: 51.0892381,
+      lon: 71.4162196,
+      description: 'Казахстанский научно-образовательный центр искусственного интеллекта (Павильон B1 на территории EXPO).'
     },
     {
       id: 'bld_aifc',
@@ -816,20 +827,9 @@
       subtitle: 'Университет AITU',
       category: 'attraction',
       icon: '🎓',
-      lat: 51.0906792,
-      lon: 71.4181709,
-      description: 'Ведущий технологический университет Казахстана (Павильон C1.1 на территории EXPO).'
-    },
-    {
-      id: 'bld_nur_alem',
-      poi_id: 'loc_nur_alem',
-      name: 'Сфера «Нұр Әлем»',
-      subtitle: 'Музей энергии будущего',
-      category: 'museum',
-      icon: '🌐',
-      lat: 51.0905556,
-      lon: 71.4183333,
-      description: 'Уникальное сферическое здание диаметром 30 метров, архитектурная доминанта EXPO-2017 и музей будущего.'
+      lat: 51.0908607,
+      lon: 71.4184149,
+      description: 'Ведущий технологический университет Казахстана (Павильон C1 на территории EXPO).'
     },
     {
       id: 'bld_botanic',
@@ -1376,42 +1376,11 @@
       modalBackdrop.addEventListener('click', closeTelemetryModal);
     }
 
-    // 5 Scenarios Modal
-    if (openScenariosBtn) {
-      openScenariosBtn.addEventListener('click', openScenariosModal);
-    }
-    if (scenariosModalCloseBtn) {
-      scenariosModalCloseBtn.addEventListener('click', closeScenariosModal);
-    }
-    if (scenariosModalBackdrop) {
-      scenariosModalBackdrop.addEventListener('click', closeScenariosModal);
-    }
-
-    // Jury Criteria Modal
-    if (openJuryBtn) {
-      openJuryBtn.addEventListener('click', openJuryModal);
-    }
-    if (juryModalCloseBtn) {
-      juryModalCloseBtn.addEventListener('click', closeJuryModal);
-    }
-    if (juryModalBackdrop) {
-      juryModalBackdrop.addEventListener('click', closeJuryModal);
-    }
-
-    // 1-Click Scenario Runner Buttons
-    const scenarioRunButtons = document.querySelectorAll('.scenario-run-btn');
-    scenarioRunButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const num = parseInt(btn.getAttribute('data-run-scenario'), 10);
-        if (Number.isFinite(num)) runHackathonScenario(num);
-      });
-    });
-
     // Climate Shield Checkbox
     if (climateShieldCheck) {
       climateShieldCheck.addEventListener('change', () => {
         if (climateShieldCheck.checked) {
-          showMapBackgroundStatus('💨 Климатический щит: приоритет крытым хабам (Mega Silk Way, Сфера Нұр Әлем, коворкинги).');
+          showMapBackgroundStatus('💨 Климатический щит: приоритет крытым хабам (Mega Silk Way, коворкинги EXPO).');
           if (locationSelect) {
             const megaOpt = Array.from(locationSelect.options).find(o => o.value.includes('Mega') || o.text.includes('Mega'));
             if (megaOpt) {
@@ -1544,8 +1513,6 @@
         if (e.key === 'Escape') {
           closePoiDrawer();
           closeTelemetryModal();
-          closeScenariosModal();
-          closeJuryModal();
         }
       });
     }
@@ -1786,73 +1753,6 @@
 
   function closeTelemetryModal() {
     if (telemetryModal) telemetryModal.classList.add('hidden');
-  }
-
-  function openScenariosModal() {
-    if (scenariosModal) scenariosModal.classList.remove('hidden');
-  }
-
-  function closeScenariosModal() {
-    if (scenariosModal) scenariosModal.classList.add('hidden');
-  }
-
-  function openJuryModal() {
-    if (juryModal) juryModal.classList.remove('hidden');
-  }
-
-  function closeJuryModal() {
-    if (juryModal) juryModal.classList.add('hidden');
-  }
-
-  function runHackathonScenario(num) {
-    closeScenariosModal();
-    setAppMode('places');
-
-    // 1. Ensure Mega Silk Way is selected
-    if (locationSelect) {
-      const megaOpt = Array.from(locationSelect.options).find(o => o.value.includes('Mega') || o.text.includes('Mega'));
-      if (megaOpt) {
-        locationSelect.value = megaOpt.value;
-        locationSelect.dispatchEvent(new Event('change'));
-      }
-    }
-
-    if (num === 1) {
-      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
-      if (radioWalk) radioWalk.checked = true;
-      selectMinutes(60);
-      if (queryInput) queryInput.value = 'Прогулка возле Mega Silk Way';
-    } else if (num === 2) {
-      const radioCafe = document.querySelector('input[name="category"][value="cafe"]');
-      if (radioCafe) radioCafe.checked = true;
-      selectMinutes(30);
-      if (queryInput) queryInput.value = 'Кофе и розетка';
-    } else if (num === 3) {
-      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
-      if (radioWalk) radioWalk.checked = true;
-      selectMinutes(60);
-      if (queryInput) queryInput.value = 'С ребёнком';
-    } else if (num === 4) {
-      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
-      if (radioWalk) radioWalk.checked = true;
-      selectMinutes(120);
-      if (queryInput) queryInput.value = 'Я турист';
-    } else if (num === 5) {
-      const radioWalk = document.querySelector('input[name="category"][value="walk"]');
-      if (radioWalk) radioWalk.checked = true;
-      selectMinutes(60);
-      if (queryInput) queryInput.value = 'Ночью';
-    }
-
-    if (submitBtn) {
-      submitBtn.click();
-    } else if (recommendForm) {
-      if (typeof recommendForm.requestSubmit === 'function') {
-        recommendForm.requestSubmit();
-      } else {
-        recommendForm.dispatchEvent(new Event('submit', { cancelable: true }));
-      }
-    }
   }
 
   // --- GPS Geolocation Handler ---
