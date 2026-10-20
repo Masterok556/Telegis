@@ -17,6 +17,7 @@ from app.generation import Generator
 from app.models import LocationsResponse, RecommendRequest, RecommendResponse, Recommendation, UsedContext
 from app.retrieval import retrieve
 from app.facts import facts_for, warnings_for, excluded_from_routes
+from app.scenarios import scenario_warnings
 from app.itinerary import ItineraryRequest, ItineraryResponse, build_itinerary
 from app.walking import WalkingNetwork
 from app.catalog import CatalogResponse, PlaceInfoRequest, PlaceInfoResponse, place_card, place_info
@@ -191,6 +192,7 @@ def create_app(settings: Settings | None = None, generator: Generator | None = N
             if (datetime.now(timezone.utc) - collected).total_seconds() > 7 * 86400:
                 warnings.append("Датасет собран более недели назад; сведения могли измениться.")
             warnings.extend(warnings_for(poi))
+            warnings.extend(scenario_warnings(payload.query))
             recommendations.append(Recommendation(
                 poi_id=poi.poi_id, name=poi.name, lat=poi.lat, lon=poi.lon, category=poi.category,
                 distance_m=candidate.distance, walk_minutes_estimate=candidate.walk_minutes,

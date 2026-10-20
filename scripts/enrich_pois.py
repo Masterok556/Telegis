@@ -1,4 +1,4 @@
-"""Fetch three reviewed primary sources and publish attributable POI facts.
+"""Fetch reviewed primary sources and publish attributable POI facts.
 
 No arbitrary URL arguments, user locations, model extraction or guessed facts.
 Every paraphrase requires exact supporting phrases in the live page; if a page
@@ -70,6 +70,26 @@ SOURCES = (
         ],
         "warnings": ["Официальная публикация от 22.05.2026 описывает NU Park как будущий проект. Подтверждения ввода всех зон нет; точка исключена из прогулочных маршрутов."],
         "warning_needles": [], "exclude_from_routes": True,
+    },
+    {
+        "key": "mangilik_el", "poi_id": "osm_way_549307755", "name": "Триумфальная арка Мангилик Ел",
+        "lat": 51.1043034, "lon": 71.4300836,
+        "url": "https://visitastana.kz/ru/about-city/what-to-see/triumfalnaya-arka-m-gilik-el9679/",
+        "published_at": None,
+        "identity_basis": "Reviewed unique Mangilik El Triumphal Arch; matching OSM name, monument type and coordinates.",
+        "facts": [
+            {"id": "independence_landmark", "needles": ["2011", "20-летия Независимости"],
+             "text": "Visit Astana описывает арку как памятник 20-летию независимости Казахстана, построенный в 2011 году."},
+            {"id": "national_reliefs", "needles": ["национальными орнаментами", "барельефы"],
+             "text": "На странице Visit Astana отмечены национальные орнаменты и барельефы на стенах арки: детали для осмотра снаружи."},
+            {"id": "hours_24_7", "needles": ["График работы:", "Круглосуточно"],
+             "text": "Visit Astana указывает для арки круглосуточный график. Это сведения источника, а не подтверждение текущего доступа."},
+        ],
+        "warnings": [
+            "Круглосуточная отметка относится к достопримечательности; доступ внутрь и на смотровую площадку отдельно не подтверждён.",
+            "Освещение, безопасность ночного подхода и временные ограничения не проверены. Оставайтесь на доступных пешеходных дорожках."
+        ],
+        "warning_needles": [],
     },
 )
 

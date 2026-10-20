@@ -16,7 +16,8 @@ from urllib.parse import urlsplit
 from app.models import POI
 
 DEFAULT_ENRICHMENT_DIR = Path(__file__).resolve().parents[1] / "data" / "enrichment"
-OFFICIAL_HOSTS = {"nu.edu.kz", "fund.nu.edu.kz", "www.astanabotsad.kz", "astanabotsad.kz"}
+OFFICIAL_HOSTS = {"nu.edu.kz", "fund.nu.edu.kz", "www.astanabotsad.kz", "astanabotsad.kz",
+                  "visitastana.kz", "www.visitastana.kz"}
 # Reviewed safety hold: OSM's park category conflicts with a dated primary-source
 # future-project description. Removing enrichment must not turn that into an open
 # park again. Remove this hold only after a new explicit opening/access review.

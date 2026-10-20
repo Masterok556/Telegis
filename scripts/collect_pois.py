@@ -51,6 +51,8 @@ PUBLIC_TAGS = {
     "garden:type", "alt_name", "official_name", "indoor_seating", "takeaway",
     "internet_access:fee", "smoking", "toilets", "stroller", "wikidata", "wikipedia",
     "brand", "operator", "material", "diet:vegetarian", "diet:vegan", "drink:coffee",
+    "lit", "surface", "playground", "playground:theme", "min_age", "max_age",
+    "minage", "maxage", "access:conditional",
 }
 
 
@@ -108,11 +110,15 @@ def normalize(raw: dict, collected_at: str) -> tuple[list[dict], list[dict], dic
         category = category_for(tags)
         name = tags.get("name:ru") or tags.get("name") or tags.get("name:en") or tags.get("name:kk")
         coord = coordinates(element)
-        if not category or not name or not coord:
+        if not category or not coord:
             skipped["missing_name_category_or_coordinates"] += 1
             continue
-        if tags.get("access") in {"private", "no", "customers_only"}:
+        if tags.get("access") in {"private", "no", "customers", "customers_only", "permit", "members"}:
             skipped["restricted_access"] += 1
+            continue
+        if category == "playground" and tags.get("access:conditional"):
+            # Conditional access cannot be verified without its timetable/context.
+            skipped["conditional_playground_access"] += 1
             continue
         if distance_m(*CENTER, *coord) > RADIUS_M:
             skipped["center_outside_collection_extent"] += 1
@@ -121,6 +127,17 @@ def normalize(raw: dict, collected_at: str) -> tuple[list[dict], list[dict], dic
         if osm_type not in {"node", "way", "relation"} or not isinstance(osm_id, int):
             skipped["invalid_osm_id"] += 1
             continue
+        descriptive_name = not bool(name)
+        if descriptive_name:
+            if category != "playground":
+                skipped["missing_name_category_or_coordinates"] += 1
+                continue
+            if tags.get("indoor") == "yes":
+                # An unnamed indoor polygon is insufficient to identify an
+                # accessible public attraction or an operator/entrance.
+                skipped["unnamed_indoor_playground"] += 1
+                continue
+            name = f"Детская площадка без названия · OSM {osm_type} {osm_id}"
         poi_id = f"osm_{osm_type}_{osm_id}"
         if poi_id in seen_ids:
             skipped["duplicate_id"] += 1
@@ -130,18 +147,26 @@ def normalize(raw: dict, collected_at: str) -> tuple[list[dict], list[dict], dic
         canonical_name = re.sub(r"[^\w]", "", str(name).casefold())
         duplicate = next((p for p in pois
             if p["category"] == category
-            and (re.sub(r"[^\w]", "", p["name"].casefold()) == canonical_name or category == "mall")
+            and (re.sub(r"[^\w]", "", p["name"].casefold()) == canonical_name or category == "mall"
+                 or (descriptive_name and p.get("name_kind") == "descriptive"))
             and p["tags"].get("level") == tags.get("level")
             and distance_m(p["lat"], p["lon"], *coord) < 20), None)
         if duplicate:
             skipped["duplicate_name_nearby"] += 1
             continue
         source_url = f"https://www.openstreetmap.org/{osm_type}/{osm_id}"
-        description = f"{CATEGORY_LABELS[category]}. Название в OpenStreetMap: {name}."
+        description = (
+            "В OpenStreetMap обозначена детская площадка без собственного названия. "
+            "Для ориентира показано описательное имя и идентификатор OSM; это не официальное название."
+            if descriptive_name else f"{CATEGORY_LABELS[category]}. Название в OpenStreetMap: {name}."
+        )
+        if category == "playground":
+            description += " Текущий доступ, оборудование, состояние и подходящий возраст не подтверждены."
         if tags.get("cuisine"):
             description += f" Кухня по данным OSM: {tags['cuisine']}."
         poi = {
             "poi_id": poi_id, "name": str(name), "lat": coord[0], "lon": coord[1],
+            "name_kind": "descriptive" if descriptive_name else "osm",
             "category": category, "description": description,
             "tags": {k: str(v) for k, v in tags.items() if k in PUBLIC_TAGS},
             "opening_hours": tags.get("opening_hours") or None,
@@ -167,7 +192,7 @@ def normalize(raw: dict, collected_at: str) -> tuple[list[dict], list[dict], dic
             anchors.append({"id": poi_id, "name": str(name), "lat": coord[0], "lon": coord[1],
                             "source_url": source_url, "coordinate_kind": poi["coordinate_kind"]})
     if not pois:
-        raise ValueError("После проверки не осталось подходящих именованных POI")
+        raise ValueError("После проверки не осталось подходящих POI")
     if len(anchors) < 2:
         # Supplement with an actual nearby park/landmark instead of inventing EXPO coordinates.
         chosen = sorted(pois, key=lambda p: (p["category"] not in {"park", "garden", "attraction", "museum"}, distance_m(*CENTER, p["lat"], p["lon"])))
@@ -224,6 +249,8 @@ def publish(raw: dict, output: Path, endpoint: str, query: str, collected_at: st
         "locations_sha256": hashlib.sha256((snapshot / "locations.json").read_bytes()).hexdigest(),
         "poi_count": len(pois), "categories": dict(Counter(p["category"] for p in pois)),
         "skipped": skipped, "locations_count": len(locations),
+        "normalization_version": 2,
+        "descriptive_name_count": sum(p["name_kind"] == "descriptive" for p in pois),
     }
     write_json(snapshot / "manifest.json", manifest)
     # A complete JSON export can still contain invalid types or inconsistent metadata.

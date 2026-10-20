@@ -19,6 +19,7 @@ from app.facts import excluded_from_routes, facts_for, warnings_for
 from app.generation import activities_for
 from app.geo import distance_m
 from app.models import Evidence, POI
+from app.scenarios import scenario_allows, scenario_rejection, scenario_warnings
 from app.retrieval import (
     Candidate, CATEGORY_PATTERNS, FEATURE_LABELS, LABELS, VISIT_MINUTES, category_constraints,
     explicit_limits, lexical_scores, required_features,
@@ -135,11 +136,7 @@ def _unsupported(q: str, payload: ItineraryRequest, dataset: Dataset) -> str:
     coverage = dataset.manifest["coverage"]
     if distance_m(payload.lat, payload.lon, coverage["lat"], coverage["lon"]) > coverage["radius_m"]:
         return "Пока доступны только маршруты в районе EXPO / Mega Silk Way. Выберите стартовую точку в зоне покрытия."
-    if re.search(r"\b(?:открыт\w*\s+сейчас|сейчас\s+открыт\w*|ноч\w*|круглосуточ\w*|open\s+now|вылет\w*|аэропорт\w*)\b", q):
-        return "Маршрут не подтверждает доступность в реальном времени, ночной доступ и время поездки в аэропорт. Уберите это условие для обычной прогулки."
-    if re.search(r"\b(?:интерактив\w*|бесплат\w*|деш[её]в\w*|бюджетн\w*|бюджет\s+(?:до\s+)?\d+(?!\d)(?!\s*(?:минут\w*|мин\b|час\w*|ч\b))|\d+\s*(?:₸|тенге|тг\b)|под\s+крышей|в\s+помещении)", q):
-        return "В данных недостаточно сведений для подтверждения дополнительного условия. Оно не будет молча исключено из маршрута."
-    return ""
+    return scenario_rejection(q)
 
 
 def _candidate_pool(payload: ItineraryRequest, dataset: Dataset, radius: float,
@@ -164,12 +161,11 @@ def _candidate_pool(payload: ItineraryRequest, dataset: Dataset, radius: float,
     allowed = set(VISIT_MINUTES) - {"cafe"}
     if walk_interests:
         allowed &= walk_interests
-    elif re.search(r"\b(?:реб[её]н\w*|с\s+детьми|children|child)\b", q):
-        allowed &= {"park", "garden", "playground"}
     if payload.include_coffee:
         allowed.add("cafe")
     allowed -= excluded
     eligible = [p for p in dataset.pois if p.category in allowed and not excluded_from_routes(p)
+                and scenario_allows(p, q)
                 and all(p.confirmed_features.get(f) is True for f in features)
                 and distance_m(payload.lat, payload.lon, p.lat, p.lon) <= radius]
     scores = lexical_scores(payload.query, eligible)
@@ -232,7 +228,8 @@ def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
 
     def empty(status: str, message: str, suggested: int | None = None) -> ItineraryResponse:
         return ItineraryResponse(status=status, message=message, used_context=context,
-                                 reserve_minutes=reserve, suggested_minimum_minutes=suggested)
+                                 reserve_minutes=reserve, suggested_minimum_minutes=suggested,
+                                 warnings=scenario_warnings(q))
 
     blocked = _unsupported(q, payload, dataset)
     if blocked:
@@ -307,6 +304,7 @@ def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
         if poi.coordinate_kind != "point":
             warnings.append("Точка обозначает центр объекта, а не проверенный вход.")
         warnings.extend(warnings_for(poi))
+        warnings.extend(scenario_warnings(q))
         facts = facts_for(poi)
         why = " ".join(f["text"] for f in facts[:2])
         if not why:
@@ -333,6 +331,7 @@ def build_itinerary(payload: ItineraryRequest, dataset: Dataset,
     warnings = ["Время приблизительное: скорость 70 м/мин, длительность посещений по категории; запас не гарантирует возвращение к точному сроку.",
                 "Дорожки взяты из OSM; временные перекрытия, погода, состояние покрытия и доступность входов не проверены.",
                 "Маршрут и идеи занятий рассчитаны кодом; сведения о местах взяты из OSM и указанных официальных источников."]
+    warnings.extend(scenario_warnings(q))
     if any(item.connector_m for item in result_legs):
         warnings.append("Короткие соединения координат с сетью приблизительны и могут пересекать препятствия; проверяйте подходы на месте. Их длина включена во время.")
     metadata = getattr(network, "metadata", {})

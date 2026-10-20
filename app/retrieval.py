@@ -8,6 +8,7 @@ from app.data_store import Dataset
 from app.geo import distance_m
 from app.models import POI, RecommendRequest
 from app.facts import facts_for, excluded_from_routes
+from app.scenarios import scenario_allows, scenario_flags, scenario_rejection
 
 VISIT_MINUTES = {
     "cafe": 15, "park": 20, "garden": 15, "playground": 20,
@@ -60,6 +61,7 @@ class Candidate:
     route_distance_m: int | None = None
     return_route_distance_m: int | None = None
     route_connector_m: int | None = None
+    scenarios: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -117,6 +119,8 @@ def category_constraints(query: str) -> tuple[set[str], set[str]]:
 def explicit_limits(query: str, available_minutes: int) -> tuple[int, float]:
     """A few unambiguous numeric limits; never increase the form's time allowance."""
     minutes, radius = available_minutes, 2500.0
+    for match in re.finditer(r"\b(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?\s*(minutes?|mins?|hours?|hrs?)\b", query):
+        minutes = min(minutes, int(match[2] or match[1]) * (60 if match[3].startswith("h") else 1))
     for match in re.finditer(
         r"\b(?:на|за|есть|осталось|всего|меня|максимум|бюджет(?:\s+времени)?|не\s+(?:более|больше)|до|уложиться\s+в)\s+"
         r"(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?\s*(минут\w*|мин\b|час\w*|ч\b)", query
@@ -149,6 +153,9 @@ def lexical_scores(query: str, pois: list[POI]) -> dict[str, float]:
                 continue
             idf = log(1 + (len(documents) - frequency[term] + 0.5) / (frequency[term] + 0.5))
             score += idf * tf * 2.5 / (tf + 1.5 * (0.25 + 0.75 * sum(doc.values()) / average))
+        if "tourist" in scenario_flags(query):
+            score += 2 * int(poi.category in {"museum", "gallery", "attraction", "viewpoint", "monument", "memorial", "artwork"})
+            score += 2 * int(any(f["kind"] == "official" for f in facts_for(poi)))
         scores[poi.poi_id] = score
     return scores
 
@@ -165,10 +172,9 @@ def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> Retri
     coverage = dataset.manifest["coverage"]
     if distance_m(request.lat, request.lon, coverage["lat"], coverage["lon"]) > coverage["radius_m"]:
         return result((), "Пока доступны только места в районе EXPO / Mega Silk Way. Выберите стартовую точку в зоне покрытия.")
-    if re.search(r"\b(?:открыт\w*\s+сейчас|сейчас\s+открыт\w*|ноч\w*|круглосуточ\w*|open\s+now|вылет\w*|аэропорт\w*)\b", q):
-        return result((), "Этот прототип не проверяет доступность в реальном времени и не рассчитывает поездки в аэропорт. Выберите прогулку или кофе без такого условия.")
-    if re.search(r"\b(?:интерактив\w*|бесплат\w*|деш[её]в\w*|бюджетн\w*|бюджет\s+(?:до\s+)?\d+(?!\d)(?!\s*(?:минут\w*|мин\b|час\w*|ч\b))|\d+\s*(?:₸|тенге|тг\b)|под\s+крышей|в\s+помещении)", q):
-        return result((), "В собранных данных недостаточно сведений, чтобы подтвердить указанное дополнительное условие. Уточните запрос или уберите это условие.")
+    blocked = scenario_rejection(q)
+    if blocked:
+        return result((), blocked)
     allowed = {"cafe"} if request.category == "cafe" else set(VISIT_MINUTES) - {"cafe"}
     # Explicit narrower interests must not be silently replaced with unrelated POI.
     if category_interests:
@@ -179,7 +185,7 @@ def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> Retri
         # Accompanying a child does not override an explicit museum or cafe interest.
         allowed &= {"park", "garden", "playground"}
     allowed -= excluded
-    eligible = [p for p in dataset.pois if p.category in allowed and not excluded_from_routes(p)
+    eligible = [p for p in dataset.pois if p.category in allowed and not excluded_from_routes(p) and scenario_allows(p, q)
                 and all(p.confirmed_features.get(f) is True for f in required)]
     if not eligible:
         detail = " Не подтверждены условия: " + ", ".join(FEATURE_LABELS[f] for f in required) + "." if required else ""
@@ -210,10 +216,12 @@ def retrieve(request: RecommendRequest, dataset: Dataset, network=None) -> Retri
         if total > available_minutes:
             continue
         score = 0.65 * (scores[poi.poi_id] / max_score) + 0.35 * (1 - meters / 2500)
+        if "family" in scenario_flags(q) and poi.category == "playground":
+            score += 0.4
         candidates.append(Candidate(poi, meters, walk, visit, total, score,
                                     routed.distance_m if routed else None,
                                     returned.distance_m if returned else None,
-                                    routed.connector_m + returned.connector_m if routed else None))
+                                    routed.connector_m + returned.connector_m if routed else None, scenario_flags(q)))
     candidates.sort(key=lambda c: (-c.score, c.distance, c.poi.poi_id))
     if not candidates:
         return result((), "Подходящих мест с посещением и возвращением в указанные ограничения времени и расстояния не найдено. Попробуйте увеличить время или радиус." +

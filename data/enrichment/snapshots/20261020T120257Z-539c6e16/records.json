@@ -1,0 +1,142 @@
+{
+  "osm_way_1470723968": {
+    "identity": {
+      "name": "Японский сад",
+      "lat": 51.0921362,
+      "lon": 71.3994992,
+      "source_url": "https://www.openstreetmap.org/way/1470723968",
+      "match_basis": "Reviewed unique Japanese garden at NU campus; OSM name and exact reviewed coordinates."
+    },
+    "source_url": "https://nu.edu.kz/news-en/place-oriental-philosophy-nu-campus/",
+    "collected_at": "2026-10-19T18:13:51+00:00",
+    "published_at": "2019-07-09",
+    "body_sha256": "e925b3c12725c4af054bcbd62823ffc2b07aeab957923400d32431bf2d59aff0",
+    "supporting_excerpts": [
+      "stones used in NU’s garden were brought from Japan",
+      "14 stones at once",
+      "fifteenth",
+      "winter we cover the stones",
+      "do not"
+    ],
+    "facts": [
+      {
+        "id": "japan_stones",
+        "text": "По статье Nazarbayev University, камни для этого японского сада привезли из Японии."
+      },
+      {
+        "id": "fourteen_stones",
+        "text": "В описании NU — композиция из 15 камней: с одной точки видны 14. Это идея для внимательного наблюдения."
+      }
+    ],
+    "warnings": [
+      "Сведения об устройстве сада взяты из статьи NU от 09.07.2019; нынешний вид и доступ на кампус не подтверждены.",
+      "По статье NU, зимой камни укрывают; видимость композиции зависит от сезона. Не сходите с дорожек и не трогайте камни."
+    ],
+    "exclude_from_routes": false
+  },
+  "osm_way_1196402246": {
+    "identity": {
+      "name": "Ботанический сад",
+      "lat": 51.1061652,
+      "lon": 71.4165705,
+      "source_url": "https://www.openstreetmap.org/way/1196402246",
+      "match_basis": "Official website domain is linked by this exact OSM POI; matching name and coordinates."
+    },
+    "source_url": "https://www.astanabotsad.kz/ru/o-nas",
+    "collected_at": "2026-10-19T18:13:52+00:00",
+    "published_at": null,
+    "body_sha256": "c5ff79495ca0fd09d8d91ebc9f10472101a5bd1fcf1876b4ae7ad50cda9ab6b7",
+    "supporting_excerpts": [
+      "8",
+      "тематических садов",
+      "искусственный водоём",
+      "пешеходный мост",
+      "оранжерейный комплекс"
+    ],
+    "facts": [
+      {
+        "id": "themed_gardens",
+        "text": "Официальный сайт описывает восемь тематических садов вокруг круглой центральной части."
+      },
+      {
+        "id": "water_bridge",
+        "text": "На официальном сайте отмечен пешеходный мост через искусственный водоём."
+      },
+      {
+        "id": "greenhouse",
+        "text": "На территории описан оранжерейный комплекс; его посещение требует отдельной проверки часов и билетов."
+      }
+    ],
+    "warnings": [
+      "Сайт описывает весь ботанический сад; вход в оранжерею, часы и билеты отдельно не проверялись."
+    ],
+    "exclude_from_routes": false
+  },
+  "osm_way_1467797207": {
+    "identity": {
+      "name": "NU Park",
+      "lat": 51.0872699,
+      "lon": 71.3994394,
+      "source_url": "https://www.openstreetmap.org/way/1467797207",
+      "match_basis": "Reviewed NU Park project at NU campus; exact OSM name and reviewed campus coordinates."
+    },
+    "source_url": "https://fund.nu.edu.kz/en/news/eurasian-bank-supports-the-creation-of-a-new-public-space-nu-park/",
+    "collected_at": "2026-10-19T18:13:56+00:00",
+    "published_at": "2026-05-22",
+    "body_sha256": "41c4b895b36817cbf91a7c6f82b68f081476cefffc678b6a2e91aec0160d31bb",
+    "supporting_excerpts": [
+      "future NU Park",
+      "50 Siberian spruce trees"
+    ],
+    "facts": [
+      {
+        "id": "development",
+        "text": "NU Impact Foundation 22.05.2026 описывает будущий NU Park и посадку 50 сибирских елей."
+      }
+    ],
+    "warnings": [
+      "Официальная публикация от 22.05.2026 описывает NU Park как будущий проект. Подтверждения ввода всех зон нет; точка исключена из прогулочных маршрутов."
+    ],
+    "exclude_from_routes": true
+  },
+  "osm_way_549307755": {
+    "identity": {
+      "name": "Триумфальная арка Мангилик Ел",
+      "lat": 51.1043034,
+      "lon": 71.4300836,
+      "source_url": "https://www.openstreetmap.org/way/549307755",
+      "match_basis": "Reviewed unique Mangilik El Triumphal Arch; matching OSM name, monument type and coordinates."
+    },
+    "source_url": "https://visitastana.kz/ru/about-city/what-to-see/triumfalnaya-arka-m-gilik-el9679/",
+    "collected_at": "2026-10-20T12:02:57+00:00",
+    "published_at": null,
+    "body_sha256": "aba50546d4e0f1f8f57ad559603d7e6dd3d8d939b14f4c8f783a2c42e994cc18",
+    "supporting_excerpts": [
+      "2011",
+      "20-летия Независимости",
+      "национальными орнаментами",
+      "барельефы",
+      "График работы:",
+      "Круглосуточно"
+    ],
+    "facts": [
+      {
+        "id": "independence_landmark",
+        "text": "Visit Astana описывает арку как памятник 20-летию независимости Казахстана, построенный в 2011 году."
+      },
+      {
+        "id": "national_reliefs",
+        "text": "На странице Visit Astana отмечены национальные орнаменты и барельефы на стенах арки: детали для осмотра снаружи."
+      },
+      {
+        "id": "hours_24_7",
+        "text": "Visit Astana указывает для арки круглосуточный график. Это сведения источника, а не подтверждение текущего доступа."
+      }
+    ],
+    "warnings": [
+      "Круглосуточная отметка относится к достопримечательности; доступ внутрь и на смотровую площадку отдельно не подтверждён.",
+      "Освещение, безопасность ночного подхода и временные ограничения не проверены. Оставайтесь на доступных пешеходных дорожках."
+    ],
+    "exclude_from_routes": false
+  }
+}

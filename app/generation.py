@@ -62,6 +62,10 @@ def evidence_for(candidate: Candidate, required: tuple[str, ...]) -> dict[str, s
     }
     for fact in facts_for(candidate.poi)[:4]:
         evidence["fact_" + fact["id"]] = fact["text"]
+    if candidate.poi.category == "playground":
+        evidence["fact_family_playground"] = "В OpenStreetMap отмечена детская площадка: это конкретная остановка для игры с ребёнком. Оборудование и подходящий возраст не подтверждены."
+    if "night" in candidate.scenarios:
+        evidence["period"] = "Для ночного запроса найдено указание на круглосуточный режим либо освещение; текущий доступ и освещение всего пути не подтверждены."
     if required:
         evidence["features"] = "В источнике отмечены нужные свойства: " + ", ".join(FEATURE_LABELS[f] for f in required) + "."
     return evidence
@@ -71,6 +75,10 @@ def activities_for(candidate: Candidate) -> dict[str, str]:
     minutes = candidate.visit_minutes
     category = candidate.poi.category
     fact_ids = {f["id"] for f in facts_for(candidate.poi)}
+    if "official_national_reliefs" in fact_ids:
+        return {"arch_details": f"За примерно {minutes} мин осмотрите арку с доступной общественной дорожки: найдите национальные орнаменты и барельефы, выберите общий ракурс для фотографии. Посещение внутренних помещений и смотровой в этот план не входит."}
+    if category == "playground":
+        return {"family_play": f"Выделите около {minutes} мин на игру вместе с ребёнком. На месте сначала осмотрите покрытие и оборудование, выберите подходящую возрасту активность; при закрытом или повреждённом оборудовании не используйте его."}
     if "official_fourteen_stones" in fact_ids:
         return {"stone_observation": f"Если вход на кампус и композиция доступны, попробуйте с дорожки найти 14 видимых камней, затем смените точку наблюдения. Выделите около {minutes} мин; зимой камни могут быть укрыты."}
     if "official_themed_gardens" in fact_ids:
@@ -106,7 +114,7 @@ def fallback(candidates: tuple[Candidate, ...], required: tuple[str, ...], messa
     for candidate in candidates[:3]:
         reasons = evidence_for(candidate, required)
         specific = next((key for key in reasons if key.startswith("fact_")), "category")
-        reason_ids = [specific, "budget"] + (["features"] if required else [])
+        reason_ids = [specific, "budget"] + (["features"] if required else []) + (["period"] if "period" in reasons else [])
         choices.append(Choice(candidate, " ".join(reasons[k] for k in reason_ids), next(iter(activities_for(candidate).values()))))
     return GenerationResult(tuple(choices), "fallback", message)
 
@@ -157,6 +165,8 @@ def validate_selections(content: str, candidates: tuple[Candidate, ...], require
             reason_ids.append("budget")
         if required and "features" not in reason_ids:
             reason_ids.append("features")
+        if "period" in reasons and "period" not in reason_ids:
+            reason_ids.append("period")
         choices.append(Choice(candidate, " ".join(reasons[k] for k in reason_ids), activities[selected.activity_id]))
         seen.add(selected.poi_id)
         if len(choices) == 3:
