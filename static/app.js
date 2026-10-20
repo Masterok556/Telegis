@@ -855,6 +855,16 @@
 
   let landmarksLayer = null;
 
+  function updateLandmarksZoomVisibility() {
+    if (!leafletMap || typeof leafletMap.getZoom !== 'function') return;
+    const zoom = leafletMap.getZoom();
+    const isVisible = zoom >= 14.2;
+    const wraps = document.querySelectorAll('.landmark-pill-marker-wrap');
+    wraps.forEach((el) => {
+      el.classList.toggle('landmark-fade-out', !isVisible);
+    });
+  }
+
   function renderLandmarkButtons() {
     if (!leafletMap) return;
     if (!landmarksLayer) {
@@ -889,6 +899,10 @@
         });
       }
     });
+
+    if (typeof setTimeout === 'function') {
+      setTimeout(updateLandmarksZoomVisibility, 60);
+    }
   }
 
   // --- Render All Verified OSM POIs as Interactive Badges ---
@@ -961,6 +975,9 @@
         zoomControl: false,
         attributionControl: true
       });
+      if (typeof window !== 'undefined') {
+        window.leafletMap = leafletMap;
+      }
 
       leafletMap.attributionControl.setPrefix(false);
       leafletMap.attributionControl.addAttribution(
@@ -985,6 +1002,11 @@
 
       poiMarkersLayer = L.layerGroup().addTo(leafletMap);
       renderLandmarkButtons();
+
+      if (typeof leafletMap.on === 'function') {
+        leafletMap.on('zoom', updateLandmarksZoomVisibility);
+        leafletMap.on('zoomend', updateLandmarksZoomVisibility);
+      }
 
       // Enable interactive map clicking
       leafletMap.on('click', (e) => {
