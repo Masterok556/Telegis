@@ -70,7 +70,18 @@
       finish_point: 'Возврат к старту',
       basis_graph: '🚶 Граф дорог OSM',
       verified_fact: '🏛️ По официальному источнику',
-      evidence_sha: 'Сведения источника'
+      evidence_sha: 'Сведения источника',
+      why_ai_chose: 'ВЫБОР ИИ: ПОЧЕМУ ИМЕННО ЭТО МЕСТО',
+      btn_route: 'Маршрут',
+      route_to: 'Маршрут к:',
+      drawer_build_route: 'Построить пеший маршрут',
+      drawer_set_start: 'Начать прогулку отсюда',
+      drawer_features_heading: 'Удобства & Параметры',
+      drawer_facts_heading: '🏛️ Источники и ограничения',
+      close_route: 'Сбросить маршрут',
+      climate_label: '💨 Климат Астаны: защита от ветра и холода',
+      heading_where: 'Куда хотите сходить?',
+      my_location: 'Моё местоположение'
     },
     kz: {
       mock_title: 'ТЕСТТІК РЕЖИМ (MOCK)',
@@ -129,7 +140,18 @@
       finish_point: 'Бастапқы нүктеге қайту',
       basis_graph: '🚶 OSM жолдар графигі (Dijkstra)',
       verified_fact: '🏛️ Тексерілген дерек (Ресми дереккөз)',
-      evidence_sha: 'Дереккөз мәліметі'
+      evidence_sha: 'Дереккөз мәліметі',
+      why_ai_chose: 'ЖИ ТАҢДАУЫ: НЕГЕ БҰЛ ОРЫН ТАҢДАЛДЫ',
+      btn_route: 'Бағыт',
+      route_to: 'Бағыт:',
+      drawer_build_route: 'Жаяу бағыт құру',
+      drawer_set_start: 'Серуенді осы жерден бастау',
+      drawer_features_heading: 'Қолайлылықтар мен сипаттамалар',
+      drawer_facts_heading: '🏛️ Дереккөздер мен шектеулер',
+      close_route: 'Бағытты жабу',
+      climate_label: '💨 Астана климаты: жел мен суықтан қорғану',
+      heading_where: 'Қайда барғыңыз келеді?',
+      my_location: 'Менің орналасқан жерім'
     },
     en: {
       mock_title: 'TEST MODE (MOCK)',
@@ -188,7 +210,18 @@
       finish_point: 'Return to start',
       basis_graph: '🚶 OSM Walk Graph (Dijkstra)',
       verified_fact: '🏛️ Official source reports',
-      evidence_sha: 'Source-reported information'
+      evidence_sha: 'Source-reported information',
+      why_ai_chose: 'AI CHOICE: WHY THIS PLACE',
+      btn_route: 'Directions',
+      route_to: 'Route to:',
+      drawer_build_route: 'Build walking route',
+      drawer_set_start: 'Start walk from here',
+      drawer_features_heading: 'Amenities & Features',
+      drawer_facts_heading: '🏛️ Sources & Constraints',
+      close_route: 'Clear route',
+      climate_label: '💨 Astana Climate: wind & cold shield',
+      heading_where: 'Where do you want to go?',
+      my_location: 'My location'
     }
   };
 
@@ -253,6 +286,12 @@
   let systemStatusLoaded = false;
 
   const climateShieldCheck = document.getElementById('climateShieldCheck');
+  const timeRangeSlider = document.getElementById('timeRangeSlider');
+  const timeSliderVal = document.getElementById('timeSliderVal');
+  const routeSummaryBar = document.getElementById('routeSummaryBar');
+  const routeBannerTitle = document.getElementById('routeBannerTitle');
+  const routeBannerStats = document.getElementById('routeBannerStats');
+  const closeRouteBannerBtn = document.getElementById('closeRouteBannerBtn');
 
   // Mode Tabs
   const tabPlaces = document.getElementById('tabPlaces');
@@ -307,6 +346,7 @@
     renderTimeSelector();
     await loadLocations();
     await loadSystemMeta();
+    autoRequestUserLocation();
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('lang')) {
@@ -396,6 +436,11 @@
       btnText.textContent = appMode === 'itinerary' ? dict.btn_build_route : dict.btn_find;
     }
 
+    if (timeSliderVal && timeRangeSlider) {
+      const unit = lang === 'en' ? 'min' : (lang === 'kz' ? 'мин' : 'мин');
+      timeSliderVal.textContent = `${timeRangeSlider.value} ${unit}`;
+    }
+
     updateCategoryLabels();
     updateReachRadius();
     updateSystemStatusText();
@@ -430,6 +475,11 @@
 
       input.addEventListener('change', () => {
         invalidateSearch();
+        if (timeRangeSlider) timeRangeSlider.value = mins;
+        if (timeSliderVal) {
+          const unit = currentLang === 'en' ? 'min' : (currentLang === 'kz' ? 'мин' : 'мин');
+          timeSliderVal.textContent = `${mins} ${unit}`;
+        }
         updateReachRadius(mins);
       });
 
@@ -441,6 +491,14 @@
       label.appendChild(span);
       timeSelector.appendChild(label);
     });
+
+    if (timeRangeSlider) {
+      timeRangeSlider.value = defaultVal;
+    }
+    if (timeSliderVal) {
+      const unit = currentLang === 'en' ? 'min' : (currentLang === 'kz' ? 'мин' : 'мин');
+      timeSliderVal.textContent = `${defaultVal} ${unit}`;
+    }
 
     updateReachRadius(defaultVal);
   }
@@ -1331,6 +1389,46 @@
       leafletMap.removeLayer(routePolyline);
       routePolyline = null;
     }
+    if (routeSummaryBar) {
+      routeSummaryBar.classList.add('hidden');
+    }
+  }
+
+  // --- 2GIS / Google Maps Style Point-to-Point Route Builder ---
+  function buildWalkingRouteToPoi(poi) {
+    if (!leafletMap || !poi?.lat || !poi?.lon) return;
+    clearRoutePolyline();
+
+    const startLat = startMarker ? startMarker.getLatLng().lat : (currentLocation?.lat || 51.0890897);
+    const startLon = startMarker ? startMarker.getLatLng().lng : (currentLocation?.lon || 71.4073303);
+    const startName = (locationSelect && locationSelect.selectedOptions[0]?.textContent) || t('start_point');
+
+    const latLngs = [[startLat, startLon], [poi.lat, poi.lon]];
+
+    routePolyline = L.polyline(latLngs, {
+      color: '#0284c7',
+      weight: 6,
+      opacity: 0.92,
+      lineCap: 'round',
+      lineJoin: 'round',
+      dashArray: '2, 8'
+    }).addTo(leafletMap);
+
+    const distM = poi.route_distance_m || Math.round(L.latLng(startLat, startLon).distanceTo(L.latLng(poi.lat, poi.lon)));
+    const walkMins = poi.walk_minutes_estimate || Math.max(1, Math.round(distM / 70));
+
+    if (routeSummaryBar && routeBannerTitle && routeBannerStats) {
+      routeBannerTitle.textContent = `${t('route_to')} ${poi.name}`;
+      routeBannerStats.textContent = `~${walkMins} мин (${distM} м) • ${startName}`;
+      routeSummaryBar.classList.remove('hidden');
+    }
+
+    const bounds = L.latLngBounds([[startLat, startLon], [poi.lat, poi.lon]]);
+    try {
+      leafletMap.fitBounds(bounds, mapViewPadding());
+    } catch (_) {}
+
+    showMapToast(`🚶 ${t('route_to')} ${poi.name}: ~${walkMins} мин (${distM} м)`);
   }
 
   function focusPoiOnMap(poiId) {
@@ -1562,17 +1660,23 @@
     if (drawerRouteBtn) {
       drawerRouteBtn.addEventListener('click', () => {
         if (currentDrawerPoi) {
-          showMapToast(`📍 Ищем рекомендации по запросу «${currentDrawerPoi.name}»`);
-          setAppMode('places');
-          const category = currentDrawerPoi.category === 'cafe' ? 'cafe' : 'walk';
-          const radio = document.querySelector(`input[name="category"][value="${category}"]`);
-          if (radio) radio.checked = true;
+          buildWalkingRouteToPoi(currentDrawerPoi);
           closePoiDrawer();
-          if (queryInput) {
-            queryInput.value = currentDrawerPoi.name;
-          }
-          if (recommendForm) recommendForm.dispatchEvent(new Event('submit', { cancelable: true }));
         }
+      });
+    }
+
+    if (closeRouteBannerBtn) {
+      closeRouteBannerBtn.addEventListener('click', () => {
+        clearRoutePolyline();
+      });
+    }
+
+    if (timeRangeSlider) {
+      timeRangeSlider.addEventListener('input', () => {
+        const val = parseInt(timeRangeSlider.value, 10);
+        selectMinutes(val);
+        invalidateSearch();
       });
     }
   }
@@ -1798,6 +1902,43 @@
     );
   }
 
+  function autoRequestUserLocation() {
+    if (!navigator.geolocation || isMockMode) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('loc')) return;
+
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          userGeoLocation = { lat, lon };
+
+          if (locationSelect) {
+            let userOpt = locationSelect.querySelector('option[value="user_geo"]');
+            if (!userOpt) {
+              userOpt = document.createElement('option');
+              userOpt.value = 'user_geo';
+              locationSelect.insertBefore(userOpt, locationSelect.firstChild);
+            }
+            userOpt.textContent = `🎯 ${t('my_location')} (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+            userOpt.dataset.lat = lat;
+            userOpt.dataset.lon = lon;
+            userOpt.selected = true;
+          }
+
+          updateStartMarker(lat, lon, t('my_location'));
+          if (leafletMap) leafletMap.flyTo([lat, lon], 15, { duration: 0.8 });
+          setGeoStatus(t('my_location'), 'active');
+        },
+        (_err) => {
+          // Gracefully fallback to default EXPO anchor
+        },
+        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+      );
+    } catch (_) {}
+  }
+
   function setGeoStatus(text, type) {
     if (!geoStatus) return;
     geoStatus.textContent = text;
@@ -1858,13 +1999,30 @@
       label.className = 'time-chip';
       radio = document.createElement('input');
       radio.type = 'radio'; radio.name = 'availableMinutes'; radio.value = value;
-      radio.addEventListener('change', () => { invalidateSearch(); updateReachRadius(value); });
+      radio.addEventListener('change', () => {
+        invalidateSearch();
+        if (timeRangeSlider) timeRangeSlider.value = value;
+        if (timeSliderVal) {
+          const unit = currentLang === 'en' ? 'min' : (currentLang === 'kz' ? 'мин' : 'мин');
+          timeSliderVal.textContent = `${value} ${unit}`;
+        }
+        updateReachRadius(value);
+      });
       const text = document.createElement('span');
-      text.className = 'time-chip-btn'; text.textContent = `${value} мин`;
+      text.className = 'time-chip-btn';
+      const unit = currentLang === 'en' ? 'min' : (currentLang === 'kz' ? 'мин' : 'мин');
+      text.textContent = `${value} ${unit}`;
       label.append(radio, text);
       timeSelector.appendChild(label);
     }
     radio.checked = true;
+    if (timeRangeSlider) {
+      timeRangeSlider.value = value;
+    }
+    if (timeSliderVal) {
+      const unit = currentLang === 'en' ? 'min' : (currentLang === 'kz' ? 'мин' : 'мин');
+      timeSliderVal.textContent = `${value} ${unit}`;
+    }
     updateReachRadius(value);
   }
 
@@ -2351,41 +2509,51 @@
         }
       }
 
-      // --- Why fits ---
-      if (poi.why) {
-        const whySection = document.createElement('div');
-        whySection.className = 'card-section';
+      // --- Prominent AI Choice Hero Box ---
+      if (poi.why || poi.activity) {
+        const aiBox = document.createElement('div');
+        aiBox.className = 'ai-why-hero-box';
 
-        const whyLabel = document.createElement('span');
-        whyLabel.className = 'card-section-label';
-        whyLabel.textContent = t('why_label');
+        const aiBadge = document.createElement('div');
+        aiBadge.className = 'ai-why-badge';
+        const aiSpark = document.createElement('span');
+        aiSpark.className = 'ai-spark-icon';
+        aiSpark.textContent = '✨';
+        const aiTitle = document.createElement('span');
+        aiTitle.className = 'ai-why-title';
+        aiTitle.textContent = t('why_ai_chose');
+        aiBadge.append(aiSpark, aiTitle);
+        aiBox.appendChild(aiBadge);
 
-        const whyText = document.createElement('p');
-        whyText.className = 'card-why-text';
-        whyText.textContent = poi.why;
+        if (poi.why) {
+          const aiText = document.createElement('p');
+          aiText.className = 'ai-why-content';
+          aiText.textContent = poi.why;
+          aiBox.appendChild(aiText);
+        }
 
-        whySection.appendChild(whyLabel);
-        whySection.appendChild(whyText);
-        card.appendChild(whySection);
+        if (poi.activity) {
+          const actLine = document.createElement('div');
+          actLine.className = 'ai-act-line';
+          actLine.innerHTML = `<strong>💡 ${t('act_label')}</strong> ${escapeHtml(poi.activity)}`;
+          aiBox.appendChild(actLine);
+        }
+
+        card.appendChild(aiBox);
       }
 
-      // --- Activity Block ---
-      if (poi.activity) {
-        const actBlock = document.createElement('div');
-        actBlock.className = 'card-activity-block';
-
-        const actTitle = document.createElement('div');
-        actTitle.className = 'card-activity-title';
-        actTitle.textContent = t('act_label');
-
-        const actText = document.createElement('p');
-        actText.className = 'card-activity-text';
-        actText.textContent = poi.activity;
-
-        actBlock.appendChild(actTitle);
-        actBlock.appendChild(actText);
-        card.appendChild(actBlock);
-      }
+      // --- 2GIS Style Walking Route Button ---
+      const routeBtn = document.createElement('button');
+      routeBtn.type = 'button';
+      routeBtn.className = 'card-route-btn';
+      routeBtn.innerHTML = `<span>🚶</span> <span>${t('btn_route')}</span>`;
+      routeBtn.title = `${t('route_to')} ${poi.name}`;
+      routeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        focusPoiOnMap(poi.poi_id);
+        buildWalkingRouteToPoi(poi);
+      });
+      card.appendChild(routeBtn);
 
       // --- Verified Facts (Evidence from official sources) ---
       if (poi.evidence && poi.evidence.length > 0) {
