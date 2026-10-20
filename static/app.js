@@ -855,14 +855,25 @@
 
   let landmarksLayer = null;
 
-  function updateLandmarksZoomVisibility() {
+  function updateAllMarkersZoomVisibility() {
     if (!leafletMap || typeof leafletMap.getZoom !== 'function') return;
     const zoom = leafletMap.getZoom();
-    const isVisible = zoom >= 14.2;
-    const wraps = document.querySelectorAll('.landmark-pill-marker-wrap');
-    wraps.forEach((el) => {
-      el.classList.toggle('landmark-fade-out', !isVisible);
+    const isLandmarkVisible = zoom >= 14.0;
+    const isPoiVisible = zoom >= 14.2;
+
+    const landmarkWraps = document.querySelectorAll('.landmark-pill-marker-wrap');
+    landmarkWraps.forEach((el) => {
+      el.classList.toggle('landmark-fade-out', !isLandmarkVisible);
     });
+
+    const poiWraps = document.querySelectorAll('.subtle-map-poi-marker');
+    poiWraps.forEach((el) => {
+      el.classList.toggle('poi-fade-out', !isPoiVisible);
+    });
+  }
+
+  function updateLandmarksZoomVisibility() {
+    updateAllMarkersZoomVisibility();
   }
 
   function renderLandmarkButtons() {
@@ -937,8 +948,13 @@
         garden: '🌸',
         attraction: '🏛️',
         monument: '🗿',
+        memorial: '🕊️',
+        artwork: '🎨',
         museum: '🖼️',
-        mall: '🛍️'
+        mall: '🛍️',
+        playground: '🛝',
+        leisure: '⚽',
+        amenity: '📍'
       };
 
       pois.forEach(p => {
@@ -957,6 +973,10 @@
           openPoiDrawer(p);
         });
       });
+
+      if (typeof setTimeout === 'function') {
+        setTimeout(updateAllMarkersZoomVisibility, 60);
+      }
     } catch (_) {}
   }
 
@@ -1004,8 +1024,8 @@
       renderLandmarkButtons();
 
       if (typeof leafletMap.on === 'function') {
-        leafletMap.on('zoom', updateLandmarksZoomVisibility);
-        leafletMap.on('zoomend', updateLandmarksZoomVisibility);
+        leafletMap.on('zoom', updateAllMarkersZoomVisibility);
+        leafletMap.on('zoomend', updateAllMarkersZoomVisibility);
       }
 
       // Enable interactive map clicking
