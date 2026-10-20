@@ -131,12 +131,12 @@
           </div>
           <div class="time-slider-wrapper">
             <input type="range" id="timeRangeSlider" class="time-range-slider" min="15" max="120" step="5" value="60" aria-label="Бюджет времени в минутах">
-            <div class="time-slider-ticks">
-              <span>15 мин</span>
-              <span>30 мин</span>
-              <span>60 мин</span>
-              <span>90 мин</span>
-              <span>120 мин</span>
+            <div class="time-slider-ticks" id="timeSliderTicks">
+              <span data-mins="15">15 мин</span>
+              <span data-mins="30">30 мин</span>
+              <span data-mins="60">60 мин</span>
+              <span data-mins="90">90 мин</span>
+              <span data-mins="120">120 мин</span>
             </div>
           </div>
           <div class="time-selector" id="timeSelector" role="radiogroup" aria-label="Доступное время">

@@ -1,9 +1,10 @@
 {
-  "checked_at": "2026-10-20T10:46:56+00:00",
+  "checked_at": "2026-10-20T16:44:19+00:00",
   "metadata": {
-    "poi_count": 49,
+    "poi_count": 134,
     "categories": {
       "cafe": 28,
+      "playground": 85,
       "memorial": 2,
       "monument": 1,
       "artwork": 5,
@@ -24,7 +25,7 @@
     "attribution": "© OpenStreetMap contributors",
     "license": "ODbL 1.0",
     "license_url": "https://www.openstreetmap.org/copyright",
-    "snapshot_id": "20261019T181106Z-e7831bf2",
+    "snapshot_id": "20261020T112234Z-47247bf6",
     "retrieval": "geographic filters + lexical BM25",
     "llm_configured": false,
     "llm_last_status": "not_configured",
@@ -41,8 +42,8 @@
       },
       "ratings_available": false,
       "with_informative_facts": 35,
-      "attributed_fact_count": 72,
-      "official_fact_count": 6,
+      "attributed_fact_count": 75,
+      "official_fact_count": 9,
       "excluded_pending_verification": [
         {
           "poi_id": "osm_way_1467797207",
@@ -165,7 +166,7 @@
       "count": 0,
       "mode": "fallback",
       "names": [],
-      "message": "Этот прототип не проверяет доступность в реальном времени и не рассчитывает поездки в аэропорт. Выберите прогулку или кофе без такого условия."
+      "message": "Доступность сейчас и время поездки в аэропорт не проверяются. Нельзя обещать посещение до вылета."
     },
     {
       "name": "Неизвестные часы",

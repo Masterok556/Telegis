@@ -436,10 +436,15 @@
       btnText.textContent = appMode === 'itinerary' ? dict.btn_build_route : dict.btn_find;
     }
 
+    const unit = lang === 'en' ? 'min' : 'мин';
     if (timeSliderVal && timeRangeSlider) {
-      const unit = lang === 'en' ? 'min' : (lang === 'kz' ? 'мин' : 'мин');
       timeSliderVal.textContent = `${timeRangeSlider.value} ${unit}`;
     }
+
+    document.querySelectorAll('.time-slider-ticks span').forEach(span => {
+      const mins = span.dataset.mins;
+      if (mins) span.textContent = `${mins} ${unit}`;
+    });
 
     updateCategoryLabels();
     updateReachRadius();
@@ -1679,6 +1684,16 @@
         invalidateSearch();
       });
     }
+
+    document.querySelectorAll('.time-slider-ticks span').forEach(span => {
+      span.addEventListener('click', () => {
+        const mins = parseInt(span.dataset.mins, 10);
+        if (mins) {
+          selectMinutes(mins);
+          invalidateSearch();
+        }
+      });
+    });
   }
 
   function setAppMode(mode) {

@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-20T10:46:59.917622+00:00",
+  "checked_at": "2026-10-20T16:44:39.305717+00:00",
   "passed": true,
   "checks": [
     {
@@ -62,8 +62,8 @@
     },
     "ratings_available": false,
     "with_informative_facts": 35,
-    "attributed_fact_count": 72,
-    "official_fact_count": 6,
+    "attributed_fact_count": 75,
+    "official_fact_count": 9,
     "excluded_pending_verification": [
       {
         "poi_id": "osm_way_1467797207",
@@ -83,6 +83,6 @@
     "source_data_timestamp": "2026-10-19T18:13:51Z",
     "max_snap_m": 120
   },
-  "itinerary_elapsed_seconds": 1.969,
+  "itinerary_elapsed_seconds": 0.464,
   "paid_llm_calls": 0
 }
